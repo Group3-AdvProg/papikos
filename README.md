@@ -1,5 +1,5 @@
 ## **List of group member names**
-Catherine Aurelia <br>
+Catherine Aurellia <br>
 Athazahra Nabila Ruby <br> 
 Darren Marcello Sidabutar <br>
 William Samuel Mulya <br>
