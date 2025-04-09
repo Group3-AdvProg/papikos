@@ -8,6 +8,11 @@ class PapikosApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// This already tests if Spring context loads successfully
 	}
 
+	@Test
+	void mainMethodRuns() {
+		PapikosApplication.main(new String[] {});
+	}
 }
