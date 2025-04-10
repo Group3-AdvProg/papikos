@@ -19,7 +19,7 @@ PapiKos is a boarding house rental application that connects landlords with pote
 
 
 ## URL(s) to the group project repository/ies:
-[Papikos Repository](https://github.com/sugonamu/Papikos)
+[Papikos Repository](https://github.com/Group3-AdvProg/papikos)
 
 
 ## URL(s) to the technical documents:
