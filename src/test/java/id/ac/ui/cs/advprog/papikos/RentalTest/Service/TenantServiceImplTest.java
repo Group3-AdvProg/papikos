@@ -23,30 +23,41 @@ public class TenantServiceImplTest {
     }
 
     @Test
-    void testCreate() {
+    void testCreateTenant() {
         Tenant tenant = new Tenant();
         when(repository.save(tenant)).thenReturn(tenant);
-        assertEquals(tenant, service.createTenant(tenant));
+        Tenant result = service.createTenant(tenant);
+        assertEquals(tenant, result);
     }
 
     @Test
-    void testFindAll() {
+    void testGetAllTenants() {
         when(repository.findAll()).thenReturn(List.of(new Tenant(), new Tenant()));
-        assertEquals(2, service.getAllTenants().size());
+        List<Tenant> result = service.getAllTenants();
+        assertEquals(2, result.size());
     }
 
     @Test
-    void testFindById() {
+    void testGetTenantByIdExists() {
         Tenant tenant = new Tenant();
         tenant.setId(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(tenant));
-        assertEquals(tenant, service.getTenantById(1L));
+
+        Tenant result = service.getTenantById(1L);
+        assertNotNull(result);
+        assertEquals(tenant, result);
     }
 
     @Test
-    void testUpdate() {
-        Long id = 1L;
+    void testGetTenantByIdNotFound() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+        Tenant result = service.getTenantById(99L);
+        assertNull(result);
+    }
 
+    @Test
+    void testUpdateTenantSuccess() {
+        Long id = 1L;
         Tenant existing = new Tenant();
         existing.setId(id);
         existing.setFullName("Old Name");
@@ -67,7 +78,17 @@ public class TenantServiceImplTest {
     }
 
     @Test
-    void testDelete() {
+    void testUpdateTenantNotFound() {
+        Tenant updated = new Tenant();
+        when(repository.findById(42L)).thenReturn(Optional.empty());
+
+        Tenant result = service.updateTenant(42L, updated);
+
+        assertNull(result);
+    }
+
+    @Test
+    void testDeleteTenant() {
         service.deleteTenant(1L);
         verify(repository, times(1)).deleteById(1L);
     }
