@@ -64,6 +64,18 @@ class HouseManagementServiceImplTest {
     }
 
     @Test
+    void testUpdateHouseNotFound() {
+        House updated = new House(1L, "New Kos", "New Addr", "Updated", 5, 1500000);
+        when(houseRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            houseService.updateHouse(1L, updated);
+        });
+
+        verify(houseRepository, never()).save(any());
+    }
+
+    @Test
     void testDeleteHouse() {
         houseService.deleteHouse(1L);
         verify(houseRepository).deleteById(1L);
