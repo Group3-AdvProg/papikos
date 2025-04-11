@@ -1,32 +1,35 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.controller;
 
+import id.ac.ui.cs.advprog.papikos.wishlist.DTO.WishlistRequest;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/wishlist")
+@RequiredArgsConstructor
 public class WishlistController {
 
-    @Autowired
-    private WishlistService wishlistService;
-
-    @PostMapping("/registerTenant")
-    public String registerTenant(@RequestParam String id, @RequestParam String name) {
-        wishlistService.registerTenant(id, name);
-        return "Tenant registered!";
-    }
+    private final WishlistService wishlistService;
 
     @PostMapping("/add")
-    public String addToWishlist(@RequestParam String tenantId, @RequestParam String itemId) {
-        wishlistService.addToWishlist(tenantId, itemId);
-        return "Item added!";
+    public ResponseEntity<String> addToWishlist(@RequestBody WishlistRequest request) {
+        wishlistService.addToWishlist(request.getTenantId(), request.getRoomType());
+        return ResponseEntity.ok("Added to wishlist.");
     }
 
-    @PostMapping("/notifyAvailability")
-    public String notifyAvailability(@RequestParam String propertyId) {
-        wishlistService.notifyAvailability(propertyId);
-        return "Notified relevant tenants.";
+    @DeleteMapping("/remove")
+    public ResponseEntity<String> removeFromWishlist(@RequestBody WishlistRequest request) {
+        wishlistService.removeFromWishlist(request.getTenantId(), request.getRoomType());
+        return ResponseEntity.ok("Removed from wishlist.");
     }
 
+    @GetMapping("/{tenantId}")
+    public ResponseEntity<List<String>> getWishlist(@PathVariable String tenantId) {
+        List<String> wishlist = wishlistService.getWishlistByTenant(tenantId);
+        return ResponseEntity.ok(wishlist);
+    }
 }

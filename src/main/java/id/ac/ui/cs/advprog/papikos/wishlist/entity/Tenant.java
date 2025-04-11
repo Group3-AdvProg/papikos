@@ -1,13 +1,16 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.entity;
 
+import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class Tenant {
-    private String id;
-    private String name;
-    private List<String> wishlist = new ArrayList<>();
-    private List<String> notifications = new ArrayList<>();
+
+    private final String id;
+    private final String name;
+    private final List<String> wishlist = new ArrayList<>();
+    private final List<String> notifications = new ArrayList<>();
 
     public Tenant(String id, String name) {
         this.id = id;
@@ -15,27 +18,17 @@ public class Tenant {
     }
 
     public void addToWishlist(String propertyId) {
-        wishlist.add(propertyId);
+        if (!wishlist.contains(propertyId)) {
+            wishlist.add(propertyId);
+        }
+    }
+
+    public void removeFromWishlist(String propertyId) {
+        wishlist.remove(propertyId);
     }
 
     public void receiveNotification(String message) {
         notifications.add(message);
-        System.out.println("🔔 Notification for " + name + ": " + message);
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public List<String> getWishlist() {
-        return wishlist;
-    }
-
-    public List<String> getNotifications() {
-        return notifications;
+        System.out.println("Notification for " + name + ": " + message);
     }
 }
