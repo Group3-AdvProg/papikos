@@ -1,6 +1,9 @@
-package com.group3.papikos.payment;
+package id.ac.ui.cs.advprog.papikos.Payment;
 
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -36,5 +39,20 @@ public class PaymentStrategyTest {
         boolean result = context.executePayment(100_000, 50_000);
 
         assertFalse(result); // Fail Case
+    }
+
+    @Test
+    void context_shouldPrintMessageWhenStrategyIsNull() {
+        PaymentContext context = new PaymentContext();
+
+        // Capture the system output
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
+
+        boolean result = context.executePayment(100_000, 150_000);
+        assertFalse(result);
+
+        assertTrue(outContent.toString().contains("No payment method selected."));
+
     }
 }
