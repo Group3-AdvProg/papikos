@@ -1,6 +1,7 @@
-package id.ac.ui.cs.advprog.papikos.Rental.controller;
+package id.ac.ui.cs.advprog.papikos.RentalTest.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.papikos.Rental.controller.TenantController;
 import id.ac.ui.cs.advprog.papikos.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.Rental.service.TenantService;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
