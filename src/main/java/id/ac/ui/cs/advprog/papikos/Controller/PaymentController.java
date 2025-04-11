@@ -1,7 +1,7 @@
-package com.group3.papikos.controller;
+package id.ac.ui.cs.advprog.papikos.Controller;
 
-import com.group3.papikos.payload.request.PaymentRequest;
-import com.group3.papikos.service.PaymentService;
+import id.ac.ui.cs.advprog.papikos.Service.PaymentService;
+import id.ac.ui.cs.advprog.papikos.payload.Request.PaymentRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

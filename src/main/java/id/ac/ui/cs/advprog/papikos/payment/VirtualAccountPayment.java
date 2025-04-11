@@ -1,4 +1,4 @@
-package com.group3.papikos.payment;
+package id.ac.ui.cs.advprog.papikos.Payment;
 
 public class VirtualAccountPayment implements PaymentStrategy {
 

@@ -1,11 +1,10 @@
-package com.group3.papikos.payment;
+package id.ac.ui.cs.advprog.papikos.Payment;
 
+import lombok.Setter;
+
+@Setter
 public class PaymentContext {
     private PaymentStrategy strategy;
-
-    public void setStrategy(PaymentStrategy strategy) {
-        this.strategy = strategy;
-    }
 
     public boolean executePayment(double amount, double balance) {
         if (balance < amount) {
