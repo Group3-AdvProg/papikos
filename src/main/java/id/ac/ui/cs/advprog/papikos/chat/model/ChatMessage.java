@@ -1,5 +1,10 @@
 package id.ac.ui.cs.advprog.papikos.chat.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class ChatMessage {
 
     public enum MessageType {
@@ -8,6 +13,7 @@ public class ChatMessage {
         LEAVE   // when a user leaves the chat room
     }
 
+    // Getters and Setters
     private MessageType type;
     private String content;
     private String sender;
@@ -21,28 +27,4 @@ public class ChatMessage {
         this.sender = sender;
     }
 
-    // Getters and Setters
-    public MessageType getType() {
-        return type;
-    }
-
-    public void setType(MessageType type) {
-        this.type = type;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getSender() {
-        return sender;
-    }
-
-    public void setSender(String sender) {
-        this.sender = sender;
-    }
 }
