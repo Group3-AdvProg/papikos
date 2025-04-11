@@ -5,7 +5,6 @@ import id.ac.ui.cs.advprog.papikos.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.Rental.service.RentalService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,6 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @WebMvcTest(RentalController.class)
 public class RentalControllerTest {
@@ -32,7 +32,7 @@ public class RentalControllerTest {
     private RentalService rentalService;
 
     private Rental sampleRental;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -40,6 +40,10 @@ public class RentalControllerTest {
         sampleRental.setId(1L);
         sampleRental.setDurationInMonths(2);
         sampleRental.setCheckInDate(LocalDate.of(2025, 4, 11));
+
+        // Register JavaTimeModule so LocalDate can be serialized
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
     @Test
