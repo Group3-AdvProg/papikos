@@ -1,5 +1,5 @@
 package id.ac.ui.cs.advprog.papikos.management.command;
 
-public interface HouseCommand {
+public interface HouseManagementCommand {
     void execute();
 }

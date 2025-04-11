@@ -2,7 +2,7 @@ package id.ac.ui.cs.advprog.papikos.management.command;
 
 import id.ac.ui.cs.advprog.papikos.management.service.HouseManagementService;
 
-public class DeleteHouseCommand implements HouseCommand {
+public class DeleteHouseCommand implements HouseManagementCommand {
 
     private final HouseManagementService service;
     private final Long id;

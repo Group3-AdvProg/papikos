@@ -3,7 +3,7 @@ package id.ac.ui.cs.advprog.papikos.management.command;
 import id.ac.ui.cs.advprog.papikos.management.model.House;
 import id.ac.ui.cs.advprog.papikos.management.service.HouseManagementService;
 
-public class AddHouseCommand implements HouseCommand {
+public class AddHouseCommand implements HouseManagementCommand {
 
     private final HouseManagementService service;
     private final House house;
