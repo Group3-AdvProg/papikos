@@ -45,10 +45,25 @@ public class TenantServiceImplTest {
 
     @Test
     void testUpdate() {
-        Tenant tenant = new Tenant();
-        tenant.setId(1L);
-        when(repository.save(tenant)).thenReturn(tenant);
-        assertEquals(tenant, service.updateTenant(1L, tenant));
+        Long id = 1L;
+
+        Tenant existing = new Tenant();
+        existing.setId(id);
+        existing.setFullName("Old Name");
+        existing.setPhoneNumber("000");
+
+        Tenant updated = new Tenant();
+        updated.setFullName("New Name");
+        updated.setPhoneNumber("123");
+
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
+        when(repository.save(any(Tenant.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Tenant result = service.updateTenant(id, updated);
+
+        assertNotNull(result);
+        assertEquals("New Name", result.getFullName());
+        assertEquals("123", result.getPhoneNumber());
     }
 
     @Test
