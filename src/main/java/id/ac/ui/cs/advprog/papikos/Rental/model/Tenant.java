@@ -16,9 +16,8 @@ public class Tenant {
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL)
     private List<Rental> rentals;
 
-    public Tenant() {}
-
-    // Getters and Setters
+    public Tenant() {
+    }
 
     public Long getId() {
         return id;
@@ -37,4 +36,18 @@ public class Tenant {
     }
 
     public String getPhoneNumber() {
-        return phone
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public List<Rental> getRentals() {
+        return rentals;
+    }
+
+    public void setRentals(List<Rental> rentals) {
+        this.rentals = rentals;
+    }
+}

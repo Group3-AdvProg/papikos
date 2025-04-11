@@ -41,7 +41,6 @@ public class RentalControllerTest {
         sampleRental.setDurationInMonths(2);
         sampleRental.setCheckInDate(LocalDate.of(2025, 4, 11));
 
-        // Register JavaTimeModule so LocalDate can be serialized
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
     }
@@ -73,6 +72,24 @@ public class RentalControllerTest {
         mockMvc.perform(get("/api/rentals/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.durationInMonths").value(2));
+    }
+
+    @Test
+    void testUpdateRental() throws Exception {
+        Rental updatedRental = new Rental();
+        updatedRental.setId(1L);
+        updatedRental.setDurationInMonths(3);
+        updatedRental.setCheckInDate(LocalDate.of(2025, 5, 1));
+
+        when(rentalService.updateRental(eq(1L), any(Rental.class))).thenReturn(updatedRental);
+
+        mockMvc.perform(put("/api/rentals/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updatedRental)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.durationInMonths").value(3))
+                .andExpect(jsonPath("$.checkInDate").value("2025-05-01"));
     }
 
     @Test

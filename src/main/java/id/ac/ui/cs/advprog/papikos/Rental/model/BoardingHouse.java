@@ -1,7 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.Rental.model;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
 public class BoardingHouse {
@@ -12,15 +11,9 @@ public class BoardingHouse {
 
     private String name;
     private String address;
-
-    @Column(length = 1000)
     private String description;
-
-    private int totalRooms;
-    private double monthlyRent;
-
-    @OneToMany(mappedBy = "boardingHouse", cascade = CascadeType.ALL)
-    private List<Rental> rentals;
+    private int roomCount;
+    private double monthlyPrice;
 
     public BoardingHouse() {}
 
@@ -58,27 +51,19 @@ public class BoardingHouse {
         this.description = description;
     }
 
-    public int getTotalRooms() {
-        return totalRooms;
+    public int getRoomCount() {
+        return roomCount;
     }
 
-    public void setTotalRooms(int totalRooms) {
-        this.totalRooms = totalRooms;
+    public void setRoomCount(int roomCount) {
+        this.roomCount = roomCount;
     }
 
-    public double getMonthlyRent() {
-        return monthlyRent;
+    public double getMonthlyPrice() {
+        return monthlyPrice;
     }
 
-    public void setMonthlyRent(double monthlyRent) {
-        this.monthlyRent = monthlyRent;
-    }
-
-    public List<Rental> getRentals() {
-        return rentals;
-    }
-
-    public void setRentals(List<Rental> rentals) {
-        this.rentals = rentals;
+    public void setMonthlyPrice(double monthlyPrice) {
+        this.monthlyPrice = monthlyPrice;
     }
 }

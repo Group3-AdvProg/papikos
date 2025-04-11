@@ -11,7 +11,7 @@ version = "0.0.1-SNAPSHOT"
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion.set(JavaLanguageVersion.of(21))
 	}
 }
 
@@ -32,17 +32,28 @@ val webdriverManagerVersion = "5.6.3"
 val junitJupiterVersion = "5.9.1"
 
 dependencies {
+	// ✅ JPA & DB dependencies
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	runtimeOnly("com.h2database:h2") // In-memory DB for testing
+
+	// Optional: fix for unresolved symbols in some IDEs
+	implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
+
+	// Web & template engine
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	compileOnly("org.projectlombok:lombok")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-	annotationProcessor("org.projectlombok:lombok")
 
+	// Lombok (optional)
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+	// Testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-	// Selenium and JUnit dependencies
+	// Selenium
 	testImplementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
 	testImplementation("io.github.bonigarcia:selenium-jupiter:$seleniumJupiterVersion")
 	testImplementation("io.github.bonigarcia:webdrivermanager:$webdriverManagerVersion")
@@ -50,7 +61,7 @@ dependencies {
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
 }
 
-// Optional: custom test tasks
+// Custom test tasks
 tasks.register<Test>("unitTest") {
 	description = "Runs unit tests."
 	group = "verification"
@@ -69,23 +80,17 @@ tasks.register<Test>("functionalTest") {
 	}
 }
 
-// ----- Key part: Exclude FunctionalTest from the built-in `test` task and finalize with Jacoco -----
-
 tasks.test {
-	// 1) Exclude functional tests (they will NOT be run by `./gradlew test`)
 	filter {
 		excludeTestsMatching("*FunctionalTest")
 	}
-	// 2) Ensure code coverage report (jacocoTestReport) runs right after `test`
 	finalizedBy(tasks.jacocoTestReport)
 }
 
-// The jacocoTestReport task depends on the results of `test`
 tasks.jacocoTestReport {
 	dependsOn(tasks.test)
 }
 
-// ----- Ensure JUnit Platform is used for ALL test tasks -----
 tasks.withType<Test>().configureEach {
 	useJUnitPlatform()
 }

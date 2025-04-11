@@ -62,7 +62,7 @@ public class BoardingHouseServiceImplTest {
         updated.setMonthlyPrice(1500000);
 
         when(repository.findById(id)).thenReturn(Optional.of(existing));
-        when(repository.save(any(BoardingHouse.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any(BoardingHouse.class))).thenAnswer(inv -> inv.getArgument(0));
 
         BoardingHouse result = service.update(id, updated);
 
@@ -71,6 +71,21 @@ public class BoardingHouseServiceImplTest {
         assertEquals("New Desc", result.getDescription());
         assertEquals(4, result.getRoomCount());
         assertEquals(1500000, result.getMonthlyPrice());
+    }
+
+    @Test
+    void testUpdateNotFound() {
+        Long id = 99L;
+        BoardingHouse updated = new BoardingHouse();
+
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            service.update(id, updated);
+        });
+
+        assertEquals("BoardingHouse not found", exception.getMessage());
+        verify(repository, times(1)).findById(id);
     }
 
     @Test

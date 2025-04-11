@@ -11,8 +11,13 @@ import java.util.Optional;
 @Service
 public class RentalServiceImpl implements RentalService {
 
+    private final RentalRepository rentalRepository;
+
+    // Constructor for dependency injection (Spring & testing)
     @Autowired
-    private RentalRepository rentalRepository;
+    public RentalServiceImpl(RentalRepository rentalRepository) {
+        this.rentalRepository = rentalRepository;
+    }
 
     @Override
     public Rental createRental(Rental rental) {
@@ -42,7 +47,7 @@ public class RentalServiceImpl implements RentalService {
             rental.setBoardingHouse(updatedRental.getBoardingHouse());
             return rentalRepository.save(rental);
         }
-        return null;
+        throw new RuntimeException("Rental not found with id: " + id);
     }
 
     @Override
