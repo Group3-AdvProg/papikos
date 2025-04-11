@@ -19,3 +19,4 @@ public class RentalTest {
         assertEquals(6, rental.getDurationInMonths());
     }
 }
+

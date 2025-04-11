@@ -23,3 +23,4 @@ public class BoardingHouseTest {
         assertEquals(1500000.0, bh.getMonthlyPrice());
     }
 }
+
