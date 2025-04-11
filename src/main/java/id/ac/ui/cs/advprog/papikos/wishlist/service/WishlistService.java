@@ -7,5 +7,6 @@ public interface WishlistService {
     void addToWishlist(String tenantId, String roomType);
     void removeFromWishlist(String tenantId, String roomType);
     List<String> getWishlistByTenant(String tenantId);
+    List<String> getNotificationsByTenant(String tenantId);
     void notifyAvailability(String roomType);
 }

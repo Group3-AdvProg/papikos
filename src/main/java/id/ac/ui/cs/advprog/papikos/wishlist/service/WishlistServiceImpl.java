@@ -10,9 +10,17 @@ public class WishlistServiceImpl implements WishlistService {
 
     private final Map<String, Tenant> tenants = new HashMap<>();
 
+    public void registerTenant(Tenant tenant) {
+        tenants.put(tenant.getId(), tenant);
+    }
+
+    public Tenant getTenant(String id) {
+        return tenants.get(id);
+    }
+
     @Override
     public void registerTenant(String id, String name) {
-        tenants.putIfAbsent(id, new Tenant(id, name));
+
     }
 
     @Override
@@ -35,6 +43,12 @@ public class WishlistServiceImpl implements WishlistService {
     public List<String> getWishlistByTenant(String tenantId) {
         Tenant tenant = tenants.get(tenantId);
         return tenant != null ? tenant.getWishlist() : Collections.emptyList();
+    }
+
+    @Override
+    public List<String> getNotificationsByTenant(String tenantId) {
+        Tenant tenant = tenants.get(tenantId);
+        return tenant != null ? tenant.getNotifications() : Collections.emptyList();
     }
 
     @Override

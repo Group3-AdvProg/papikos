@@ -16,7 +16,8 @@ public class Tenant {
     @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL)
     private List<Rental> rentals;
 
-    public Tenant() {}
+    public Tenant() {
+    }
 
     // Getters and Setters
 
@@ -37,4 +38,6 @@ public class Tenant {
     }
 
     public String getPhoneNumber() {
-        return phone
+        return phone;
+    }
+}
