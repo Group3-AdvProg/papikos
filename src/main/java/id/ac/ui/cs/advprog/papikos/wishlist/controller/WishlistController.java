@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.papikos.wishlist.controller;
 
 import id.ac.ui.cs.advprog.papikos.wishlist.DTO.WishlistRequest;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +18,10 @@ public class WishlistController {
 
     @PostMapping("/add")
     public ResponseEntity<String> addToWishlist(@RequestBody WishlistRequest request) {
-        wishlistService.addToWishlist(request.getTenantId(), request.getRoomType());
+        wishlistService.addToWishlist(request.getTenantId(), request.getHouseId());
         return ResponseEntity.ok("Added to wishlist.");
     }
+
 
     @DeleteMapping("/remove")
     public ResponseEntity<String> removeFromWishlist(@RequestBody WishlistRequest request) {

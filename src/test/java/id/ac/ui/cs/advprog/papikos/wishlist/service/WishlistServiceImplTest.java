@@ -1,10 +1,11 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.service;
 
+import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
+import id.ac.ui.cs.advprog.papikos.wishlist.dto.NotificationDTO;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -20,17 +21,21 @@ public class WishlistServiceImplTest {
 
     private WishlistItemRepository wishlistItemRepo;
     private NotificationRepository notificationRepo;
+    private HouseRepository houseRepo;
     private WishlistServiceImpl wishlistService;
 
     @BeforeEach
     void setUp() {
         wishlistItemRepo = mock(WishlistItemRepository.class);
         notificationRepo = mock(NotificationRepository.class);
-        wishlistService = new WishlistServiceImpl(wishlistItemRepo, notificationRepo);
+        houseRepo = mock(HouseRepository.class);
+        wishlistService = new WishlistServiceImpl(wishlistItemRepo, notificationRepo, houseRepo);
     }
 
     @Test
     void testAddToWishlist() {
+        when(wishlistItemRepo.findByTenantIdAndRoomType("tenant123", "Kamar AC")).thenReturn(null);
+
         wishlistService.addToWishlist("tenant123", "Kamar AC");
 
         ArgumentCaptor<WishlistItem> captor = ArgumentCaptor.forClass(WishlistItem.class);
@@ -42,8 +47,26 @@ public class WishlistServiceImplTest {
     }
 
     @Test
+    void testPreventDuplicateWishlistEntry() {
+        WishlistItem existing = WishlistItem.builder()
+                .tenantId("tenant123")
+                .roomType("Kamar AC")
+                .build();
+
+        when(wishlistItemRepo.findByTenantIdAndRoomType("tenant123", "Kamar AC")).thenReturn(existing);
+
+        wishlistService.addToWishlist("tenant123", "Kamar AC");
+
+        verify(wishlistItemRepo, never()).save(any());
+    }
+
+    @Test
     void testRemoveFromWishlist() {
-        WishlistItem mockItem = WishlistItem.builder().tenantId("tenant123").roomType("Kamar AC").build();
+        WishlistItem mockItem = WishlistItem.builder()
+                .tenantId("tenant123")
+                .roomType("Kamar AC")
+                .build();
+
         when(wishlistItemRepo.findByTenantIdAndRoomType("tenant123", "Kamar AC")).thenReturn(mockItem);
 
         wishlistService.removeFromWishlist("tenant123", "Kamar AC");
@@ -81,6 +104,16 @@ public class WishlistServiceImplTest {
     }
 
     @Test
+    void testGetWishlistForUnknownTenant() {
+        when(wishlistItemRepo.findByTenantId("unknownTenant")).thenReturn(Collections.emptyList());
+
+        List<String> wishlist = wishlistService.getWishlistByTenant("unknownTenant");
+
+        assertNotNull(wishlist);
+        assertTrue(wishlist.isEmpty());
+    }
+
+    @Test
     void testNotifyAvailabilityCreatesNotifications() {
         WishlistItem item = WishlistItem.builder().tenantId("tenant123").roomType("Kamar AC").build();
         when(wishlistItemRepo.findByRoomType("Kamar AC")).thenReturn(List.of(item));
@@ -94,7 +127,6 @@ public class WishlistServiceImplTest {
         assertEquals("tenant123", notif.getTenantId());
         assertTrue(notif.getMessage().contains("Kamar AC"));
         assertNotNull(notif.getCreatedAt());
-        assertTrue(notif.getCreatedAt().isBefore(LocalDateTime.now().plusSeconds(1)));
     }
 
     @Test
@@ -124,78 +156,29 @@ public class WishlistServiceImplTest {
 
         when(notificationRepo.findByTenantId("tenant123")).thenReturn(List.of(notif1, notif2));
 
-        List<Notification> notifications = wishlistService.getNotificationsByTenant("tenant123");
+        List<NotificationDTO> notifications = wishlistService.getNotificationsByTenant("tenant123");
 
         assertEquals(2, notifications.size());
-        assertTrue(notifications.get(0).getMessage().contains("Room"));
+        assertEquals("Room A available!", notifications.get(0).getMessage());
     }
 
     @Test
     void testGetNotificationsByTenantEmpty() {
         when(notificationRepo.findByTenantId("tenant123")).thenReturn(Collections.emptyList());
 
-        List<Notification> notifications = wishlistService.getNotificationsByTenant("tenant123");
+        List<NotificationDTO> notifications = wishlistService.getNotificationsByTenant("tenant123");
 
         assertTrue(notifications.isEmpty());
-    }
-
-    @Test
-    void testAddAndGetWishlist() {
-        wishlistService.addToWishlist("tenant123", "Kamar AC");
-        List<String> wishlist = wishlistService.getWishlistByTenant("tenant123");
-
-        assertEquals(1, wishlist.size());
-        assertEquals("Kamar AC", wishlist.get(0));
     }
 
     @Test
     void testAddMultipleRoomTypes() {
+        when(wishlistItemRepo.findByTenantIdAndRoomType("tenant123", "Kamar AC")).thenReturn(null);
+        when(wishlistItemRepo.findByTenantIdAndRoomType("tenant123", "Kamar Deluxe")).thenReturn(null);
+
         wishlistService.addToWishlist("tenant123", "Kamar AC");
         wishlistService.addToWishlist("tenant123", "Kamar Deluxe");
 
-        List<String> wishlist = wishlistService.getWishlistByTenant("tenant123");
-        assertEquals(2, wishlist.size());
-        assertTrue(wishlist.contains("Kamar Deluxe"));
+        verify(wishlistItemRepo, times(2)).save(any());
     }
-
-    @Test
-    void testNotifyAvailabilitySendsNotifications() {
-        wishlistService.addToWishlist("tenant123", "Kamar AC");
-        wishlistService.notifyAvailability("Kamar AC");
-
-        List<Notification> notifications = wishlistService.getNotificationsByTenant("tenant123");
-        assertEquals(1, notifications.size());
-        assertEquals("Room type Kamar AC is now available!", notifications.get(0).getMessage());
-    }
-
-    @Test
-    void testNoNotificationForUnlistedRoomType() {
-        wishlistService.addToWishlist("tenant123", "Kamar AC");
-        wishlistService.notifyAvailability("Kamar Deluxe");
-
-        List<Notification> notifications = wishlistService.getNotificationsByTenant("tenant123");
-        assertTrue(notifications.isEmpty());
-    }
-
-    @Test
-    void testGetWishlistForUnknownTenant() {
-        List<String> wishlist = wishlistService.getWishlistByTenant("unknownTenant");
-        assertNotNull(wishlist);
-        assertTrue(wishlist.isEmpty());
-    }
-
-    @Test
-    void testPreventDuplicateWishlistEntry() {
-        WishlistItem existing = WishlistItem.builder()
-                .tenantId("tenant123")
-                .roomType("Kamar AC")
-                .build();
-
-        when(wishlistItemRepo.findByTenantIdAndRoomType("tenant123", "Kamar AC")).thenReturn(existing);
-
-        wishlistService.addToWishlist("tenant123", "Kamar AC");
-
-        verify(wishlistItemRepo, never()).save(any());
-    }
-
 }

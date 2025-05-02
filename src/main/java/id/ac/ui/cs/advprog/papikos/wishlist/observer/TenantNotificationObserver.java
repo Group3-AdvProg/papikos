@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.papikos.wishlist.observer;
 
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;

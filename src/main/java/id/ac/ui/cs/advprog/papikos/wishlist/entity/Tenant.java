@@ -9,22 +9,22 @@ public class Tenant {
 
     private final String id;
     private final String name;
-    private final List<String> wishlist = new ArrayList<>();
-    private final List<String> notifications = new ArrayList<>();
+    private List<Long> wishlist = new ArrayList<>();
+    private List<String> notifications = new ArrayList<>();
 
     public Tenant(String id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public void addToWishlist(String propertyId) {
-        if (!wishlist.contains(propertyId)) {
-            wishlist.add(propertyId);
+    public void addToWishlist(Long houseId) {
+        if (!wishlist.contains(houseId)) {
+            wishlist.add(houseId);
         }
     }
 
-    public void removeFromWishlist(String propertyId) {
-        wishlist.remove(propertyId);
+    public void removeFromWishlist(Long houseId) {
+        wishlist.remove(houseId);
     }
 
     public void receiveNotification(String message) {

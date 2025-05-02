@@ -1,4 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.observer;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
+
 
 import java.util.*;
 

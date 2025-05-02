@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
+
 
 @Entity
 @Getter

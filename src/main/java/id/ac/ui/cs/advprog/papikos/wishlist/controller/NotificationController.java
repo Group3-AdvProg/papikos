@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.controller;
 
 import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -2,6 +2,8 @@ package id.ac.ui.cs.advprog.papikos.wishlist.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
+
 
 @Entity
 @Getter
