@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Getter
@@ -22,4 +23,8 @@ public class Notification {
     private LocalDateTime createdAt;
 
     private boolean isRead;
+
+    public LocalTime getTimestamp() {
+        return null;
+    }
 }

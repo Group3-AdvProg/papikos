@@ -43,4 +43,29 @@ public class TenantTest {
     void testGetId() {
         assertEquals("tenant123", tenant.getId());
     }
+
+    @Test
+    void testAddDuplicateWishlistItem() {
+        tenant.addToWishlist("Kamar AC");
+        tenant.addToWishlist("Kamar AC");  // Add again
+        assertEquals(1, tenant.getWishlist().size(), "Duplicate wishlist items should not be added.");
+    }
+
+    @Test
+    void testRemoveNonExistentWishlistItem() {
+        tenant.addToWishlist("Kamar AC");
+        tenant.removeFromWishlist("Kamar Deluxe"); // Not added
+        assertEquals(1, tenant.getWishlist().size(), "Removing nonexistent item shouldn't affect wishlist.");
+    }
+
+    @Test
+    void testMultipleNotifications() {
+        tenant.receiveNotification("Notif 1");
+        tenant.receiveNotification("Notif 2");
+        List<String> notifications = tenant.getNotifications();
+        assertEquals(2, notifications.size());
+        assertTrue(notifications.contains("Notif 1"));
+        assertTrue(notifications.contains("Notif 2"));
+    }
+
 }

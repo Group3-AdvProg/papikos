@@ -73,7 +73,7 @@ public class WishlistServiceImpl implements WishlistService {
     }
 
     @Override
-    public List<String> getNotificationsByTenant(String tenantId) {
+    public List<Notification> getNotificationsByTenant(String tenantId) {
         List<Notification> notifications = notificationRepo.findByTenantId(tenantId);
         return notifications.stream()
                 .map(Notification::getMessage)
