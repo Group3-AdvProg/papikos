@@ -1,7 +1,8 @@
 package id.ac.ui.cs.advprog.papikos.management.service;
 
-import id.ac.ui.cs.advprog.papikos.model.House;
-import id.ac.ui.cs.advprog.papikos.repository.HouseRepository;
+import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementServiceImpl;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
+import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

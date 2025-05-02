@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.management.command;
 
+import id.ac.ui.cs.advprog.papikos.house.management.command.HouseManagementCommand;
+import id.ac.ui.cs.advprog.papikos.house.management.command.HouseManagementCommandExecutor;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.Mockito.*;

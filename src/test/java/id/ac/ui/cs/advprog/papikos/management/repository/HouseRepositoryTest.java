@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.management.repository;
 
-import id.ac.ui.cs.advprog.papikos.model.House;
-import id.ac.ui.cs.advprog.papikos.repository.HouseRepository;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
+import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,7 @@
-package id.ac.ui.cs.advprog.papikos.management.command;
+package id.ac.ui.cs.advprog.papikos.house.management.command;
 
-import id.ac.ui.cs.advprog.papikos.model.House;
-import id.ac.ui.cs.advprog.papikos.management.service.HouseManagementService;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
+import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
 
 public class UpdateHouseCommand implements HouseManagementCommand {
 

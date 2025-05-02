@@ -1,6 +1,6 @@
-package id.ac.ui.cs.advprog.papikos.repository;
+package id.ac.ui.cs.advprog.papikos.house.repository;
 
-import id.ac.ui.cs.advprog.papikos.model.House;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
