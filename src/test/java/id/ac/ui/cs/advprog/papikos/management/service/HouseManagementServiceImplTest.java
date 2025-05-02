@@ -32,7 +32,7 @@ class HouseManagementServiceImplTest {
 
     @Test
     void testAddHouse() {
-        House house = new House("Kos A", "Jakarta", "Desc", 4, 1200000);
+        House house = new House("Kos A", "Jakarta", "Desc", 4, 1200000, "https://dummyimage.com/kos.jpg");
         houseService.addHouse(house);
         verify(houseRepository, times(1)).save(house);
     }
@@ -56,7 +56,7 @@ class HouseManagementServiceImplTest {
 
     @Test
     void testUpdateHouse() {
-        House updated = new House(1L, "New Kos", "New Addr", "Updated", 5, 1500000);
+        House updated = new House(1L, "New Kos", "New Addr", "Updated", 5, 1500000, "https://dummyimage.com/kos.jpg");
         when(houseRepository.findById(1L)).thenReturn(Optional.of(updated));
 
         houseService.updateHouse(1L, updated);
@@ -66,7 +66,7 @@ class HouseManagementServiceImplTest {
 
     @Test
     void testUpdateHouseNotFound() {
-        House updated = new House(1L, "New Kos", "New Addr", "Updated", 5, 1500000);
+        House updated = new House(1L, "New Kos", "New Addr", "Updated", 5, 1500000, "https://dummyimage.com/kos.jpg");
         when(houseRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> {

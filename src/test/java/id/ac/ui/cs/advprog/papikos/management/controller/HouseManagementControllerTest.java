@@ -57,11 +57,11 @@ class HouseManagementControllerTest {
     }
 
     @Test
-    void testHouseListPage() throws Exception {
+    void testManagementPage() throws Exception {
         when(houseManagementService.findAll()).thenReturn(Arrays.asList(new House(), new House()));
 
         mockMvc.perform(get("/management/list"))
-                .andExpect(view().name("HouseList"))
+                .andExpect(view().name("Management"))
                 .andExpect(model().attributeExists("houses"));
 
         verify(houseManagementService, times(1)).findAll();

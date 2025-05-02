@@ -21,7 +21,7 @@ class HouseRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        house = new House("Kos Harapan", "Depok", "Bersih dan aman", 4, 1300000.0);
+        house = new House("Kos Harapan", "Depok", "Bersih dan aman", 4, 1300000.0, "https://dummyimage.com/kos.jpg");
         houseRepository.save(house);
     }
 

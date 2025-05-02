@@ -12,7 +12,7 @@ class AddHouseCommandTest {
     @Test
     void callAddHouseInService() {
         HouseManagementService mockService = mock(HouseManagementService.class);
-        House house = new House("Kos A", "Jakarta", "Desc", 3, 1500000.0);
+        House house = new House("Kos A", "Jakarta", "Desc", 3, 1500000.0, "https://dummyimage.com/kos.jpg");
         AddHouseCommand command = new AddHouseCommand(mockService, house);
 
         command.execute();

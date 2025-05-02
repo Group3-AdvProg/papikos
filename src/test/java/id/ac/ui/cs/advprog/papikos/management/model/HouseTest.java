@@ -8,7 +8,7 @@ class HouseTest {
 
     @Test
     void testCreateHouseSuccess() {
-        House house = new House("Kos Harapan", "Depok", "Nyaman", 5, 1200000.0);
+        House house = new House("Kos Harapan", "Depok", "Nyaman", 5, 1200000.0, "https://dummyimage.com/kos.jpg");
         assertEquals("Kos Harapan", house.getName());
         assertEquals("Depok", house.getAddress());
         assertEquals("Nyaman", house.getDescription());
