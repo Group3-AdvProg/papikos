@@ -45,6 +45,7 @@ dependencies {
 
 	// H2 Database (for testing)
 	testImplementation("com.h2database:h2")
+	runtimeOnly("com.h2database:h2")
 
 	// Lombok
 	compileOnly("org.projectlombok:lombok")
