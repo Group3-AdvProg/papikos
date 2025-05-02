@@ -33,7 +33,7 @@ public class HouseManagementController {
     public String houseListPage(Model model) {
         List<House> allHouses = houseManagementService.findAll();
         model.addAttribute("houses", allHouses);
-        return "HouseList";
+        return "Management";
     }
 
     @GetMapping("/edit/{id}")
