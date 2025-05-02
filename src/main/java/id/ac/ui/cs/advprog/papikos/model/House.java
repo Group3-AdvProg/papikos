@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.management.model;
+package id.ac.ui.cs.advprog.papikos.model;
 
 import jakarta.persistence.*;
 import lombok.*;

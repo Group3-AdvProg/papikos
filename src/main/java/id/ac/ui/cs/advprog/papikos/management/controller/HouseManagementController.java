@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.management.controller;
 
-import id.ac.ui.cs.advprog.papikos.management.model.House;
+import id.ac.ui.cs.advprog.papikos.model.House;
 import id.ac.ui.cs.advprog.papikos.management.service.HouseManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

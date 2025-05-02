@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.management.service;
 
-import id.ac.ui.cs.advprog.papikos.management.model.House;
+import id.ac.ui.cs.advprog.papikos.model.House;
 
 import java.util.List;
 import java.util.Optional;
