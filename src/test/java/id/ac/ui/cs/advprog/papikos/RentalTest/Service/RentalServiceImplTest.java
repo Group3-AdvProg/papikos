@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.BoardingHouse;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.BoardingHouse;
 import id.ac.ui.cs.advprog.papikos.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.Rental.repository.RentalRepository;

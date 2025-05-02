@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Model;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.BoardingHouse;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.BoardingHouse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
