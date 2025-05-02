@@ -1,7 +1,6 @@
-package id.ac.ui.cs.advprog.papikos.Rental.service;
+package id.ac.ui.cs.advprog.papikos.house.rental.service;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.Tenant;
-
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Tenant;
 import java.util.List;
 
 public interface TenantService {

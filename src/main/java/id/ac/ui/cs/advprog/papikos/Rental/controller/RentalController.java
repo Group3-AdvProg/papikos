@@ -1,8 +1,7 @@
-package id.ac.ui.cs.advprog.papikos.Rental.controller;
+package id.ac.ui.cs.advprog.papikos.house.rental.controller;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.Rental.service.RentalService;
-import org.springframework.beans.factory.annotation.Autowired;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,31 +11,34 @@ import java.util.Optional;
 @RequestMapping("/api/rentals")
 public class RentalController {
 
-    @Autowired
-    private RentalService rentalService;
+    private final RentalService service;
+
+    public RentalController(RentalService service) {
+        this.service = service;
+    }
 
     @PostMapping
-    public Rental createRental(@RequestBody Rental rental) {
-        return rentalService.createRental(rental);
+    public Rental create(@RequestBody Rental rental) {
+        return service.createRental(rental);
     }
 
     @GetMapping
-    public List<Rental> getAllRentals() {
-        return rentalService.getAllRentals();
+    public List<Rental> findAll() {
+        return service.getAllRentals();
     }
 
     @GetMapping("/{id}")
-    public Optional<Rental> getRentalById(@PathVariable Long id) {
-        return rentalService.getRentalById(id);
+    public Optional<Rental> findById(@PathVariable Long id) {
+        return service.getRentalById(id);
     }
 
     @PutMapping("/{id}")
-    public Rental updateRental(@PathVariable Long id, @RequestBody Rental rental) {
-        return rentalService.updateRental(id, rental);
+    public Rental update(@PathVariable Long id, @RequestBody Rental rental) {
+        return service.updateRental(id, rental);
     }
 
     @DeleteMapping("/{id}")
-    public void cancelRental(@PathVariable Long id) {
-        rentalService.cancelRental(id);
+    public void cancel(@PathVariable Long id) {
+        service.cancelRental(id);
     }
 }

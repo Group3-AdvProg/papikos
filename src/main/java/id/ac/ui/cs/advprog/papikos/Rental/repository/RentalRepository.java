@@ -1,6 +1,6 @@
-package id.ac.ui.cs.advprog.papikos.Rental.repository;
+package id.ac.ui.cs.advprog.papikos.house.rental.repository;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RentalRepository extends JpaRepository<Rental, Long> {

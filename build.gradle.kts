@@ -32,7 +32,6 @@ val webdriverManagerVersion = "5.6.3"
 val junitJupiterVersion = "5.9.1"
 
 dependencies {
-	// ✅ JPA & DB dependencies
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	runtimeOnly("com.h2database:h2") // In-memory DB for testing
 

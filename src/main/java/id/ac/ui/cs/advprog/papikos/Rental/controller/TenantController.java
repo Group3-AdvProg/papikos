@@ -1,9 +1,7 @@
-package id.ac.ui.cs.advprog.papikos.Rental.controller;
+package id.ac.ui.cs.advprog.papikos.house.rental.controller;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.Tenant;
-import id.ac.ui.cs.advprog.papikos.Rental.service.TenantService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Tenant;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.TenantService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,32 +10,34 @@ import java.util.List;
 @RequestMapping("/tenant")
 public class TenantController {
 
-    @Autowired
-    private TenantService tenantService;
+    private final TenantService service;
+
+    public TenantController(TenantService service) {
+        this.service = service;
+    }
 
     @PostMapping
-    public Tenant createTenant(@RequestBody Tenant tenant) {
-        return tenantService.createTenant(tenant);
+    public Tenant create(@RequestBody Tenant tenant) {
+        return service.createTenant(tenant);
     }
 
     @GetMapping
-    public List<Tenant> getAllTenants() {
-        return tenantService.getAllTenants();
+    public List<Tenant> findAll() {
+        return service.getAllTenants();
     }
 
     @GetMapping("/{id}")
-    public Tenant getTenantById(@PathVariable Long id) {
-        return tenantService.getTenantById(id);
+    public Tenant findById(@PathVariable Long id) {
+        return service.getTenantById(id);
     }
 
     @PutMapping("/{id}")
-    public Tenant updateTenant(@PathVariable Long id, @RequestBody Tenant tenant) {
-        return tenantService.updateTenant(id, tenant);
+    public Tenant update(@PathVariable Long id, @RequestBody Tenant tenant) {
+        return service.updateTenant(id, tenant);
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void deleteTenant(@PathVariable Long id) {
-        tenantService.deleteTenant(id);
+    public void delete(@PathVariable Long id) {
+        service.deleteTenant(id);
     }
 }

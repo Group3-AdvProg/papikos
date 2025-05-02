@@ -1,7 +1,6 @@
-package id.ac.ui.cs.advprog.papikos.Rental.service;
+package id.ac.ui.cs.advprog.papikos.house.rental.service;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.Rental;
-
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
 import java.util.List;
 import java.util.Optional;
 

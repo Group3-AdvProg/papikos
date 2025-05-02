@@ -1,61 +1,56 @@
-package id.ac.ui.cs.advprog.papikos.Rental.service;
+package id.ac.ui.cs.advprog.papikos.house.rental.service.impl;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.Rental.repository.RentalRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class RentalServiceImpl implements RentalService {
 
-    private final RentalRepository rentalRepository;
+    private final RentalRepository repository;
 
-    // Constructor for dependency injection (Spring & testing)
-    @Autowired
-    public RentalServiceImpl(RentalRepository rentalRepository) {
-        this.rentalRepository = rentalRepository;
+    public RentalServiceImpl(RentalRepository repository) {
+        this.repository = repository;
     }
 
     @Override
     public Rental createRental(Rental rental) {
-        return rentalRepository.save(rental);
+        return repository.save(rental);
     }
 
     @Override
     public List<Rental> getAllRentals() {
-        return rentalRepository.findAll();
+        return repository.findAll();
     }
 
     @Override
     public Optional<Rental> getRentalById(Long id) {
-        return rentalRepository.findById(id);
+        return repository.findById(id);
     }
 
     @Override
-    public Rental updateRental(Long id, Rental updatedRental) {
-        Optional<Rental> existingRental = rentalRepository.findById(id);
-        if (existingRental.isPresent()) {
-            Rental rental = existingRental.get();
-            rental.setCheckInDate(updatedRental.getCheckInDate());
-            rental.setDurationInMonths(updatedRental.getDurationInMonths());
-            rental.setApproved(updatedRental.isApproved());
-            rental.setCancelled(updatedRental.isCancelled());
-            rental.setTenant(updatedRental.getTenant());
-            rental.setBoardingHouse(updatedRental.getBoardingHouse());
-            return rentalRepository.save(rental);
-        }
-        throw new RuntimeException("Rental not found with id: " + id);
+    public Rental updateRental(Long id, Rental updated) {
+        return repository.findById(id)
+                .map(r -> {
+                    r.setCheckInDate(updated.getCheckInDate());
+                    r.setDurationInMonths(updated.getDurationInMonths());
+                    r.setApproved(updated.isApproved());
+                    r.setCancelled(updated.isCancelled());
+                    r.setTenant(updated.getTenant());
+                    r.setHouse(updated.getHouse());
+                    return repository.save(r);
+                })
+                .orElseThrow(() -> new RuntimeException("Rental not found with id: " + id));
     }
 
     @Override
     public void cancelRental(Long id) {
-        Optional<Rental> rentalOpt = rentalRepository.findById(id);
-        rentalOpt.ifPresent(rental -> {
-            rental.setCancelled(true);
-            rentalRepository.save(rental);
+        repository.findById(id).ifPresent(r -> {
+            r.setCancelled(true);
+            repository.save(r);
         });
     }
 }

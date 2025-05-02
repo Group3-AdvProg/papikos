@@ -1,51 +1,48 @@
-package id.ac.ui.cs.advprog.papikos.Rental.service;
+package id.ac.ui.cs.advprog.papikos.house.rental.service.impl;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.Tenant;
-import id.ac.ui.cs.advprog.papikos.Rental.repository.TenantRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Tenant;
+import id.ac.ui.cs.advprog.papikos.house.rental.repository.TenantRepository;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.TenantService;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
 public class TenantServiceImpl implements TenantService {
 
-    private final TenantRepository tenantRepository;
+    private final TenantRepository repository;
 
-    // Constructor injection for Spring and testability
-    @Autowired
-    public TenantServiceImpl(TenantRepository tenantRepository) {
-        this.tenantRepository = tenantRepository;
+    public TenantServiceImpl(TenantRepository repository) {
+        this.repository = repository;
     }
 
     @Override
     public Tenant createTenant(Tenant tenant) {
-        return tenantRepository.save(tenant);
+        return repository.save(tenant);
     }
 
     @Override
     public List<Tenant> getAllTenants() {
-        return tenantRepository.findAll();
+        return repository.findAll();
     }
 
     @Override
     public Tenant getTenantById(Long id) {
-        return tenantRepository.findById(id).orElse(null);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
     public Tenant updateTenant(Long id, Tenant tenant) {
-        Tenant existing = tenantRepository.findById(id).orElse(null);
+        Tenant existing = repository.findById(id).orElse(null);
         if (existing != null) {
             existing.setFullName(tenant.getFullName());
             existing.setPhoneNumber(tenant.getPhoneNumber());
-            return tenantRepository.save(existing);
+            return repository.save(existing);
         }
         return null;
     }
 
     @Override
     public void deleteTenant(Long id) {
-        tenantRepository.deleteById(id);
+        repository.deleteById(id);
     }
 }
