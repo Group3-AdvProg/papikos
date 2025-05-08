@@ -1,64 +1,76 @@
 package id.ac.ui.cs.advprog.papikos.house.Rental.model;
 
-import id.ac.ui.cs.advprog.papikos.house.model.House;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 public class Rental {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
-    // relasi ke Tenant
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "tenant_id")
-    private Tenant tenant;
-
-    // relasi ke shared House
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "house_id")
-    private House house;
-
+    private String houseId;        // ID kos yang disewa
     private LocalDate checkInDate;
     private int durationInMonths;
     private boolean approved;
-    private boolean cancelled;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
 
     public Rental() {}
 
-    public Rental(Tenant tenant,
-                  House house,
-                  LocalDate checkInDate,
-                  int durationInMonths) {
-        this.tenant = tenant;
-        this.house = house;
+    //–– Optional convenience constructor
+    public Rental(String houseId, LocalDate checkInDate, int durationInMonths, Tenant tenant) {
+        this.houseId = houseId;
         this.checkInDate = checkInDate;
         this.durationInMonths = durationInMonths;
+        this.tenant = tenant;
         this.approved = false;
-        this.cancelled = false;
     }
 
-    // --- Getters & Setters ---
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    //–– Getters & Setters
+    public UUID getId() {
+        return id;
+    }
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
-    public Tenant getTenant() { return tenant; }
-    public void setTenant(Tenant tenant) { this.tenant = tenant; }
+    public String getHouseId() {
+        return houseId;
+    }
+    public void setHouseId(String houseId) {
+        this.houseId = houseId;
+    }
 
-    public House getHouse() { return house; }
-    public void setHouse(House house) { this.house = house; }
+    public LocalDate getCheckInDate() {
+        return checkInDate;
+    }
+    public void setCheckInDate(LocalDate checkInDate) {
+        this.checkInDate = checkInDate;
+    }
 
-    public LocalDate getCheckInDate() { return checkInDate; }
-    public void setCheckInDate(LocalDate checkInDate) { this.checkInDate = checkInDate; }
+    public int getDurationInMonths() {
+        return durationInMonths;
+    }
+    public void setDurationInMonths(int durationInMonths) {
+        this.durationInMonths = durationInMonths;
+    }
 
-    public int getDurationInMonths() { return durationInMonths; }
-    public void setDurationInMonths(int durationInMonths) { this.durationInMonths = durationInMonths; }
+    public boolean isApproved() {
+        return approved;
+    }
+    public void setApproved(boolean approved) {
+        this.approved = approved;
+    }
 
-    public boolean isApproved() { return approved; }
-    public void setApproved(boolean approved) { this.approved = approved; }
-
-    public boolean isCancelled() { return cancelled; }
-    public void setCancelled(boolean cancelled) { this.cancelled = cancelled; }
+    public Tenant getTenant() {
+        return tenant;
+    }
+    public void setTenant(Tenant tenant) {
+        this.tenant = tenant;
+    }
 }
