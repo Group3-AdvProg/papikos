@@ -6,98 +6,126 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.service.BoardingHouseService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class BoardingHouseControllerTest {
 
-    private MockMvc mockMvc;
-
     @Mock
-    private BoardingHouseService boardingHouseService;
+    private BoardingHouseService service;
 
     @InjectMocks
     private BoardingHouseController controller;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private MockMvc mockMvc;
+    private ObjectMapper mapper;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mapper = new ObjectMapper();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
+                .build();
+    }
+
+    private House makeHouse(Long id, String name) {
+        House h = new House();
+        h.setId(id);
+        h.setName(name);
+        h.setAddress(name + " Addr");
+        h.setDescription(name + " Desc");
+        h.setNumberOfRooms(2);
+        h.setMonthlyRent(150.0);
+        h.setImageUrl(name + ".png");
+        return h;
     }
 
     @Test
     void testListHouses() throws Exception {
-        House h1 = new House(1L, "Kos A", "Alamat A", "Desc A", 2, 100.0, "imgA");
-        House h2 = new House(2L, "Kos B", "Alamat B", "Desc B", 3, 200.0, "imgB");
-        when(boardingHouseService.findAll()).thenReturn(Arrays.asList(h1, h2));
+        House h1 = makeHouse(1L, "A");
+        House h2 = makeHouse(2L, "B");
+        when(service.findAll()).thenReturn(Arrays.asList(h1, h2));
 
         mockMvc.perform(get("/api/houses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("Kos A"));
+                .andExpect(jsonPath("$[0].name").value("A"));
     }
 
     @Test
-    void testGetHouseById() throws Exception {
-        House h = new House(1L, "Kos C", "Alamat C", "Desc C", 1, 150.0, "imgC");
-        when(boardingHouseService.findById(1L)).thenReturn(Optional.of(h));
+    void testGetById_Found() throws Exception {
+        House h = makeHouse(42L, "X");
+        when(service.findById(42L)).thenReturn(Optional.of(h));
 
-        mockMvc.perform(get("/api/houses/1"))
+        mockMvc.perform(get("/api/houses/42"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.address").value("Alamat C"));
+                .andExpect(jsonPath("$.address").value("X Addr"));
+    }
+
+    @Test
+    void testGetById_NotFound() throws Exception {
+        when(service.findById(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/houses/99"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void testCreateHouse() throws Exception {
-        House created = new House(5L, "Kos D", "Alamat D", "Desc D", 4, 300.0, "imgD");
-        when(boardingHouseService.create(any(House.class))).thenReturn(created);
+        House in = makeHouse(null, "New");
+        in.setId(null);
+        House out = makeHouse(7L, "New");
+        when(service.create(any(House.class))).thenReturn(out);
 
-        House input = new House(null, "Kos D", "Alamat D", "Desc D", 4, 300.0, "imgD");
         mockMvc.perform(post("/api/houses")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(input)))
+                        .content(mapper.writeValueAsString(in)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(5))
-                .andExpect(jsonPath("$.name").value("Kos D"));
+                .andExpect(jsonPath("$.id").value(7))
+                .andExpect(jsonPath("$.name").value("New"));
     }
 
     @Test
-    void testUpdateHouse() throws Exception {
-        House updated = new House(1L, "Kos E", "Alamat E", "Desc E", 2, 120.0, "imgE");
-        when(boardingHouseService.update(eq(1L), any(House.class))).thenReturn(updated);
+    void testUpdateHouse_Success() throws Exception {
+        House updated = makeHouse(5L, "Upd");
+        when(service.update(eq(5L), any(House.class))).thenReturn(updated);
 
-        mockMvc.perform(put("/api/houses/1")
+        mockMvc.perform(put("/api/houses/5")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updated)))
+                        .content(mapper.writeValueAsString(updated)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Kos E"));
+                .andExpect(jsonPath("$.description").value("Upd Desc"));
+    }
+
+    @Test
+    void testUpdateHouse_NotFound() throws Exception {
+        House body = makeHouse(5L, "Nope");
+        when(service.update(eq(5L), any(House.class)))
+                .thenThrow(new RuntimeException("House not found"));
+
+        mockMvc.perform(put("/api/houses/5")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(body)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void testDeleteHouse() throws Exception {
-        doNothing().when(boardingHouseService).delete(1L);
+        doNothing().when(service).delete(123L);
 
-        mockMvc.perform(delete("/api/houses/1"))
+        mockMvc.perform(delete("/api/houses/123"))
                 .andExpect(status().isNoContent());
     }
 }

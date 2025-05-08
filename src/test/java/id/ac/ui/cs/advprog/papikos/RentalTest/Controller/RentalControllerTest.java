@@ -8,39 +8,26 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class RentalControllerTest {
 
+    @Mock private RentalService rentalService;
+    @InjectMocks private RentalController controller;
     private MockMvc mockMvc;
-
-    @Mock
-    private RentalService rentalService;
-
-    @InjectMocks
-    private RentalController controller;
-
     private ObjectMapper mapper;
     private final UUID sampleId = UUID.randomUUID();
 
@@ -53,48 +40,57 @@ class RentalControllerTest {
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                // ensure MockMvc also uses the same mapper
-                .setMessageConverters(new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter(mapper))
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .build();
     }
 
     @Test
-    void testGetAll() throws Exception {
+    void testGetAllRentals() throws Exception {
         Rental r1 = createRental("A");
         Rental r2 = createRental("B");
         when(rentalService.getAllRentals()).thenReturn(Arrays.asList(r1, r2));
 
         mockMvc.perform(get("/api/rentals"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[1].houseId").value("houseB"));
     }
 
     @Test
-    void testGetById() throws Exception {
+    void testGetById_Found() throws Exception {
         Rental r = createRental("X");
         when(rentalService.getRentalById(sampleId)).thenReturn(Optional.of(r));
 
         mockMvc.perform(get("/api/rentals/" + sampleId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.houseId").value("houseX"));
+                .andExpect(jsonPath("$.fullName").value("NameX"));
     }
 
     @Test
-    void testCreate() throws Exception {
+    void testGetById_NotFound() throws Exception {
+        when(rentalService.getRentalById(sampleId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/rentals/" + sampleId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testCreateRental() throws Exception {
+        Rental in = createRental("New");
+        in.setId(null);
         Rental out = createRental("New");
         when(rentalService.createRental(any(Rental.class))).thenReturn(out);
 
-        Rental in = createRental("New");
-        in.setId(null); // simulate no ID on input
         mockMvc.perform(post("/api/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(in)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.houseId").value("houseNew"));
+                .andExpect(jsonPath("$.id").value(out.getId().toString()))
+                .andExpect(jsonPath("$.durationInMonths").value(1));
     }
 
     @Test
-    void testUpdate() throws Exception {
+    void testUpdateRental_Success() throws Exception {
         Rental update = createRental("U");
         when(rentalService.updateRental(eq(sampleId), any(Rental.class))).thenReturn(update);
 
@@ -102,24 +98,37 @@ class RentalControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(update)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.durationInMonths").value(1));
+                .andExpect(jsonPath("$.houseId").value("houseU"));
     }
 
     @Test
-    void testDelete() throws Exception {
+    void testUpdateRental_NotFound() throws Exception {
+        Rental update = createRental("U");
+        when(rentalService.updateRental(eq(sampleId), any(Rental.class)))
+                .thenThrow(new RuntimeException("not found"));
+
+        mockMvc.perform(put("/api/rentals/" + sampleId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(update)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testDeleteRental() throws Exception {
         doNothing().when(rentalService).deleteRental(sampleId);
 
         mockMvc.perform(delete("/api/rentals/" + sampleId))
                 .andExpect(status().isNoContent());
     }
 
+    // helper to build a sample Rental
     private Rental createRental(String suffix) {
         Rental r = new Rental();
         r.setId(sampleId);
         r.setHouseId("house" + suffix);
         r.setFullName("Name" + suffix);
         r.setPhoneNumber("08123");
-        r.setCheckInDate(LocalDate.now());
+        r.setCheckInDate(LocalDate.of(2025, 6, 1));
         r.setDurationInMonths(1);
         r.setApproved(false);
         return r;
