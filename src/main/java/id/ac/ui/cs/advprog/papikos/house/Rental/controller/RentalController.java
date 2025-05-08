@@ -2,10 +2,11 @@ package id.ac.ui.cs.advprog.papikos.house.Rental.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/rentals")
@@ -18,27 +19,36 @@ public class RentalController {
     }
 
     @PostMapping
-    public Rental create(@RequestBody Rental rental) {
-        return service.createRental(rental);
+    public ResponseEntity<Rental> create(@RequestBody Rental rental) {
+        Rental created = service.createRental(rental);
+        return ResponseEntity.ok(created);
     }
 
     @GetMapping
-    public List<Rental> findAll() {
-        return service.getAllRentals();
+    public ResponseEntity<List<Rental>> findAll() {
+        return ResponseEntity.ok(service.getAllRentals());
     }
 
     @GetMapping("/{id}")
-    public Optional<Rental> findById(@PathVariable Long id) {
-        return service.getRentalById(id);
+    public ResponseEntity<Rental> findById(@PathVariable UUID id) {
+        return service.getRentalById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public Rental update(@PathVariable Long id, @RequestBody Rental rental) {
-        return service.updateRental(id, rental);
+    public ResponseEntity<Rental> update(@PathVariable UUID id, @RequestBody Rental rental) {
+        try {
+            Rental updated = service.updateRental(id, rental);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void cancel(@PathVariable Long id) {
-        service.cancelRental(id);
+    public ResponseEntity<Void> cancel(@PathVariable UUID id) {
+        service.deleteRental(id);
+        return ResponseEntity.noContent().build();
     }
 }
