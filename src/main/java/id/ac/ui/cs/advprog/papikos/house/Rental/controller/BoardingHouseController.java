@@ -2,7 +2,6 @@ package id.ac.ui.cs.advprog.papikos.house.Rental.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.BoardingHouseService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +13,6 @@ public class BoardingHouseController {
 
     private final BoardingHouseService service;
 
-    @Autowired
     public BoardingHouseController(BoardingHouseService service) {
         this.service = service;
     }

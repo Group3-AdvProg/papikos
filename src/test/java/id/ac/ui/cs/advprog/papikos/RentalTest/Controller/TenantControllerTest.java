@@ -17,9 +17,16 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class TenantControllerTest {
 
@@ -66,11 +73,11 @@ class TenantControllerTest {
 
     @Test
     void testCreate() throws Exception {
-        Tenant in = new Tenant("New","084");
         Tenant out = new Tenant("New","084");
         out.setId(sampleId);
-        when(tenantService.createTenant(in)).thenReturn(out);
+        when(tenantService.createTenant(any(Tenant.class))).thenReturn(out);
 
+        Tenant in = new Tenant("New","084");
         mockMvc.perform(post("/api/tenants")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(in)))
@@ -82,7 +89,7 @@ class TenantControllerTest {
     void testUpdate() throws Exception {
         Tenant upd = new Tenant("Y","085");
         upd.setId(sampleId);
-        when(tenantService.updateTenant(sampleId, upd)).thenReturn(upd);
+        when(tenantService.updateTenant(eq(sampleId), any(Tenant.class))).thenReturn(upd);
 
         mockMvc.perform(put("/api/tenants/" + sampleId)
                         .contentType(MediaType.APPLICATION_JSON)

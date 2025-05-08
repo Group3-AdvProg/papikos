@@ -14,10 +14,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
+import java.util.Optional;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class BoardingHouseControllerTest {
 
@@ -52,7 +60,7 @@ class BoardingHouseControllerTest {
     @Test
     void testGetHouseById() throws Exception {
         House h = new House(1L, "Kos C", "Alamat C", "Desc C", 1, 150.0, "imgC");
-        when(boardingHouseService.findById(1L)).thenReturn(java.util.Optional.of(h));
+        when(boardingHouseService.findById(1L)).thenReturn(Optional.of(h));
 
         mockMvc.perform(get("/api/houses/1"))
                 .andExpect(status().isOk())
@@ -61,10 +69,10 @@ class BoardingHouseControllerTest {
 
     @Test
     void testCreateHouse() throws Exception {
-        House input = new House("Kos D", "Alamat D", "Desc D", 4, 300.0, "imgD");
         House created = new House(5L, "Kos D", "Alamat D", "Desc D", 4, 300.0, "imgD");
-        when(boardingHouseService.create(input)).thenReturn(created);
+        when(boardingHouseService.create(any(House.class))).thenReturn(created);
 
+        House input = new House(null, "Kos D", "Alamat D", "Desc D", 4, 300.0, "imgD");
         mockMvc.perform(post("/api/houses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(input)))
@@ -76,7 +84,7 @@ class BoardingHouseControllerTest {
     @Test
     void testUpdateHouse() throws Exception {
         House updated = new House(1L, "Kos E", "Alamat E", "Desc E", 2, 120.0, "imgE");
-        when(boardingHouseService.update(1L, updated)).thenReturn(updated);
+        when(boardingHouseService.update(eq(1L), any(House.class))).thenReturn(updated);
 
         mockMvc.perform(put("/api/houses/1")
                         .contentType(MediaType.APPLICATION_JSON)

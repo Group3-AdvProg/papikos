@@ -11,65 +11,46 @@ public class Rental {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private String houseId;        // ID kos yang disewa
+    private String houseId;
+    private String fullName;       // keep these if your tests still reference them
+    private String phoneNumber;
     private LocalDate checkInDate;
     private int durationInMonths;
     private boolean approved;
 
+    // ← add this:
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
 
     public Rental() {}
 
-    //–– Optional convenience constructor
-    public Rental(String houseId, LocalDate checkInDate, int durationInMonths, Tenant tenant) {
-        this.houseId = houseId;
-        this.checkInDate = checkInDate;
-        this.durationInMonths = durationInMonths;
-        this.tenant = tenant;
-        this.approved = false;
-    }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
-    //–– Getters & Setters
-    public UUID getId() {
-        return id;
-    }
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public String getHouseId() { return houseId; }
+    public void setHouseId(String houseId) { this.houseId = houseId; }
 
-    public String getHouseId() {
-        return houseId;
-    }
-    public void setHouseId(String houseId) {
-        this.houseId = houseId;
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public LocalDate getCheckInDate() {
-        return checkInDate;
-    }
-    public void setCheckInDate(LocalDate checkInDate) {
-        this.checkInDate = checkInDate;
-    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public int getDurationInMonths() {
-        return durationInMonths;
-    }
-    public void setDurationInMonths(int durationInMonths) {
-        this.durationInMonths = durationInMonths;
-    }
+    public LocalDate getCheckInDate() { return checkInDate; }
+    public void setCheckInDate(LocalDate checkInDate) { this.checkInDate = checkInDate; }
 
-    public boolean isApproved() {
-        return approved;
-    }
-    public void setApproved(boolean approved) {
-        this.approved = approved;
-    }
+    public int getDurationInMonths() { return durationInMonths; }
+    public void setDurationInMonths(int durationInMonths) { this.durationInMonths = durationInMonths; }
 
+    public boolean isApproved() { return approved; }
+    public void setApproved(boolean approved) { this.approved = approved; }
+
+    // ↓ Newly added getter & setter for Tenant ↓
     public Tenant getTenant() {
         return tenant;
     }
+
     public void setTenant(Tenant tenant) {
         this.tenant = tenant;
     }

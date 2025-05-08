@@ -1,6 +1,8 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import id.ac.ui.cs.advprog.papikos.house.Rental.controller.RentalController;
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
@@ -18,9 +20,16 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class RentalControllerTest {
 
@@ -32,14 +41,21 @@ class RentalControllerTest {
     @InjectMocks
     private RentalController controller;
 
-    private ObjectMapper mapper = new ObjectMapper();
-
-    private UUID sampleId = UUID.randomUUID();
+    private ObjectMapper mapper;
+    private final UUID sampleId = UUID.randomUUID();
 
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        // configure ObjectMapper for Java 8 dates
+        mapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                // ensure MockMvc also uses the same mapper
+                .setMessageConverters(new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter(mapper))
+                .build();
     }
 
     @Test
@@ -65,11 +81,11 @@ class RentalControllerTest {
 
     @Test
     void testCreate() throws Exception {
-        Rental in = createRental("New");
-        in.setId(null);
         Rental out = createRental("New");
-        when(rentalService.createRental(in)).thenReturn(out);
+        when(rentalService.createRental(any(Rental.class))).thenReturn(out);
 
+        Rental in = createRental("New");
+        in.setId(null); // simulate no ID on input
         mockMvc.perform(post("/api/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(in)))
@@ -80,7 +96,7 @@ class RentalControllerTest {
     @Test
     void testUpdate() throws Exception {
         Rental update = createRental("U");
-        when(rentalService.updateRental(sampleId, update)).thenReturn(update);
+        when(rentalService.updateRental(eq(sampleId), any(Rental.class))).thenReturn(update);
 
         mockMvc.perform(put("/api/rentals/" + sampleId)
                         .contentType(MediaType.APPLICATION_JSON)

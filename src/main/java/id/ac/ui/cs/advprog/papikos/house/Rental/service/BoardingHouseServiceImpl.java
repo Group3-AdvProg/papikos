@@ -2,40 +2,37 @@ package id.ac.ui.cs.advprog.papikos.house.Rental.service;
 
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class BoardingHouseServiceImpl implements BoardingHouseService {
 
-    private final HouseRepository repository;
+    private final HouseRepository repo;
 
-    @Autowired
-    public BoardingHouseServiceImpl(HouseRepository repository) {
-        this.repository = repository;
+    public BoardingHouseServiceImpl(HouseRepository repo) {
+        this.repo = repo;
     }
 
     @Override
     public House create(House house) {
-        return repository.save(house);
+        return repo.save(house);
     }
 
     @Override
     public List<House> findAll() {
-        return repository.findAll();
+        return repo.findAll();
     }
 
     @Override
     public Optional<House> findById(Long id) {
-        return repository.findById(id);
+        return repo.findById(id);
     }
 
     @Override
     public House update(Long id, House updatedHouse) {
-        return repository.findById(id)
+        return repo.findById(id)
                 .map(h -> {
                     h.setName(updatedHouse.getName());
                     h.setAddress(updatedHouse.getAddress());
@@ -43,13 +40,13 @@ public class BoardingHouseServiceImpl implements BoardingHouseService {
                     h.setNumberOfRooms(updatedHouse.getNumberOfRooms());
                     h.setMonthlyRent(updatedHouse.getMonthlyRent());
                     h.setImageUrl(updatedHouse.getImageUrl());
-                    return repository.save(h);
+                    return repo.save(h);
                 })
                 .orElseThrow(() -> new RuntimeException("House not found: " + id));
     }
 
     @Override
     public void delete(Long id) {
-        repository.deleteById(id);
+        repo.deleteById(id);
     }
 }
