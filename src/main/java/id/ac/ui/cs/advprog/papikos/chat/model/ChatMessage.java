@@ -1,30 +1,37 @@
 package id.ac.ui.cs.advprog.papikos.chat.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import jakarta.persistence.*;
+import java.time.Instant;
 
-@Getter
-@Setter
+@Entity
+@Table(name = "chat_messages")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ChatMessage {
 
     public enum MessageType {
-        CHAT,   // a plain chat message
-        JOIN,   // when a user joins the chat room
-        LEAVE   // when a user leaves the chat room
+        CHAT, JOIN, LEAVE
     }
 
-    // Getters and Setters
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private MessageType type;
+
+    @Column(nullable = false)
     private String content;
+
+    @Column(nullable = false)
     private String sender;
 
-    // Constructors
-    public ChatMessage() {}
+    @Column(nullable = false, updatable = false)
+    private Instant timestamp;
 
-    public ChatMessage(MessageType type, String content, String sender) {
-        this.type = type;
-        this.content = content;
-        this.sender = sender;
+    @PrePersist
+    protected void onCreate() {
+        this.timestamp = Instant.now();
     }
-
 }
