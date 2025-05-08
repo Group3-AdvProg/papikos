@@ -3,55 +3,51 @@ package id.ac.ui.cs.advprog.papikos.house.management.controller;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
-@Controller
-@RequestMapping("/management")
+@RestController
+@RequestMapping("/api/management")
 public class HouseManagementController {
 
     @Autowired
     private HouseManagementService houseManagementService;
 
-    @GetMapping("/create")
-    public String createHousePage(Model model) {
-        House house = new House();
-        model.addAttribute("house", house);
-        return "CreateHouse";
-    }
-
-    @PostMapping("/create")
-    public String createHousePost(@ModelAttribute House house, Model model) {
-        houseManagementService.addHouse(house);
-        return "redirect:/management/list";
-    }
-
-    @GetMapping("/list")
-    public String houseListPage(Model model) {
+    @GetMapping("/houses")
+    public ResponseEntity<List<House>> getAllHouses() {
         List<House> allHouses = houseManagementService.findAll();
-        model.addAttribute("houses", allHouses);
-        return "Management";
+        return ResponseEntity.ok(allHouses);
     }
 
-    @GetMapping("/edit/{id}")
-    public String editHousePage(@PathVariable Long id, Model model) {
-        House house = houseManagementService.findById(id).orElse(null);
-        model.addAttribute("house", house);
-        return "EditHouse";
+    @PostMapping("/houses")
+    public ResponseEntity<House> createHouse(@RequestBody House house) {
+        houseManagementService.addHouse(house);
+        return ResponseEntity.ok(house);
     }
 
-    @PostMapping("/edit")
-    public String editHousePost(@ModelAttribute House house, Model model) {
-        houseManagementService.updateHouse(house.getId(), house);
-        return "redirect:/management/list";
+    @GetMapping("/houses/{id}")
+    public ResponseEntity<?> getHouseById(@PathVariable Long id) {
+        Optional<House> house = houseManagementService.findById(id);
+        return house.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/delete/{id}")
-    public String deleteHouse(@PathVariable Long id) {
+    @PutMapping("/houses/{id}")
+    public ResponseEntity<?> updateHouse(@PathVariable Long id, @RequestBody House updatedHouse) {
+        Optional<House> existingHouse = houseManagementService.findById(id);
+        if (existingHouse.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        houseManagementService.updateHouse(id, updatedHouse);
+        return ResponseEntity.ok(updatedHouse);
+    }
+
+    @DeleteMapping("/houses/{id}")
+    public ResponseEntity<Void> deleteHouse(@PathVariable Long id) {
         houseManagementService.deleteHouse(id);
-        return "redirect:/management/list";
+        return ResponseEntity.noContent().build();
     }
 }
