@@ -40,6 +40,12 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	implementation("org.springframework:spring-messaging")
 
+	// ─── JPA & Hibernate ───────────────────────────────────────────────
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+	// ─── Database (H2 for dev; switch to Postgres/MySQL in prod) ───────
+	runtimeOnly("com.h2database:h2")
+
 	// Lombok
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
