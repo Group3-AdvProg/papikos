@@ -1,7 +1,5 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.BoardingHouse;
-import id.ac.ui.cs.advprog.papikos.house.Rental.repository.BoardingHouseRepository;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.BoardingHouseServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

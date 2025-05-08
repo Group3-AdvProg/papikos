@@ -1,7 +1,5 @@
 package id.ac.ui.cs.advprog.papikos.house.Rental.service;
 
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.BoardingHouse;
-import id.ac.ui.cs.advprog.papikos.house.Rental.repository.BoardingHouseRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

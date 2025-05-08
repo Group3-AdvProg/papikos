@@ -2,7 +2,6 @@ package id.ac.ui.cs.advprog.papikos.RentalTest.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.house.Rental.controller.BoardingHouseController;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.BoardingHouse;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.BoardingHouseService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
