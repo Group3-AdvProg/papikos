@@ -1,7 +1,7 @@
-package id.ac.ui.cs.advprog.papikos.Service;
+package id.ac.ui.cs.advprog.papikos.service;
 
 
-import id.ac.ui.cs.advprog.papikos.payload.Request.PaymentRequest;
+import id.ac.ui.cs.advprog.papikos.payload.request.PaymentRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.payload.Request;
+package id.ac.ui.cs.advprog.papikos.payload.request;
 
 import lombok.Data;
 

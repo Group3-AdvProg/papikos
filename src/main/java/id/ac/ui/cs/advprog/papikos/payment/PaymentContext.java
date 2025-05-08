@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.Payment;
+package id.ac.ui.cs.advprog.papikos.payment;
 
 import lombok.Setter;
 

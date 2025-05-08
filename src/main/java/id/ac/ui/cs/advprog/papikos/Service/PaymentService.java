@@ -1,10 +1,10 @@
-package id.ac.ui.cs.advprog.papikos.Service;
+package id.ac.ui.cs.advprog.papikos.service;
 
-import id.ac.ui.cs.advprog.papikos.Payment.BankTransferPayment;
-import id.ac.ui.cs.advprog.papikos.Payment.PaymentContext;
-import id.ac.ui.cs.advprog.papikos.Payment.PaymentStrategy;
-import id.ac.ui.cs.advprog.papikos.Payment.VirtualAccountPayment;
-import id.ac.ui.cs.advprog.papikos.payload.Request.PaymentRequest;
+import id.ac.ui.cs.advprog.papikos.payment.BankTransferPayment;
+import id.ac.ui.cs.advprog.papikos.payment.PaymentContext;
+import id.ac.ui.cs.advprog.papikos.payment.PaymentStrategy;
+import id.ac.ui.cs.advprog.papikos.payment.VirtualAccountPayment;
+import id.ac.ui.cs.advprog.papikos.payload.request.PaymentRequest;
 import org.springframework.stereotype.Service;
 
 @Service

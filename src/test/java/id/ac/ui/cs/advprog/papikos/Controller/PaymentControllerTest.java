@@ -1,8 +1,8 @@
-package id.ac.ui.cs.advprog.papikos.Controller;
+package id.ac.ui.cs.advprog.papikos.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.ac.ui.cs.advprog.papikos.Service.PaymentService;
-import id.ac.ui.cs.advprog.papikos.payload.Request.PaymentRequest;
+import id.ac.ui.cs.advprog.papikos.service.PaymentService;
+import id.ac.ui.cs.advprog.papikos.payload.request.PaymentRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
