@@ -18,7 +18,7 @@ public class WishlistItem {
     private Long id;
 
     private String tenantId;
-    private String roomType;
+    private Long houseId;
 
     // You could use @ManyToOne for a real Tenant entity
     // @ManyToOne

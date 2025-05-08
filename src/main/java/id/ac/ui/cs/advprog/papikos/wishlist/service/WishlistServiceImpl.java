@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.service;
 
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
@@ -7,10 +8,11 @@ import id.ac.ui.cs.advprog.papikos.wishlist.observer.TenantNotificationObserver;
 import id.ac.ui.cs.advprog.papikos.wishlist.observer.WishlistNotifierImpl;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,41 +21,45 @@ public class WishlistServiceImpl implements WishlistService {
     private final WishlistItemRepository wishlistItemRepo;
     private final NotificationRepository notificationRepo;
     private final HouseRepository houseRepository;
-
-    private final WishlistNotifierImpl notifier = new WishlistNotifierImpl();
-    private final Map<String, List<Long>> wishlistMap = new HashMap<>();
+    private final WishlistNotifierImpl<Long> notifier = new WishlistNotifierImpl<>(); // Ensure proper initialization
 
     @Override
     public void registerTenant(String tenantId, String tenantName) {
-        // In a real setup, save tenant to DB or cache
-        wishlistMap.putIfAbsent(tenantId, new ArrayList<>());
+        // No-op or implementation as needed
     }
 
     @Override
-    public void addToWishlist(String tenantId, String roomType) {
+    public void addToWishlist(String tenantId, Long houseId) {
+        houseRepository.findById(houseId)
+                .orElseThrow(() -> new EntityNotFoundException("House not found with id: " + houseId));
+
+        WishlistItem existing = wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId);
+        if (existing != null) {
+            return; // Prevent duplicate
+        }
+
         WishlistItem item = WishlistItem.builder()
                 .tenantId(tenantId)
-                .roomType(roomType)
+                .houseId(houseId)
                 .build();
         wishlistItemRepo.save(item);
 
-        notifier.registerObserver(roomType, new TenantNotificationObserver(tenantId, notificationRepo));
-        notifier.notifyObservers(roomType);
+        notifier.registerObserver(houseId, new TenantNotificationObserver(tenantId, notificationRepo));
+        notifier.notifyObservers(houseId);
     }
 
     @Override
-    public void removeFromWishlist(String tenantId, String roomType) {
-        WishlistItem item = wishlistItemRepo.findByTenantIdAndRoomType(tenantId, roomType);
+    public void removeFromWishlist(String tenantId, Long houseId) {
+        WishlistItem item = wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId);
         if (item != null) {
             wishlistItemRepo.delete(item);
         }
-        wishlistMap.getOrDefault(tenantId, new ArrayList<>()).remove(roomType);
     }
 
     @Override
-    public List<String> getWishlistByTenant(String tenantId) {
+    public List<Long> getWishlistByTenant(String tenantId) {
         return wishlistItemRepo.findByTenantId(tenantId)
-                .stream().map(WishlistItem::getRoomType).toList();
+                .stream().map(WishlistItem::getHouseId).toList();
     }
 
     @Override
@@ -63,7 +69,12 @@ public class WishlistServiceImpl implements WishlistService {
     }
 
     @Override
-    public void notifyAvailability(String roomType) {
-        notifier.notifyObservers(roomType);
+    public void notifyAvailability(Long houseId) {
+        List<WishlistItem> items = wishlistItemRepo.findByHouseId(houseId);
+        if (items.isEmpty()) {
+            return; // No observers to notify
+        }
+
+        notifier.notifyObservers(houseId);
     }
 }
