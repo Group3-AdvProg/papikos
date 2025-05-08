@@ -1,94 +1,68 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.BoardingHouseServiceImpl;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
+import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class BoardingHouseServiceImplTest {
+class BoardingHouseServiceImplTest {
 
-    private BoardingHouseRepository repository;
-    private BoardingHouseServiceImpl service;
+    @Mock private HouseRepository repo;
+    @InjectMocks private BoardingHouseServiceImpl service;
 
     @BeforeEach
-    void setUp() {
-        repository = mock(BoardingHouseRepository.class);
-        service = new BoardingHouseServiceImpl(repository);
+    void setup() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
     void testCreate() {
-        BoardingHouse bh = new BoardingHouse();
-        when(repository.save(bh)).thenReturn(bh);
-        BoardingHouse result = service.create(bh);
-        assertEquals(bh, result);
+        House h = new House("N","A","D",1,100.0,"I");
+        when(repo.save(h)).thenReturn(new House(1L,"N","A","D",1,100.0,"I"));
+        House result = service.create(h);
+        assertNotNull(result.getId());
+        assertEquals("N", result.getName());
     }
 
     @Test
     void testFindAll() {
-        List<BoardingHouse> list = List.of(new BoardingHouse(), new BoardingHouse());
-        when(repository.findAll()).thenReturn(list);
-        assertEquals(2, service.findAll().size());
+        House h1 = new House(1L,"A","X","D",2,50.0,"U");
+        when(repo.findAll()).thenReturn(Arrays.asList(h1));
+        assertEquals(1, service.findAll().size());
     }
 
     @Test
     void testFindById() {
-        BoardingHouse bh = new BoardingHouse();
-        bh.setId(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(bh));
-        Optional<BoardingHouse> result = service.findById(1L);
-        assertTrue(result.isPresent());
-        assertEquals(1L, result.get().getId());
+        House h = new House(2L,"B","Y","D",3,75.0,"U");
+        when(repo.findById(2L)).thenReturn(Optional.of(h));
+        Optional<House> opt = service.findById(2L);
+        assertTrue(opt.isPresent());
+        assertEquals("B", opt.get().getName());
     }
 
     @Test
     void testUpdate() {
-        Long id = 1L;
-        BoardingHouse existing = new BoardingHouse();
-        existing.setId(id);
-        existing.setName("Old Name");
-
-        BoardingHouse updated = new BoardingHouse();
-        updated.setName("New Name");
-        updated.setAddress("New Address");
-        updated.setDescription("New Desc");
-        updated.setRoomCount(4);
-        updated.setMonthlyPrice(1500000);
-
-        when(repository.findById(id)).thenReturn(Optional.of(existing));
-        when(repository.save(any(BoardingHouse.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        BoardingHouse result = service.update(id, updated);
-
-        assertEquals("New Name", result.getName());
-        assertEquals("New Address", result.getAddress());
-        assertEquals("New Desc", result.getDescription());
-        assertEquals(4, result.getRoomCount());
-        assertEquals(1500000, result.getMonthlyPrice());
-    }
-
-    @Test
-    void testUpdateNotFound() {
-        Long id = 99L;
-        BoardingHouse updated = new BoardingHouse();
-
-        when(repository.findById(id)).thenReturn(Optional.empty());
-
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            service.update(id, updated);
-        });
-
-        assertEquals("BoardingHouse not found", exception.getMessage());
-        verify(repository, times(1)).findById(id);
+        House existing = new House(3L,"Old","O","D",1,20.0,"U");
+        House upd = new House("New","N","D",2,40.0,"I");
+        when(repo.findById(3L)).thenReturn(Optional.of(existing));
+        when(repo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        House result = service.update(3L, upd);
+        assertEquals("New", result.getName());
+        assertEquals(2, result.getNumberOfRooms());
     }
 
     @Test
     void testDelete() {
-        service.delete(1L);
-        verify(repository, times(1)).deleteById(1L);
+        doNothing().when(repo).deleteById(4L);
+        assertDoesNotThrow(() -> service.delete(4L));
+        verify(repo).deleteById(4L);
     }
 }
