@@ -11,8 +11,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(NotificationController.class)
 public class NotificationControllerTest {
@@ -28,11 +27,18 @@ public class NotificationControllerTest {
         when(wishlistService.getNotificationsByTenant("tenant123"))
                 .thenReturn(List.of("Room type Kamar AC is now available!"));
 
-        mockMvc.perform(get("/api/notifications/tenant123"))
+        mockMvc.perform(get("http://localhost:8080/api/notifications/tenant123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(1))
                 .andExpect(jsonPath("$[0]").value("Room type Kamar AC is now available!"));
     }
 
-    // ...other tests...
+    @Test
+    void testGetNotificationsByTenantEmpty() throws Exception {
+        when(wishlistService.getNotificationsByTenant("tenant123"))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("http://localhost:8080/api/notifications/tenant123"))
+                .andExpect(status().isNoContent());
+    }
 }
