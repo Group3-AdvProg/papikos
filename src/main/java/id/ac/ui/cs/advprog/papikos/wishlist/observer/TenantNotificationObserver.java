@@ -14,10 +14,10 @@ public class TenantNotificationObserver implements NotificationObserver {
     private final NotificationRepository notificationRepo;
 
     @Override
-    public void update(String roomType) {
+    public void update(Long houseId) {
         Notification notification = Notification.builder()
                 .tenantId(tenantId)
-                .message("Room type " + roomType + " is now available!")
+                .message("House ID " + houseId + " is now available!")
                 .createdAt(LocalDateTime.now())
                 .isRead(false)
                 .build();

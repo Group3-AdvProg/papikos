@@ -1,7 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.controller;
 
 import id.ac.ui.cs.advprog.papikos.wishlist.DTO.WishlistRequest;
-import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,42 +31,36 @@ public class WishlistControllerTest {
     void testAddToWishlist() throws Exception {
         WishlistRequest request = new WishlistRequest();
         request.setTenantId("tenant123");
-        request.setRoomType("Kamar AC");
+        request.setHouseId(101L);
 
         mockMvc.perform(post("/api/wishlist/add")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
-        verify(wishlistService).addToWishlist("tenant123", "Kamar AC");
+        verify(wishlistService).addToWishlist("tenant123", 101L);
     }
 
     @Test
     void testGetWishlistByTenant() throws Exception {
         when(wishlistService.getWishlistByTenant("tenant123"))
-                .thenReturn(List.of("Kamar AC", "Kamar Deluxe"));
+                .thenReturn(List.of(101L, 102L));
 
         mockMvc.perform(get("/api/wishlist/tenant/tenant123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(2))
-                .andExpect(jsonPath("$[0]").value("Kamar AC"))
-                .andExpect(jsonPath("$[1]").value("Kamar Deluxe"));
+                .andExpect(jsonPath("$[0]").value(101))
+                .andExpect(jsonPath("$[1]").value(102));
     }
 
     @Test
     void testGetNotificationsByTenant() throws Exception {
-        // Fixing the issue here: Returning a List of Notification objects
-        Notification notification = new Notification();
-        notification.setTenantId("tenant123");
-        notification.setMessage("Room type Kamar AC is now available!");
-
         when(wishlistService.getNotificationsByTenant("tenant123"))
-                .thenReturn(List.of(notification));
+                .thenReturn(List.of("Room with ID 101 is now available!"));
 
         mockMvc.perform(get("/api/wishlist/notifications/tenant123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(1))
-                .andExpect(jsonPath("$[0].message").value("Room type Kamar AC is now available!"))
-                .andExpect(jsonPath("$[0].tenantId").value("tenant123"));
+                .andExpect(jsonPath("$[0]").value("Room with ID 101 is now available!"));
     }
 }

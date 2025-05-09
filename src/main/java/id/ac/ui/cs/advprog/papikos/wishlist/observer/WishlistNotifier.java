@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.observer;
 
 public interface WishlistNotifier {
-    void registerObserver(String roomType, NotificationObserver observer);
-    void removeObserver(String roomType, NotificationObserver observer);
-    void notifyObservers(String roomType);
+    void registerObserver(Long houseId, NotificationObserver observer);
+    void removeObserver(Long houseId, NotificationObserver observer);
+    void notifyObservers(Long houseId);
 }

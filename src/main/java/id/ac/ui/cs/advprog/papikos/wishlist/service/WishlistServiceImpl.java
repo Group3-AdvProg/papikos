@@ -5,6 +5,7 @@ import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
 import id.ac.ui.cs.advprog.papikos.wishlist.observer.TenantNotificationObserver;
+import id.ac.ui.cs.advprog.papikos.wishlist.observer.WishlistNotifier;
 import id.ac.ui.cs.advprog.papikos.wishlist.observer.WishlistNotifierImpl;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
@@ -21,7 +22,7 @@ public class WishlistServiceImpl implements WishlistService {
     private final WishlistItemRepository wishlistItemRepo;
     private final NotificationRepository notificationRepo;
     private final HouseRepository houseRepository;
-    private final WishlistNotifierImpl<Long> notifier = new WishlistNotifierImpl<>(); // Ensure proper initialization
+    private final WishlistNotifier notifier = new WishlistNotifierImpl();
 
     @Override
     public void registerTenant(String tenantId, String tenantName) {
@@ -35,7 +36,7 @@ public class WishlistServiceImpl implements WishlistService {
 
         WishlistItem existing = wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId);
         if (existing != null) {
-            return; // Prevent duplicate
+            return;
         }
 
         WishlistItem item = WishlistItem.builder()
@@ -59,7 +60,9 @@ public class WishlistServiceImpl implements WishlistService {
     @Override
     public List<Long> getWishlistByTenant(String tenantId) {
         return wishlistItemRepo.findByTenantId(tenantId)
-                .stream().map(WishlistItem::getHouseId).toList();
+                .stream()
+                .map(WishlistItem::getHouseId)
+                .toList();
     }
 
     @Override
@@ -72,9 +75,8 @@ public class WishlistServiceImpl implements WishlistService {
     public void notifyAvailability(Long houseId) {
         List<WishlistItem> items = wishlistItemRepo.findByHouseId(houseId);
         if (items.isEmpty()) {
-            return; // No observers to notify
+            return;
         }
-
         notifier.notifyObservers(houseId);
     }
 }

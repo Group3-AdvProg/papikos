@@ -1,34 +1,37 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.observer;
+
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import id.ac.ui.cs.advprog.papikos.house.model.House;
-
-
-import java.util.*;
 
 public class WishlistNotifierImpl implements WishlistNotifier {
 
-    private final Map<String, List<NotificationObserver>> observersByRoomType = new HashMap<>();
+    private final Map<Long, List<NotificationObserver>> observersByHouseId = new HashMap<>();
 
     @Override
-    public void registerObserver(String roomType, NotificationObserver observer) {
-        observersByRoomType
-                .computeIfAbsent(roomType, k -> new ArrayList<>())
+    public void registerObserver(Long houseId, NotificationObserver observer) {
+        observersByHouseId
+                .computeIfAbsent(houseId, k -> new ArrayList<>())
                 .add(observer);
     }
 
     @Override
-    public void removeObserver(String roomType, NotificationObserver observer) {
-        List<NotificationObserver> observers = observersByRoomType.get(roomType);
+    public void removeObserver(Long houseId, NotificationObserver observer) {
+        List<NotificationObserver> observers = observersByHouseId.get(houseId);
         if (observers != null) {
             observers.remove(observer);
         }
     }
 
     @Override
-    public void notifyObservers(String roomType) {
-        List<NotificationObserver> observers = observersByRoomType.get(roomType);
+    public void notifyObservers(Long houseId) {
+        List<NotificationObserver> observers = observersByHouseId.get(houseId);
         if (observers != null) {
             for (NotificationObserver observer : observers) {
-                observer.update(roomType);
+                observer.update(houseId);
             }
         }
     }
