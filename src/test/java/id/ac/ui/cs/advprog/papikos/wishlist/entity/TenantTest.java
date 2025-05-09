@@ -18,16 +18,16 @@ public class TenantTest {
 
     @Test
     void testAddToWishlist() {
-        tenant.addToWishlist("Kamar AC");
-        List<String> wishlist = tenant.getWishlist();
+        tenant.addToWishlist(1L);
+        List<Long> wishlist = tenant.getWishlist();
         assertEquals(1, wishlist.size());
-        assertEquals("Kamar AC", wishlist.get(0));
+        assertEquals(1L, wishlist.get(0));
     }
 
     @Test
     void testRemoveFromWishlist() {
-        tenant.addToWishlist("Kamar AC");
-        tenant.removeFromWishlist("Kamar AC");
+        tenant.addToWishlist(1L);
+        tenant.removeFromWishlist(1L);
         assertTrue(tenant.getWishlist().isEmpty());
     }
 
@@ -46,15 +46,15 @@ public class TenantTest {
 
     @Test
     void testAddDuplicateWishlistItem() {
-        tenant.addToWishlist("Kamar AC");
-        tenant.addToWishlist("Kamar AC");  // Add again
+        tenant.addToWishlist(1L);
+        tenant.addToWishlist(1L);  // Add again
         assertEquals(1, tenant.getWishlist().size(), "Duplicate wishlist items should not be added.");
     }
 
     @Test
     void testRemoveNonExistentWishlistItem() {
-        tenant.addToWishlist("Kamar AC");
-        tenant.removeFromWishlist("Kamar Deluxe"); // Not added
+        tenant.addToWishlist(1L);
+        tenant.removeFromWishlist(2L); // Not added
         assertEquals(1, tenant.getWishlist().size(), "Removing nonexistent item shouldn't affect wishlist.");
     }
 

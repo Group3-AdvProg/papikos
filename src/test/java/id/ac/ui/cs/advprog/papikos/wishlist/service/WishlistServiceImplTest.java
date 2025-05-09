@@ -1,10 +1,10 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.service;
 
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
-import id.ac.ui.cs.advprog.papikos.wishlist.dto.NotificationDTO;
+import id.ac.ui.cs.advprog.papikos.wishlist.DTO.NotificationDTO;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
-import id.ac.ui.cs.advprog.papikos.wishlist.observer.WishlistNotifierImpl;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,6 @@ public class WishlistServiceImplTest {
     private WishlistItemRepository wishlistItemRepo;
     private NotificationRepository notificationRepo;
     private HouseRepository houseRepo;
-    private WishlistNotifierImpl<Long> notifier; // Mock notifier
     private WishlistServiceImpl wishlistService;
 
     @BeforeEach
@@ -31,12 +30,12 @@ public class WishlistServiceImplTest {
         wishlistItemRepo = mock(WishlistItemRepository.class);
         notificationRepo = mock(NotificationRepository.class);
         houseRepo = mock(HouseRepository.class);
-        notifier = mock(WishlistNotifierImpl.class); // Mock notifier
-        wishlistService = new WishlistServiceImpl(wishlistItemRepo, notificationRepo, houseRepo, notifier);
+        wishlistService = new WishlistServiceImpl(wishlistItemRepo, notificationRepo, houseRepo);
     }
 
     @Test
     void testAddToWishlist() {
+        when(houseRepo.findById(1L)).thenReturn(java.util.Optional.of(mock(House.class)));
         when(wishlistItemRepo.findByTenantIdAndHouseId("tenant123", 1L)).thenReturn(null);
 
         wishlistService.addToWishlist("tenant123", 1L);
@@ -47,9 +46,6 @@ public class WishlistServiceImplTest {
         WishlistItem savedItem = captor.getValue();
         assertEquals("tenant123", savedItem.getTenantId());
         assertEquals(1L, savedItem.getHouseId());
-
-        verify(notifier).registerObserver(eq(1L), any());
-        verify(notifier).notifyObservers(1L);
     }
 
     @Test
@@ -59,13 +55,12 @@ public class WishlistServiceImplTest {
                 .houseId(1L)
                 .build();
 
+        when(houseRepo.findById(1L)).thenReturn(java.util.Optional.of(mock(House.class)));
         when(wishlistItemRepo.findByTenantIdAndHouseId("tenant123", 1L)).thenReturn(existing);
 
         wishlistService.addToWishlist("tenant123", 1L);
 
         verify(wishlistItemRepo, never()).save(any());
-        verify(notifier, never()).registerObserver(any(), any());
-        verify(notifier, never()).notifyObservers(any());
     }
 
     @Test
@@ -127,8 +122,6 @@ public class WishlistServiceImplTest {
         when(wishlistItemRepo.findByHouseId(1L)).thenReturn(List.of(item));
 
         wishlistService.notifyAvailability(1L);
-
-        verify(notifier).notifyObservers(1L);
     }
 
     @Test
@@ -136,8 +129,6 @@ public class WishlistServiceImplTest {
         when(wishlistItemRepo.findByHouseId(999L)).thenReturn(Collections.emptyList());
 
         wishlistService.notifyAvailability(999L);
-
-        verify(notifier, never()).notifyObservers(any());
     }
 
     @Test
@@ -158,23 +149,25 @@ public class WishlistServiceImplTest {
 
         when(notificationRepo.findByTenantId("tenant123")).thenReturn(List.of(notif1, notif2));
 
-        List<NotificationDTO> notifications = wishlistService.getNotificationsByTenant("tenant123");
+        List<String> notifications = wishlistService.getNotificationsByTenant("tenant123");
 
         assertEquals(2, notifications.size());
-        assertEquals("House 1 available!", notifications.get(0).getMessage());
+        assertEquals("House 1 available!", notifications.get(0));
     }
 
     @Test
     void testGetNotificationsByTenantEmpty() {
         when(notificationRepo.findByTenantId("tenant123")).thenReturn(Collections.emptyList());
 
-        List<NotificationDTO> notifications = wishlistService.getNotificationsByTenant("tenant123");
+        List<String> notifications = wishlistService.getNotificationsByTenant("tenant123");
 
         assertTrue(notifications.isEmpty());
     }
 
     @Test
     void testAddMultipleHouseIds() {
+        when(houseRepo.findById(1L)).thenReturn(java.util.Optional.of(mock(House.class)));
+        when(houseRepo.findById(2L)).thenReturn(java.util.Optional.of(mock(House.class)));
         when(wishlistItemRepo.findByTenantIdAndHouseId("tenant123", 1L)).thenReturn(null);
         when(wishlistItemRepo.findByTenantIdAndHouseId("tenant123", 2L)).thenReturn(null);
 
