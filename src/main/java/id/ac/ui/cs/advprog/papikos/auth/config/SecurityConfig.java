@@ -33,10 +33,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
-                                "/api/management/**",
-                                "/management.html",
-                                "/css/**", "/js/**", "/images/**",
-                                "/favicon.ico").permitAll()  // Public endpoints (e.g., registration, login)
+                                "/",
+                                "/index.html",
+                                "/login.html",
+                                "/register.html"
+                                ).permitAll()  // Public endpoints (e.g., registration, login)
+                        .requestMatchers("/api/management/**").hasRole("LANDLORD")
                         .anyRequest().authenticated()                 // All other endpoints require authentication
                 )
 
