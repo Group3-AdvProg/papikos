@@ -12,13 +12,16 @@ public class ChatWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic", "/queue");
+        // re-enable the general /topic prefix (for /topic/public)
+        // while still allowing /topic/room/{roomId} for room-specific broadcasts
+        config.enableSimpleBroker("/topic", "/topic/room");
         config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
+        registry
+                .addEndpoint("/ws")
                 .setAllowedOrigins("*")
                 .withSockJS();
     }
