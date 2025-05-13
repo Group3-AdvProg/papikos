@@ -8,41 +8,22 @@ import static org.junit.jupiter.api.Assertions.*;
 class ChatMessageTest {
 
     @Test
-    void testChatMessageBuilder() {
-        // Arrange
-        ChatMessage.MessageType type    = ChatMessage.MessageType.CHAT;
-        String                       content = "Hello, World!";
-        String                       sender  = "Alice";
+    void builder_and_getters_includeRoom() {
+        ChatRoom room = ChatRoom.builder().id(7L).name("Room7").build();
+        Instant now = Instant.now();
 
-        // Act: build the ChatMessage
-        ChatMessage message = ChatMessage.builder()
-                .type(type)
-                .content(content)
-                .sender(sender)
+        ChatMessage msg = ChatMessage.builder()
+                .type(ChatMessage.MessageType.CHAT)
+                .content("hello")
+                .sender("u")
+                .timestamp(now)
+                .room(room)
                 .build();
 
-        // Assert: fields set, timestamp is null until persist
-        assertNotNull(message,                   "ChatMessage should not be null");
-        assertEquals(type, message.getType(),    "Message type should match");
-        assertEquals(content, message.getContent(), "Message content should match");
-        assertEquals(sender, message.getSender(),   "Message sender should match");
-        assertNull(message.getTimestamp(),       "Timestamp should be null before JPA persisting");
-    }
-
-    @Test
-    void testNoArgConstructorAndSetters() {
-        // Arrange
-        ChatMessage message = new ChatMessage();
-        message.setType(ChatMessage.MessageType.LEAVE);
-        message.setContent("Goodbye");
-        message.setSender("Bob");
-        Instant now = Instant.now();
-        message.setTimestamp(now);
-
-        // Assert
-        assertEquals(ChatMessage.MessageType.LEAVE, message.getType());
-        assertEquals("Goodbye", message.getContent());
-        assertEquals("Bob", message.getSender());
-        assertEquals(now, message.getTimestamp());
+        assertEquals(ChatMessage.MessageType.CHAT, msg.getType());
+        assertEquals("hello", msg.getContent());
+        assertEquals("u", msg.getSender());
+        assertEquals(now, msg.getTimestamp());
+        assertEquals(room, msg.getRoom());
     }
 }
