@@ -6,7 +6,11 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "chat_messages")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ChatMessage {
 
     public enum MessageType {
@@ -32,6 +36,13 @@ public class ChatMessage {
 
     @PrePersist
     protected void onCreate() {
-        this.timestamp = Instant.now();
+        // Only set timestamp if it hasn't already been provided (e.g. in tests)
+        if (this.timestamp == null) {
+            this.timestamp = Instant.now();
+        }
     }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id", nullable = false)
+    private ChatRoom room;
 }
