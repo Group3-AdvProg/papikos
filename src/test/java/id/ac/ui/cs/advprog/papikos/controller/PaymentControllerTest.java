@@ -40,7 +40,7 @@ public class PaymentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Payment successful"));
+                .andExpect(content().string("payment successful"));
     }
 
     @Test
@@ -56,6 +56,6 @@ public class PaymentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Payment failed or insufficient balance"));
+                .andExpect(content().string("payment failed or insufficient balance"));
     }
 }
