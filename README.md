@@ -24,3 +24,13 @@ PapiKos is a boarding house rental application that connects landlords with pote
 
 ## URL(s) to the technical documents:
 [Papkos Technical Docs](https://docs.google.com/document/d/1UUP2N7lyEjMo6M4J-rEnBAB-YIbCyOc5ocVgWecGnYU/edit?tab=t.0)
+
+## Software Architecture Implementation
+Context Diagram
+![Context Diagram](images/context.png)
+
+Container Diagram
+![Container Diagram](images/container.png)
+
+Deployment Diagram
+![Deployment Diagram](images/deployment.png)
