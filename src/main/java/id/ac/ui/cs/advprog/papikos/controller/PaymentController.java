@@ -15,6 +15,6 @@ public class PaymentController {
     @PostMapping("/pay")
     public String pay(@RequestBody PaymentRequest request) {
         boolean result = paymentService.handlePayment(request);
-        return result ? "Payment successful" : "Payment failed or insufficient balance";
+        return result ? "payment successful" : "payment failed or insufficient balance";
     }
 }
