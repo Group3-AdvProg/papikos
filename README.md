@@ -43,6 +43,15 @@ Deployment Diagram
 
 ### 4. Individual Diagrams
 
+#### Rental - Darren Marcello Sidabutar
+Component Diagram
+![Component Diagram Darren](images/Component_Darren.png)
+
+Code Diagram
+![Code Diagram Darren 1](images/Code1_Darren.png)
+![Code Diagram Darren 2](images/Code2_Darren.png)
+![Code Diagram Darren 3](images/Code3_Darren.png)
+
 #### House Management - Athazahra Nabila Ruby
 Component Diagram
 ![Component Diagram Thata](images/component_thata.png)
