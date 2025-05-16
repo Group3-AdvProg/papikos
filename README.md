@@ -94,3 +94,10 @@ Component Diagram
 
 Code Diagram
 ![Code Diagram Dito](images/Code_Dito.png)
+
+#### Wishlist & Notification - Catherine Aurellia
+Component Diagram
+![img_1.png](img_1.png)
+
+Code Diagram
+![img_2.png](img_2.png)
