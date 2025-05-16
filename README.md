@@ -67,3 +67,10 @@ Component Diagram
 
 Code Diagram
 ![Code Diagram Will](images/code_will.png)
+
+#### Chat - Muhammad Raditya Indrastata Norman
+Component Diagram
+![Component Diagram Dito](images/Component_Dito.png)
+
+Code Diagram
+![Code Diagram Dito](images/Code_Dito.png)
