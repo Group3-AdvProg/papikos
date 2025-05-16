@@ -44,6 +44,15 @@ Future Context Diagram
 Future Container Diagram
 ![Future Container Diagram](images/future_container.png)
 
+## Risk Analysis
+![Risk analysis](images/Risk.png)
+
+## Context Diagram after Risk Analysis
+![Context Diagram](images/Future_Context.png)
+
+## Container Diagram after Risk Analysis
+![Container Diagram](images/Future_Container.png)
+
 ### 3. Risk Storming
 
 ### 4. Individual Diagrams
