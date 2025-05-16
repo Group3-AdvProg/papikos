@@ -54,6 +54,11 @@ Future Container Diagram
 ![Container Diagram](images/Future_Container.png)
 
 ### 3. Risk Storming
+Our risk assessment highlighted four areas of highest concern: Payment processing, Data integrity, Scalability, and Security. Payment workflows scored a 28 / 30 due to their direct exposure to financial fraud and chargebacks, so isolating transaction logic in its own service and offloading card handling to a PCI-compliant gateway was essential. Data integrity followed closely (25 / 30), driven by the danger of cross-service transaction failures; we now enforce a “database-per-service” pattern to contain each domain’s data and ensure transactional boundaries cannot bleed into unrelated modules. Scalability (total 39 across Availability and Performance) and Security (23 / 30) risks were mitigated by introducing both an API Gateway for centralized authentication/authorization, rate-limiting, and TLS termination, and a Redis cache to absorb read-heavy traffic.
+
+To address these hotspots, the monolithic backend was refactored into six Spring Boot microservices: Authentication, Rental, Payment, Wishlist, Chat, and Notification. Each service owns its own PostgreSQL schema. We put an Azure API Management front door in front of our API Gateway, decoupling client-facing concerns from business logic and shrinking our attack surface. Asynchronous events (e.g. “room available”, “payment succeeded”, “new message”) now flow through a managed message broker. This decouples real-time updates from critical request paths and bolsters both availability and maintainability.
+
+These changes collectively reduce our operational scope, enforce stricter security domains (by isolating sensitive logic), and provide clear scaling boundaries for each service. The result is a more resilient, secure, and maintainable architecture that directly addresses the risks identified in our analysis.
 
 
 ### 4. Individual Diagrams
