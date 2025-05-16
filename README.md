@@ -38,6 +38,11 @@ Deployment Diagram
 ![Deployment Diagram](images/deployment.png)
 
 ### 2. Future Architecture
+Future Context Diagram
+![Future Context Diagram](images/future_context.png)
+
+Future Container Diagram
+![Future Container Diagram](images/future_container.png)
 
 ### 3. Risk Storming
 
