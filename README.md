@@ -1,3 +1,4 @@
+# Advanced Programming Final Project - Papikos by Group K03
 ## **Group Members**
 Catherine Aurellia (2306256261)<br>
 Athazahra Nabila Ruby (2306173113)<br> 
@@ -26,6 +27,7 @@ PapiKos is a boarding house rental application that connects landlords with pote
 [Papkos Technical Docs](https://docs.google.com/document/d/1UUP2N7lyEjMo6M4J-rEnBAB-YIbCyOc5ocVgWecGnYU/edit?tab=t.0)
 
 ## Software Architecture Implementation
+### 1. Current Architecture
 Context Diagram
 ![Context Diagram](images/context.png)
 
@@ -34,3 +36,17 @@ Container Diagram
 
 Deployment Diagram
 ![Deployment Diagram](images/deployment.png)
+
+### 2. Future Architecture
+
+### 3. Risk Storming
+
+### 4. Individual Diagrams
+
+#### House Management - Athazahra Nabila Ruby
+Component Diagram
+![Component Diagram Thata](images/component_thata.png)
+
+Code Diagram
+![Code Diagram Thata 1](images/code_thata_1.png)
+![Code Diagram Thata 2](images/code_thata_2.png)
