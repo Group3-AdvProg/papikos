@@ -50,3 +50,11 @@ Component Diagram
 Code Diagram
 ![Code Diagram Thata 1](images/code_thata_1.png)
 ![Code Diagram Thata 2](images/code_thata_2.png)
+
+
+#### Payment - William Samuel Mulya
+Component Diagram
+![Component Diagram Will](images/component_will.png)
+
+Code Diagram
+![Code Diagram Will](images/code_will.png)
