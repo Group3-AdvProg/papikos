@@ -1,8 +1,8 @@
-// TenantController.java
 package id.ac.ui.cs.advprog.papikos.house.Rental.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.TenantService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,14 +10,11 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/tenants")
 public class TenantController {
 
     private final TenantService service;
-
-    public TenantController(TenantService service) {
-        this.service = service;
-    }
 
     @PostMapping
     public ResponseEntity<Tenant> create(@RequestBody Tenant tenant) {
@@ -39,12 +36,7 @@ public class TenantController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Tenant> update(@PathVariable UUID id, @RequestBody Tenant tenant) {
-        try {
-            Tenant updated = service.updateTenant(id, tenant);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(service.updateTenant(id, tenant));
     }
 
     @DeleteMapping("/{id}")
