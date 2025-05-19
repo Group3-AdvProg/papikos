@@ -1,7 +1,9 @@
 package id.ac.ui.cs.advprog.papikos.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.papikos.model.User;
 import id.ac.ui.cs.advprog.papikos.payload.request.TopUpRequest;
+import id.ac.ui.cs.advprog.papikos.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.service.TransactionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Optional;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -24,6 +30,9 @@ public class WalletControllerTest {
 
     @MockBean
     private TransactionService transactionService;
+
+    @MockBean
+    private UserRepository userRepository;
 
     private TopUpRequest buildRequest(String method) {
         TopUpRequest request = new TopUpRequest();
@@ -64,5 +73,19 @@ public class WalletControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Invalid top-up method."));
+    }
+
+    @Test
+    void getBalance_shouldReturnBalanceForValidUser() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setBalance(200.0);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        mockMvc.perform(get("/api/wallet/balance")
+                        .param("userId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("200.0"));
     }
 }
