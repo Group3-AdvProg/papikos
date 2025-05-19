@@ -1,10 +1,15 @@
 package id.ac.ui.cs.advprog.papikos.controller;
 
+import id.ac.ui.cs.advprog.papikos.model.User;
 import id.ac.ui.cs.advprog.papikos.payload.request.TopUpRequest;
 import id.ac.ui.cs.advprog.papikos.payment.*;
+import id.ac.ui.cs.advprog.papikos.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/wallet")
@@ -12,6 +17,9 @@ public class WalletController {
 
     @Autowired
     private TransactionService transactionService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private final PaymentContext context = new PaymentContext();
 
@@ -29,7 +37,7 @@ public class WalletController {
 
         context.setStrategy(strategy);
 
-        // No need to check balance for top-up
+        // Always allow top-up (no balance check)
         boolean success = context.executePayment(request.getAmount(), Double.MAX_VALUE);
 
         if (success) {
@@ -44,5 +52,13 @@ public class WalletController {
         }
 
         return "Top-up failed.";
+    }
+
+    @GetMapping("/balance")
+    public ResponseEntity<Double> getBalance(@RequestParam Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        return ResponseEntity.ok(user.getBalance());
     }
 }
