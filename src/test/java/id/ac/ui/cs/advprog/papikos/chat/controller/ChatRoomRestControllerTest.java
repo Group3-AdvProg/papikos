@@ -1,10 +1,13 @@
+// src/test/java/id/ac/ui/cs/advprog/papikos/chat/controller/ChatRoomRestControllerTest.java
 package id.ac.ui.cs.advprog.papikos.chat.controller;
 
-import id.ac.ui.cs.advprog.papikos.chat.model.ChatRoom;
+import id.ac.ui.cs.advprog.papikos.auth.filter.JwtFilter;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
+import id.ac.ui.cs.advprog.papikos.chat.model.ChatRoom;
 import id.ac.ui.cs.advprog.papikos.chat.service.ChatRoomService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -20,12 +23,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ChatRoomRestController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ChatRoomRestControllerTest {
     @Autowired
     private MockMvc mvc;
 
     @MockBean
     private ChatRoomService service;
+
+    // Stub out security beans
+    @MockBean
+    private JwtFilter jwtFilter;
+
+    @MockBean
+    private id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil jwtUtil;
 
     @Test
     void createRoom_returnsCreatedRoom() throws Exception {
