@@ -1,8 +1,9 @@
-package id.ac.ui.cs.advprog.papikos.house.Rental.service;
+package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.repository.RentalRepository;
+import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -13,7 +14,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class RentalServiceImplTest {
+public class RentalServiceImplTest {
 
     @Mock private RentalRepository repo;
     @InjectMocks private RentalServiceImpl service;
@@ -91,7 +92,6 @@ class RentalServiceImplTest {
     void update_with_new_tenant() {
         Rental stored = baseRental();
         Tenant t = new Tenant("Bar","082");
-        // attach existing or null tenant in store
         stored.setTenant(null);
 
         Rental details = baseRental();

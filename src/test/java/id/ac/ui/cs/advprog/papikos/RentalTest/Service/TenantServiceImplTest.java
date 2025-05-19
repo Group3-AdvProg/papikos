@@ -1,7 +1,8 @@
-package id.ac.ui.cs.advprog.papikos.house.Rental.service;
+package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.repository.TenantRepository;
+import id.ac.ui.cs.advprog.papikos.house.Rental.service.TenantServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -11,7 +12,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class TenantServiceImplTest {
+public class TenantServiceImplTest {
 
     @Mock
     private TenantRepository repo;
