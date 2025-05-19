@@ -11,7 +11,7 @@ version = "0.0.1-SNAPSHOT"
 
 java {
 	toolchain {
-		languageVersion.set(JavaLanguageVersion.of(21))
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
@@ -32,27 +32,38 @@ val webdriverManagerVersion = "5.6.3"
 val junitJupiterVersion = "5.9.1"
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	runtimeOnly("com.h2database:h2") // In-memory DB for testing
-
-	// Optional: fix for unresolved symbols in some IDEs
-	implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
-
-	// Web & template engine
+	// Spring Boot starters
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 
-	// Lombok (optional)
+	// ✅ Add for WebSocket & Messaging support
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
+	implementation("org.springframework:spring-messaging")
+
+	// ─── JPA & Hibernate ───────────────────────────────────────────────
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+	// ─── Database (H2 for dev; switch to Postgres/MySQL in prod) ───────
+	runtimeOnly("com.h2database:h2")
+
+	// Lombok
 	compileOnly("org.projectlombok:lombok")
-	annotationProcessor("org.projectlombok:lombok")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+	annotationProcessor("org.projectlombok:lombok")
+
+	// Devtools
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 
-	// Testing
+	// Spring Boot Test Starter
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-	// Selenium
+	// Selenium and JUnit dependencies
+	val seleniumJavaVersion = "4.14.1"
+	val seleniumJupiterVersion = "5.0.1"
+	val webdriverManagerVersion = "5.6.3"
+	val junitJupiterVersion = "5.9.1"
+
 	testImplementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
 	testImplementation("io.github.bonigarcia:selenium-jupiter:$seleniumJupiterVersion")
 	testImplementation("io.github.bonigarcia:webdrivermanager:$webdriverManagerVersion")
@@ -60,7 +71,8 @@ dependencies {
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
 }
 
-// Custom test tasks
+
+// Optional: custom test tasks
 tasks.register<Test>("unitTest") {
 	description = "Runs unit tests."
 	group = "verification"
@@ -79,17 +91,23 @@ tasks.register<Test>("functionalTest") {
 	}
 }
 
+// ----- Key part: Exclude FunctionalTest from the built-in `test` task and finalize with Jacoco -----
+
 tasks.test {
+	// 1) Exclude functional tests (they will NOT be run by `./gradlew test`)
 	filter {
 		excludeTestsMatching("*FunctionalTest")
 	}
+	// 2) Ensure code coverage report (jacocoTestReport) runs right after `test`
 	finalizedBy(tasks.jacocoTestReport)
 }
 
+// The jacocoTestReport task depends on the results of `test`
 tasks.jacocoTestReport {
 	dependsOn(tasks.test)
 }
 
+// ----- Ensure JUnit Platform is used for ALL test tasks -----
 tasks.withType<Test>().configureEach {
 	useJUnitPlatform()
 }
