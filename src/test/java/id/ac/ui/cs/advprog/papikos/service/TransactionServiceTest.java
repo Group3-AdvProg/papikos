@@ -71,4 +71,31 @@ public class TransactionServiceTest {
         assertEquals("TOP_UP", result.get(0).getType());
         verify(transactionRepository, times(1)).findByUserIdAndType("u1", "TOP_UP");
     }
+
+    @Test
+    void getTransactionsByUserAndDate_shouldReturnFilteredList() {
+        String userId = "user123";
+        LocalDateTime from = LocalDateTime.of(2024, 1, 1, 0, 0);
+        LocalDateTime to = LocalDateTime.of(2024, 1, 31, 23, 59);
+
+        Transaction t1 = Transaction.builder()
+                .userId(userId)
+                .timestamp(LocalDateTime.of(2024, 1, 5, 10, 0))
+                .build();
+
+        Transaction t2 = Transaction.builder()
+                .userId(userId)
+                .timestamp(LocalDateTime.of(2024, 1, 20, 15, 0))
+                .build();
+
+        when(transactionRepository.findByUserIdAndTimestampBetween(userId, from, to))
+                .thenReturn(List.of(t1, t2));
+
+        List<Transaction> result = transactionService.getTransactionsByUserAndDate(userId, from, to);
+
+        assertEquals(2, result.size());
+        assertEquals(t1, result.get(0));
+        assertEquals(t2, result.get(1));
+        verify(transactionRepository, times(1)).findByUserIdAndTimestampBetween(userId, from, to);
+    }
 }
