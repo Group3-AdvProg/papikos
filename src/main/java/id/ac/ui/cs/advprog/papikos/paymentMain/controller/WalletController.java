@@ -1,14 +1,13 @@
 package id.ac.ui.cs.advprog.papikos.paymentMain.controller;
 
-import id.ac.ui.cs.advprog.papikos.paymentMain.model.User;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payload.request.TopUpRequest;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payload.response.ApiResponse;
-import id.ac.ui.cs.advprog.papikos.payment.*;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payment.BankTransferPayment;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payment.PaymentContext;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payment.PaymentStrategy;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payment.VirtualAccountPayment;
-import id.ac.ui.cs.advprog.papikos.paymentMain.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.paymentMain.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

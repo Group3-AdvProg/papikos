@@ -1,12 +1,12 @@
 package id.ac.ui.cs.advprog.papikos.paymentMain.service;
 
-import id.ac.ui.cs.advprog.papikos.paymentMain.model.User;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payment.BankTransferPayment;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payment.PaymentContext;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payment.PaymentStrategy;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payment.VirtualAccountPayment;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payload.request.PaymentRequest;
-import id.ac.ui.cs.advprog.papikos.paymentMain.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,9 +1,10 @@
 package id.ac.ui.cs.advprog.papikos.paymentTest.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.ac.ui.cs.advprog.papikos.paymentMain.model.User;
+import id.ac.ui.cs.advprog.papikos.paymentMain.controller.WalletController;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payload.request.TopUpRequest;
-import id.ac.ui.cs.advprog.papikos.paymentMain.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.paymentMain.service.TransactionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,4 +123,11 @@ public class WalletControllerTest {
     }
 
 
+    public TransactionService getTransactionService() {
+        return transactionService;
+    }
+
+    public void setTransactionService(TransactionService transactionService) {
+        this.transactionService = transactionService;
+    }
 }
