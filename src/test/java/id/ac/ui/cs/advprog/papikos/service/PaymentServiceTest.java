@@ -13,16 +13,13 @@ public class PaymentServiceTest {
 
     private PaymentService service;
     private UserRepository userRepository;
-    private TransactionService transactionService;
 
     @BeforeEach
     void setUp() {
         userRepository = Mockito.mock(UserRepository.class);
-        transactionService = Mockito.mock(TransactionService.class);
+        TransactionService transactionService = Mockito.mock(TransactionService.class);
 
-        service = new PaymentService();
-        service.setUserRepository(userRepository);
-        service.setTransactionService(transactionService);
+        service = new PaymentService(userRepository, transactionService);
     }
 
     @Test
