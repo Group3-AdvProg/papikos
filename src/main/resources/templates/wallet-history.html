@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transaction History</title>
+    <script defer src="/js/transaction.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8 font-sans">
+<div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow">
+    <h2 class="text-2xl font-bold mb-4">Transaction History</h2>
+
+    <form id="filter-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <input type="text" id="userId" placeholder="User ID" class="border px-3 py-2 rounded" required />
+        <select id="type" class="border px-3 py-2 rounded">
+            <option value="">All Types</option>
+            <option value="TOP_UP">Top-Up</option>
+            <option value="RENT_PAYMENT">Rent Payment</option>
+        </select>
+        <input type="date" id="from" class="border px-3 py-2 rounded" />
+        <input type="date" id="to" class="border px-3 py-2 rounded" />
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded col-span-1 md:col-span-3">
+            Filter
+        </button>
+    </form>
+
+    <div id="results" class="space-y-2 text-sm text-gray-800"></div>
+</div>
+</body>
+</html>
