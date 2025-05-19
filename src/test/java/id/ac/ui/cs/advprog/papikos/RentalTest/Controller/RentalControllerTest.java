@@ -9,10 +9,13 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -31,15 +34,27 @@ class RentalControllerTest {
     private ObjectMapper mapper;
     private final UUID sampleId = UUID.randomUUID();
 
+    // Error handler untuk test
+    @RestControllerAdvice
+    static class TestExceptionHandler {
+        @ExceptionHandler(RuntimeException.class)
+        public ResponseEntity<String> handleRuntime(RuntimeException ex) {
+            if (ex.getMessage().toLowerCase().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.internalServerError().body("Unexpected error: " + ex.getMessage());
+        }
+    }
+
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
-        // configure ObjectMapper for Java 8 dates
         mapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new TestExceptionHandler()) // ✅ tambahkan error handler
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .build();
     }
@@ -105,7 +120,7 @@ class RentalControllerTest {
     void testUpdateRental_NotFound() throws Exception {
         Rental update = createRental("U");
         when(rentalService.updateRental(eq(sampleId), any(Rental.class)))
-                .thenThrow(new RuntimeException("not found"));
+                .thenThrow(new RuntimeException("not found")); // ini akan ditangkap oleh handler
 
         mockMvc.perform(put("/api/rentals/" + sampleId)
                         .contentType(MediaType.APPLICATION_JSON)

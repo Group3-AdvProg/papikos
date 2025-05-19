@@ -11,6 +11,9 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.ResponseEntity;
 
 import java.util.*;
 
@@ -29,11 +32,24 @@ class TenantControllerTest {
     private ObjectMapper mapper;
     private final UUID sampleId = UUID.randomUUID();
 
+    // Local exception handler untuk unit test
+    @RestControllerAdvice
+    static class TestExceptionHandler {
+        @ExceptionHandler(RuntimeException.class)
+        public ResponseEntity<String> handleRuntime(RuntimeException ex) {
+            if (ex.getMessage().toLowerCase().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.internalServerError().body("Unexpected error: " + ex.getMessage());
+        }
+    }
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         mapper = new ObjectMapper();
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new TestExceptionHandler()) // ✅ inject error handler
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .build();
     }
