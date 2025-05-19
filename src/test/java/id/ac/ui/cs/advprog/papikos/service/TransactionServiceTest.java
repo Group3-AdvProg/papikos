@@ -10,6 +10,11 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -73,10 +78,11 @@ public class TransactionServiceTest {
     }
 
     @Test
-    void getTransactionsByUserAndDate_shouldReturnFilteredList() {
+    void getTransactionsByUserAndDate_withPagination_shouldReturnPage() {
         String userId = "user123";
         LocalDateTime from = LocalDateTime.of(2024, 1, 1, 0, 0);
         LocalDateTime to = LocalDateTime.of(2024, 1, 31, 23, 59);
+        Pageable pageable = PageRequest.of(0, 10);
 
         Transaction t1 = Transaction.builder()
                 .userId(userId)
@@ -88,14 +94,16 @@ public class TransactionServiceTest {
                 .timestamp(LocalDateTime.of(2024, 1, 20, 15, 0))
                 .build();
 
-        when(transactionRepository.findByUserIdAndTimestampBetween(userId, from, to))
-                .thenReturn(List.of(t1, t2));
+        Page<Transaction> mockPage = new PageImpl<>(List.of(t1, t2));
 
-        List<Transaction> result = transactionService.getTransactionsByUserAndDate(userId, from, to);
+        when(transactionRepository.findByUserIdAndTimestampBetween(userId, from, to, pageable))
+                .thenReturn(mockPage);
 
-        assertEquals(2, result.size());
-        assertEquals(t1, result.get(0));
-        assertEquals(t2, result.get(1));
-        verify(transactionRepository, times(1)).findByUserIdAndTimestampBetween(userId, from, to);
+        Page<Transaction> result = transactionService.getTransactionsByUserAndDate(userId, from, to, pageable);
+
+        assertEquals(2, result.getTotalElements());
+        assertEquals(t1, result.getContent().get(0));
+        assertEquals(t2, result.getContent().get(1));
+        verify(transactionRepository, times(1)).findByUserIdAndTimestampBetween(userId, from, to, pageable);
     }
 }
