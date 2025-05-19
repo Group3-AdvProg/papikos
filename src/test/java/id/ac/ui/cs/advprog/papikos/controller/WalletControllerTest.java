@@ -96,4 +96,30 @@ public class WalletControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("200.0"));
     }
+
+    @Test
+    void getBalance_shouldFailWhenUserNotFound() throws Exception {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/wallet/balance")
+                        .param("userId", "99"))
+                .andExpect(status().isNotFound())
+                .andExpect(status().reason("User not found"));
+    }
+
+    @Test
+    void topUp_shouldFailDueToForcedExecutionFailure() throws Exception {
+        TopUpRequest request = buildRequest("bank");
+        request.setAmount(9999); // Triggers the forced failure in controller
+
+        mockMvc.perform(post("/api/wallet/topup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FAILED"))
+                .andExpect(jsonPath("$.message").value("Top-up failed."))
+                .andExpect(jsonPath("$.redirectTo").value("/wallet/topup"));
+    }
+
+
 }

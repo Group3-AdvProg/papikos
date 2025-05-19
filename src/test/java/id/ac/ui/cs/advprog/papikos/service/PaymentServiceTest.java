@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PaymentServiceTest {
@@ -99,4 +101,34 @@ public class PaymentServiceTest {
         assertEquals(100.0, tenant.getBalance());
         assertEquals(100.0, landlord.getBalance());
     }
+
+    @Test
+    void testHandleRentPayment_tenantNotFound_shouldThrowException() {
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            service.handleRentPayment("1", "2", 100.0);
+        });
+
+        assertEquals("Tenant not found", ex.getMessage());
+    }
+
+    @Test
+    void testHandleRentPayment_landlordNotFound_shouldThrowException() {
+        User tenant = new User();
+        tenant.setId(1L);
+        tenant.setBalance(200.0);
+
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
+            service.handleRentPayment("1", "2", 100.0);
+        });
+
+        assertEquals("Landlord not found", thrown.getMessage());
+    }
+
+
+
 }
