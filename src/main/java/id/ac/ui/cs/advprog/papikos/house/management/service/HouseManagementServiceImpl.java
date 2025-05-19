@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.house.management.service;
 
 import id.ac.ui.cs.advprog.papikos.house.model.House;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,16 @@ public class HouseManagementServiceImpl implements HouseManagementService {
     }
 
     @Override
-    public List<House> findAll() {
-        return houseRepository.findAll();
-    }
+    public List<House> findAllByOwner(User owner) { return houseRepository.findByOwner(owner); }
 
     @Override
     public Optional<House> findById(Long id) {
         return houseRepository.findById(id);
+    }
+
+    @Override
+    public Optional<House> findByIdAndOwner(Long id, User owner) {
+        return houseRepository.findByIdAndOwner(id, owner);
     }
 
     @Override

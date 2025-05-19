@@ -1,102 +1,115 @@
-package id.ac.ui.cs.advprog.papikos.management.controller;
+package id.ac.ui.cs.advprog.papikos.house.management.controller;
 
-import id.ac.ui.cs.advprog.papikos.house.management.controller.HouseManagementController;
-import id.ac.ui.cs.advprog.papikos.house.model.House;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false)
 class HouseManagementControllerTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
-    @Mock
+    @MockBean
     private HouseManagementService houseManagementService;
 
-    @InjectMocks
-    private HouseManagementController houseManagementController;
+    @MockBean
+    private UserRepository userRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private House house;
+    private User owner;
+    private UserDetails userDetails;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(houseManagementController).build();
-    }
+        owner = new User();
+        owner.setId(1L);
+        owner.setEmail("owner@example.com");
 
-    @Test
-    void testCreateHousePage() throws Exception {
-        mockMvc.perform(get("/management/create"))
-                .andExpect(view().name("CreateHouse"))
-                .andExpect(model().attributeExists("house"));
-    }
+        userDetails = mock(UserDetails.class);
+        when(userDetails.getUsername()).thenReturn("owner@example.com");
 
-    @Test
-    void testCreateHousePost() throws Exception {
-        House house = new House();
-        house.setName("Kos A");
-
-        mockMvc.perform(post("/management/create")
-                        .flashAttr("house", house))
-                .andExpect(redirectedUrl("/management/list"));
-
-        verify(houseManagementService, times(1)).addHouse(any(House.class));
-    }
-
-    @Test
-    void testManagementPage() throws Exception {
-        when(houseManagementService.findAll()).thenReturn(Arrays.asList(new House(), new House()));
-
-        mockMvc.perform(get("/management/list"))
-                .andExpect(view().name("Management"))
-                .andExpect(model().attributeExists("houses"));
-
-        verify(houseManagementService, times(1)).findAll();
-    }
-
-    @Test
-    void testEditHousePage() throws Exception {
-        House house = new House();
+        house = new House("Kos A", "Jl. UI", "Dekat kampus", 10, 1500000.0,
+                "https://example.com/img.jpg", owner);
         house.setId(1L);
+
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+    }
+
+    @Test
+    void testGetAllHouses() throws Exception {
+        when(houseManagementService.findAllByOwner(owner)).thenReturn(List.of(house));
+
+        mockMvc.perform(get("/api/management/houses")
+                        .principal(() -> "owner@example.com")) // inject principal
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Kos A"));
+    }
+
+    @Test
+    void testCreateHouse() throws Exception {
+        doNothing().when(houseManagementService).addHouse(any(House.class));
+
+        mockMvc.perform(post("/api/management/houses")
+                        .principal(() -> "owner@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(house)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Kos A"));
+    }
+
+    @Test
+    void testGetHouseById_ValidOwner() throws Exception {
+        when(houseManagementService.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(house));
+
+        mockMvc.perform(get("/api/management/houses/1")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Kos A"));
+    }
+
+    @Test
+    void testUpdateHouse_ValidOwner() throws Exception {
         when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
 
-        mockMvc.perform(get("/management/edit/1"))
-                .andExpect(view().name("EditHouse"))
-                .andExpect(model().attributeExists("house"));
-
-        verify(houseManagementService, times(1)).findById(1L);
-    }
-
-    @Test
-    void testEditHousePost() throws Exception {
-        House house = new House();
-        house.setId(1L);
-        house.setName("Updated Kos");
-
-        mockMvc.perform(post("/management/edit")
-                        .flashAttr("house", house))
-                .andExpect(redirectedUrl("/management/list"));
+        mockMvc.perform(put("/api/management/houses/1")
+                        .principal(() -> "owner@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(house)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Kos A"));
 
         verify(houseManagementService, times(1)).updateHouse(eq(1L), any(House.class));
     }
 
     @Test
-    void testDeleteHouse() throws Exception {
-        mockMvc.perform(get("/management/delete/1"))
-                .andExpect(redirectedUrl("/management/list"));
+    void testDeleteHouse_ValidOwner() throws Exception {
+        when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
+
+        mockMvc.perform(delete("/api/management/houses/1")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isNoContent());
 
         verify(houseManagementService, times(1)).deleteHouse(1L);
     }

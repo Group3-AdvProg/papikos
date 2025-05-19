@@ -31,7 +31,16 @@ public class SecurityConfig {
 
                 // Setup authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()  // Public endpoints (e.g., registration, login)
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/",
+                                "/index.html",
+                                "/login.html",
+                                "/register.html",
+                                "/management.html",
+                                "/houseDetails.html"
+                                ).permitAll()  // Public endpoints (e.g., registration, login)
+                        .requestMatchers("/api/management/**").hasRole("LANDLORD")
                         .anyRequest().authenticated()                 // All other endpoints require authentication
                 )
 
