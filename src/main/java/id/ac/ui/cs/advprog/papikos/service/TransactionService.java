@@ -34,4 +34,9 @@ public class TransactionService {
     public List<Transaction> getTransactionsByUserAndType(String userId, String type) {
         return transactionRepository.findByUserIdAndType(userId, type);
     }
+
+    public List<Transaction> getTransactionsByUserAndDate(String userId, LocalDateTime from, LocalDateTime to) {
+        return transactionRepository.findByUserIdAndTimestampBetween(userId, from, to);
+    }
+
 }
