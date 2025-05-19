@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.papikos.controller;
 
 import id.ac.ui.cs.advprog.papikos.model.User;
 import id.ac.ui.cs.advprog.papikos.payload.request.TopUpRequest;
+import id.ac.ui.cs.advprog.papikos.payload.response.ApiResponse;
 import id.ac.ui.cs.advprog.papikos.payment.*;
 import id.ac.ui.cs.advprog.papikos.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.service.TransactionService;
@@ -24,7 +25,7 @@ public class WalletController {
     private final PaymentContext context = new PaymentContext();
 
     @PostMapping("/topup")
-    public String topUp(@RequestBody TopUpRequest request) {
+    public ResponseEntity<ApiResponse> topUp(@RequestBody TopUpRequest request) {
         PaymentStrategy strategy = switch (request.getMethod().toLowerCase()) {
             case "bank" -> new BankTransferPayment();
             case "virtual" -> new VirtualAccountPayment();
@@ -32,12 +33,12 @@ public class WalletController {
         };
 
         if (strategy == null) {
-            return "Invalid top-up method.";
+            return ResponseEntity.ok(
+                    new ApiResponse("FAILED", "Invalid top-up method.", "/wallet/topup")
+            );
         }
 
         context.setStrategy(strategy);
-
-        // Always allow top-up (no balance check)
         boolean success = context.executePayment(request.getAmount(), Double.MAX_VALUE);
 
         if (success) {
@@ -48,11 +49,16 @@ public class WalletController {
                     "TOP_UP",
                     request.getMethod()
             );
-            return "Top-up successful.";
+            return ResponseEntity.ok(
+                    new ApiResponse("SUCCESS", "Top-up successful.", null)
+            );
         }
 
-        return "Top-up failed.";
+        return ResponseEntity.ok(
+                new ApiResponse("FAILED", "Top-up failed.", "/wallet/topup")
+        );
     }
+
 
     @GetMapping("/balance")
     public ResponseEntity<Double> getBalance(@RequestParam Long userId) {

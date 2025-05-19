@@ -19,6 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
 @WebMvcTest(controllers = WalletController.class)
 public class WalletControllerTest {
 
@@ -50,7 +52,9 @@ public class WalletControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Top-up successful."));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Top-up successful."))
+                .andExpect(jsonPath("$.redirectTo").doesNotExist());
     }
 
     @Test
@@ -61,7 +65,9 @@ public class WalletControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Top-up successful."));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Top-up successful."))
+                .andExpect(jsonPath("$.redirectTo").doesNotExist());
     }
 
     @Test
@@ -72,7 +78,9 @@ public class WalletControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Invalid top-up method."));
+                .andExpect(jsonPath("$.status").value("FAILED"))
+                .andExpect(jsonPath("$.message").value("Invalid top-up method."))
+                .andExpect(jsonPath("$.redirectTo").value("/wallet/topup"));
     }
 
     @Test
