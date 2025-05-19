@@ -1,12 +1,11 @@
-package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
+package id.ac.ui.cs.advprog.papikos.house.Rental.service;
 
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.BoardingHouse;
-import id.ac.ui.cs.advprog.papikos.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.Rental.model.Tenant;
-import id.ac.ui.cs.advprog.papikos.Rental.repository.RentalRepository;
-import id.ac.ui.cs.advprog.papikos.Rental.service.RentalServiceImpl;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
+import id.ac.ui.cs.advprog.papikos.house.Rental.repository.RentalRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.*;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -14,107 +13,109 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class RentalServiceImplTest {
+class RentalServiceImplTest {
 
-    private RentalRepository repository;
-    private RentalServiceImpl service;
+    @Mock private RentalRepository repo;
+    @InjectMocks private RentalServiceImpl service;
+    private final UUID id = UUID.randomUUID();
 
     @BeforeEach
-    void setUp() {
-        repository = mock(RentalRepository.class);
-        service = new RentalServiceImpl(repository);
+    void init() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    private Rental baseRental() {
+        Rental r = new Rental();
+        r.setId(id);
+        r.setHouseId("H1");
+        r.setFullName("Foo");
+        r.setPhoneNumber("081234");
+        r.setCheckInDate(LocalDate.of(2025,1,1));
+        r.setDurationInMonths(3);
+        r.setApproved(false);
+        return r;
     }
 
     @Test
-    void testCreateRental() {
-        Rental rental = new Rental();
-        when(repository.save(rental)).thenReturn(rental);
+    void create_and_getAll_and_getById_and_delete() {
+        Rental r = baseRental();
 
-        Rental result = service.createRental(rental);
-        assertEquals(rental, result);
+        // createRental
+        when(repo.save(r)).thenReturn(r);
+        Rental created = service.createRental(r);
+        assertSame(r, created);
+        verify(repo).save(r);
+
+        // getAllRentals
+        when(repo.findAll()).thenReturn(List.of(r));
+        List<Rental> all = service.getAllRentals();
+        assertEquals(1, all.size());
+        assertEquals(r, all.get(0));
+
+        // getRentalById
+        when(repo.findById(id)).thenReturn(Optional.of(r));
+        Optional<Rental> opt = service.getRentalById(id);
+        assertTrue(opt.isPresent());
+        assertEquals("H1", opt.get().getHouseId());
+
+        // deleteRental
+        doNothing().when(repo).deleteById(id);
+        assertDoesNotThrow(() -> service.deleteRental(id));
+        verify(repo).deleteById(id);
     }
 
     @Test
-    void testGetAllRentals() {
-        List<Rental> rentals = List.of(new Rental(), new Rental());
-        when(repository.findAll()).thenReturn(rentals);
+    void update_without_changing_tenant() {
+        Rental stored = baseRental();
+        Rental details = baseRental();
+        // tweak some fields
+        details.setHouseId("H2");
+        details.setDurationInMonths(5);
+        details.setApproved(true);
 
-        List<Rental> result = service.getAllRentals();
-        assertEquals(2, result.size());
+        when(repo.findById(id)).thenReturn(Optional.of(stored));
+        when(repo.save(any(Rental.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Rental updated = service.updateRental(id, details);
+
+        assertEquals("H2", updated.getHouseId());
+        assertEquals(5, updated.getDurationInMonths());
+        assertTrue(updated.isApproved());
+        // original fullName, phoneNumber, checkInDate unchanged
+        assertEquals("Foo", updated.getFullName());
+        verify(repo).findById(id);
+        verify(repo).save(stored);
     }
 
     @Test
-    void testGetRentalById() {
-        Rental rental = new Rental();
-        rental.setId(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(rental));
+    void update_with_new_tenant() {
+        Rental stored = baseRental();
+        Tenant t = new Tenant("Bar","082");
+        // attach existing or null tenant in store
+        stored.setTenant(null);
 
-        Optional<Rental> result = service.getRentalById(1L);
-        assertTrue(result.isPresent());
-        assertEquals(rental, result.get());
+        Rental details = baseRental();
+        details.setTenant(t);
+
+        when(repo.findById(id)).thenReturn(Optional.of(stored));
+        when(repo.save(any(Rental.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Rental updated = service.updateRental(id, details);
+
+        assertSame(t, updated.getTenant(), "the tenant should be set on update");
+        verify(repo).findById(id);
+        verify(repo).save(stored);
     }
 
     @Test
-    void testUpdateRentalSuccess() {
-        Rental existingRental = new Rental();
-        existingRental.setId(1L);
+    void update_throws_when_not_found() {
+        when(repo.findById(id)).thenReturn(Optional.empty());
 
-        Rental updatedRental = new Rental();
-        updatedRental.setCheckInDate(LocalDate.now());
-        updatedRental.setDurationInMonths(6);
-        updatedRental.setApproved(true);
-        updatedRental.setCancelled(false);
-
-        Tenant tenant = new Tenant();
-        BoardingHouse house = new BoardingHouse();
-        updatedRental.setTenant(tenant);
-        updatedRental.setBoardingHouse(house);
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existingRental));
-        when(repository.save(any(Rental.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Rental result = service.updateRental(1L, updatedRental);
-
-        assertEquals(updatedRental.getCheckInDate(), result.getCheckInDate());
-        assertEquals(updatedRental.getDurationInMonths(), result.getDurationInMonths());
-        assertEquals(updatedRental.isApproved(), result.isApproved());
-        assertEquals(updatedRental.isCancelled(), result.isCancelled());
-        assertEquals(updatedRental.getTenant(), result.getTenant());
-        assertEquals(updatedRental.getBoardingHouse(), result.getBoardingHouse());
-    }
-
-    @Test
-    void testUpdateRentalNotFound() {
-        Rental updatedRental = new Rental();
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            service.updateRental(99L, updatedRental);
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
+            service.updateRental(id, baseRental());
         });
-
-        assertEquals("Rental not found with id: 99", exception.getMessage());
-    }
-
-    @Test
-    void testCancelRentalSuccess() {
-        Rental rental = new Rental();
-        rental.setCancelled(false);
-
-        when(repository.findById(1L)).thenReturn(Optional.of(rental));
-
-        service.cancelRental(1L);
-
-        assertTrue(rental.isCancelled());
-        verify(repository).save(rental);
-    }
-
-    @Test
-    void testCancelRentalNotFound() {
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-
-        // no exception thrown, just no action
-        service.cancelRental(99L);
-
-        verify(repository, never()).save(any());
+        assertTrue(ex.getMessage().contains("Rental not found"));
+        verify(repo).findById(id);
+        verify(repo, never()).save(any());
     }
 }

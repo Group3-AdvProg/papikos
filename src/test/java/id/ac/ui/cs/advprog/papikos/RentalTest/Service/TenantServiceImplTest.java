@@ -1,95 +1,94 @@
-package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
+package id.ac.ui.cs.advprog.papikos.house.Rental.service;
 
-import id.ac.ui.cs.advprog.papikos.Rental.model.Tenant;
-import id.ac.ui.cs.advprog.papikos.Rental.repository.TenantRepository;
-import id.ac.ui.cs.advprog.papikos.Rental.service.TenantServiceImpl;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
+import id.ac.ui.cs.advprog.papikos.house.Rental.repository.TenantRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.*;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class TenantServiceImplTest {
+class TenantServiceImplTest {
 
-    private TenantRepository repository;
+    @Mock
+    private TenantRepository repo;
+
+    @InjectMocks
     private TenantServiceImpl service;
+
+    private final UUID id = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        repository = mock(TenantRepository.class);
-        service = new TenantServiceImpl(repository);
+        MockitoAnnotations.openMocks(this);
+    }
+
+    private Tenant baseTenant() {
+        Tenant t = new Tenant();
+        t.setId(id);
+        t.setFullName("Alice");
+        t.setPhoneNumber("081234");
+        return t;
     }
 
     @Test
-    void testCreateTenant() {
-        Tenant tenant = new Tenant();
-        when(repository.save(tenant)).thenReturn(tenant);
-        Tenant result = service.createTenant(tenant);
-        assertEquals(tenant, result);
+    void create_and_getAll_and_getById_and_delete() {
+        Tenant t = baseTenant();
+
+        // createTenant
+        when(repo.save(t)).thenReturn(t);
+        Tenant created = service.createTenant(t);
+        assertSame(t, created);
+        verify(repo).save(t);
+
+        // getAllTenants
+        when(repo.findAll()).thenReturn(List.of(t));
+        List<Tenant> all = service.getAllTenants();
+        assertEquals(1, all.size());
+        assertEquals("Alice", all.get(0).getFullName());
+
+        // getTenantById
+        when(repo.findById(id)).thenReturn(Optional.of(t));
+        Optional<Tenant> opt = service.getTenantById(id);
+        assertTrue(opt.isPresent());
+        assertEquals("081234", opt.get().getPhoneNumber());
+
+        // deleteTenant
+        doNothing().when(repo).deleteById(id);
+        assertDoesNotThrow(() -> service.deleteTenant(id));
+        verify(repo).deleteById(id);
     }
 
     @Test
-    void testGetAllTenants() {
-        when(repository.findAll()).thenReturn(List.of(new Tenant(), new Tenant()));
-        List<Tenant> result = service.getAllTenants();
-        assertEquals(2, result.size());
+    void updateTenant_successful() {
+        Tenant stored = baseTenant();
+        Tenant update = new Tenant();
+        update.setFullName("Bob");
+        update.setPhoneNumber("089999");
+
+        when(repo.findById(id)).thenReturn(Optional.of(stored));
+        when(repo.save(any(Tenant.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Tenant result = service.updateTenant(id, update);
+
+        assertEquals("Bob", result.getFullName());
+        assertEquals("089999", result.getPhoneNumber());
+        verify(repo).findById(id);
+        verify(repo).save(stored);
     }
 
     @Test
-    void testGetTenantByIdExists() {
-        Tenant tenant = new Tenant();
-        tenant.setId(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(tenant));
+    void updateTenant_notFound_throws() {
+        when(repo.findById(id)).thenReturn(Optional.empty());
 
-        Tenant result = service.getTenantById(1L);
-        assertNotNull(result);
-        assertEquals(tenant, result);
-    }
-
-    @Test
-    void testGetTenantByIdNotFound() {
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-        Tenant result = service.getTenantById(99L);
-        assertNull(result);
-    }
-
-    @Test
-    void testUpdateTenantSuccess() {
-        Long id = 1L;
-        Tenant existing = new Tenant();
-        existing.setId(id);
-        existing.setFullName("Old Name");
-        existing.setPhoneNumber("000");
-
-        Tenant updated = new Tenant();
-        updated.setFullName("New Name");
-        updated.setPhoneNumber("123");
-
-        when(repository.findById(id)).thenReturn(Optional.of(existing));
-        when(repository.save(any(Tenant.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        Tenant result = service.updateTenant(id, updated);
-
-        assertNotNull(result);
-        assertEquals("New Name", result.getFullName());
-        assertEquals("123", result.getPhoneNumber());
-    }
-
-    @Test
-    void testUpdateTenantNotFound() {
-        Tenant updated = new Tenant();
-        when(repository.findById(42L)).thenReturn(Optional.empty());
-
-        Tenant result = service.updateTenant(42L, updated);
-
-        assertNull(result);
-    }
-
-    @Test
-    void testDeleteTenant() {
-        service.deleteTenant(1L);
-        verify(repository, times(1)).deleteById(1L);
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
+            service.updateTenant(id, baseTenant());
+        });
+        assertTrue(ex.getMessage().contains("Tenant not found"));
+        verify(repo).findById(id);
+        verify(repo, never()).save(any());
     }
 }

@@ -1,102 +1,121 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.ac.ui.cs.advprog.papikos.Rental.controller.TenantController;
-import id.ac.ui.cs.advprog.papikos.Rental.model.Tenant;
-import id.ac.ui.cs.advprog.papikos.Rental.service.TenantService;
+import id.ac.ui.cs.advprog.papikos.house.Rental.controller.TenantController;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
+import id.ac.ui.cs.advprog.papikos.house.Rental.service.TenantService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.*;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.List;
+import java.util.*;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(TenantController.class)
-public class TenantControllerTest {
+class TenantControllerTest {
 
-    @Autowired
+    @Mock private TenantService tenantService;
+    @InjectMocks private TenantController controller;
+
     private MockMvc mockMvc;
+    private ObjectMapper mapper;
+    private final UUID sampleId = UUID.randomUUID();
 
-    @MockBean
-    private TenantService tenantService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Test
-    public void testGetAllTenants() throws Exception {
-        Tenant tenant = new Tenant();
-        tenant.setId(1L);
-        tenant.setFullName("John Doe");
-        tenant.setPhoneNumber("08123456789");
-
-        when(tenantService.getAllTenants()).thenReturn(List.of(tenant));
-
-        mockMvc.perform(get("/tenant"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].fullName").value("John Doe"))
-                .andExpect(jsonPath("$[0].phoneNumber").value("08123456789"));
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        mapper = new ObjectMapper();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
+                .build();
     }
 
     @Test
-    public void testGetTenantById() throws Exception {
-        Tenant tenant = new Tenant();
-        tenant.setId(1L);
-        tenant.setFullName("John Doe");
-        tenant.setPhoneNumber("08123456789");
+    void testListTenants() throws Exception {
+        Tenant t1 = new Tenant("Alice", "081");
+        Tenant t2 = new Tenant("Bob", "082");
+        t1.setId(sampleId);
+        t2.setId(UUID.randomUUID());
+        when(tenantService.getAllTenants()).thenReturn(Arrays.asList(t1, t2));
 
-        when(tenantService.getTenantById(1L)).thenReturn(tenant);
-
-        mockMvc.perform(get("/tenant/1"))
+        mockMvc.perform(get("/api/tenants"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fullName").value("John Doe"))
-                .andExpect(jsonPath("$.phoneNumber").value("08123456789"));
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].fullName").value("Alice"));
     }
 
     @Test
-    public void testCreateTenant() throws Exception {
-        Tenant tenant = new Tenant();
-        tenant.setId(1L);
-        tenant.setFullName("John Doe");
-        tenant.setPhoneNumber("08123456789");
+    void testGetById_Found() throws Exception {
+        Tenant t = new Tenant("Carol", "083");
+        t.setId(sampleId);
+        when(tenantService.getTenantById(sampleId)).thenReturn(Optional.of(t));
 
-        when(tenantService.createTenant(Mockito.any(Tenant.class))).thenReturn(tenant);
+        mockMvc.perform(get("/api/tenants/" + sampleId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.phoneNumber").value("083"));
+    }
 
-        mockMvc.perform(post("/tenant")
+    @Test
+    void testGetById_NotFound() throws Exception {
+        when(tenantService.getTenantById(sampleId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/tenants/" + sampleId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testCreateTenant() throws Exception {
+        Tenant in = new Tenant("Dave", "084");
+        Tenant out = new Tenant("Dave", "084");
+        out.setId(sampleId);
+        when(tenantService.createTenant(any(Tenant.class))).thenReturn(out);
+
+        mockMvc.perform(post("/api/tenants")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(tenant)))
+                        .content(mapper.writeValueAsString(in)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fullName").value("John Doe"))
-                .andExpect(jsonPath("$.phoneNumber").value("08123456789"));
+                .andExpect(jsonPath("$.id").value(sampleId.toString()))
+                .andExpect(jsonPath("$.fullName").value("Dave"));
     }
 
     @Test
-    public void testUpdateTenant() throws Exception {
-        Tenant tenant = new Tenant();
-        tenant.setId(1L);
-        tenant.setFullName("Jane Doe");
-        tenant.setPhoneNumber("0822334455");
+    void testUpdateTenant_Success() throws Exception {
+        Tenant in = new Tenant("Eve", "085");
+        in.setId(sampleId);
+        when(tenantService.updateTenant(eq(sampleId), any(Tenant.class))).thenReturn(in);
 
-        when(tenantService.updateTenant(Mockito.eq(1L), Mockito.any(Tenant.class))).thenReturn(tenant);
-
-        mockMvc.perform(put("/tenant/1")
+        mockMvc.perform(put("/api/tenants/" + sampleId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(tenant)))
+                        .content(mapper.writeValueAsString(in)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fullName").value("Jane Doe"))
-                .andExpect(jsonPath("$.phoneNumber").value("0822334455"));
+                .andExpect(jsonPath("$.fullName").value("Eve"));
     }
 
     @Test
-    public void testDeleteTenant() throws Exception {
-        mockMvc.perform(delete("/tenant/1"))
-                .andExpect(status().isOk());
+    void testUpdateTenant_NotFound() throws Exception {
+        Tenant in = new Tenant("Eve", "085");
+        when(tenantService.updateTenant(eq(sampleId), any(Tenant.class)))
+                .thenThrow(new RuntimeException("Tenant not found"));
+
+        mockMvc.perform(put("/api/tenants/" + sampleId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(in)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testDeleteTenant() throws Exception {
+        doNothing().when(tenantService).deleteTenant(sampleId);
+
+        mockMvc.perform(delete("/api/tenants/" + sampleId))
+                .andExpect(status().isNoContent());
     }
 }

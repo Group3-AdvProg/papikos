@@ -2,42 +2,46 @@ package id.ac.ui.cs.advprog.papikos.house.Rental.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.TenantService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
-@RequestMapping("/tenant")
+@RequiredArgsConstructor
+@RequestMapping("/api/tenants")
 public class TenantController {
 
     private final TenantService service;
 
-    public TenantController(TenantService service) {
-        this.service = service;
-    }
-
     @PostMapping
-    public Tenant create(@RequestBody Tenant tenant) {
-        return service.createTenant(tenant);
+    public ResponseEntity<Tenant> create(@RequestBody Tenant tenant) {
+        Tenant created = service.createTenant(tenant);
+        return ResponseEntity.ok(created);
     }
 
     @GetMapping
-    public List<Tenant> findAll() {
-        return service.getAllTenants();
+    public ResponseEntity<List<Tenant>> list() {
+        return ResponseEntity.ok(service.getAllTenants());
     }
 
     @GetMapping("/{id}")
-    public Tenant findById(@PathVariable Long id) {
-        return service.getTenantById(id);
+    public ResponseEntity<Tenant> getById(@PathVariable UUID id) {
+        return service.getTenantById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public Tenant update(@PathVariable Long id, @RequestBody Tenant tenant) {
-        return service.updateTenant(id, tenant);
+    public ResponseEntity<Tenant> update(@PathVariable UUID id, @RequestBody Tenant tenant) {
+        return ResponseEntity.ok(service.updateTenant(id, tenant));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.deleteTenant(id);
+        return ResponseEntity.noContent().build();
     }
 }

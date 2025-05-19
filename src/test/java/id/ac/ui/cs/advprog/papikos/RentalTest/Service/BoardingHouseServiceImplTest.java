@@ -1,96 +1,104 @@
-package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
+package id.ac.ui.cs.advprog.papikos.house.Rental.service;
 
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.BoardingHouse;
-import id.ac.ui.cs.advprog.papikos.house.Rental.repository.BoardingHouseRepository;
-import id.ac.ui.cs.advprog.papikos.house.Rental.service.BoardingHouseServiceImpl;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
+import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.*;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class BoardingHouseServiceImplTest {
+class BoardingHouseServiceImplTest {
 
-    private BoardingHouseRepository repository;
-    private BoardingHouseServiceImpl service;
+    @Mock private HouseRepository repo;
+    @InjectMocks private BoardingHouseServiceImpl service;
+    private final Long id = 123L;
 
     @BeforeEach
     void setUp() {
-        repository = mock(BoardingHouseRepository.class);
-        service = new BoardingHouseServiceImpl(repository);
+        MockitoAnnotations.openMocks(this);
+    }
+
+    private House baseHouse() {
+        House h = new House();
+        h.setId(id);
+        h.setName("Home");
+        h.setAddress("123 St");
+        h.setDescription("Nice place");
+        h.setNumberOfRooms(3);
+        h.setMonthlyRent(500.0);
+        h.setImageUrl("img.png");
+        return h;
     }
 
     @Test
-    void testCreate() {
-        BoardingHouse bh = new BoardingHouse();
-        when(repository.save(bh)).thenReturn(bh);
-        BoardingHouse result = service.create(bh);
-        assertEquals(bh, result);
+    void create_findAll_findById_and_delete() {
+        House h = baseHouse();
+
+        // create
+        when(repo.save(h)).thenReturn(h);
+        House created = service.create(h);
+        assertSame(h, created);
+        verify(repo).save(h);
+
+        // findAll
+        when(repo.findAll()).thenReturn(List.of(h));
+        List<House> all = service.findAll();
+        assertEquals(1, all.size());
+        assertEquals("Home", all.get(0).getName());
+
+        // findById
+        when(repo.findById(id)).thenReturn(Optional.of(h));
+        Optional<House> opt = service.findById(id);
+        assertTrue(opt.isPresent());
+        assertEquals("123 St", opt.get().getAddress());
+
+        // delete
+        doNothing().when(repo).deleteById(id);
+        assertDoesNotThrow(() -> service.delete(id));
+        verify(repo).deleteById(id);
     }
 
     @Test
-    void testFindAll() {
-        List<BoardingHouse> list = List.of(new BoardingHouse(), new BoardingHouse());
-        when(repository.findAll()).thenReturn(list);
-        assertEquals(2, service.findAll().size());
+    void update_successful() {
+        House stored = baseHouse();
+        House changes = new House();
+        changes.setName("NewName");
+        changes.setAddress("456 Ave");
+        changes.setDescription("Updated");
+        changes.setNumberOfRooms(4);
+        changes.setMonthlyRent(600.0);
+        changes.setImageUrl("new.png");
+
+        when(repo.findById(id)).thenReturn(Optional.of(stored));
+        when(repo.save(any(House.class))).thenAnswer(i -> i.getArgument(0));
+
+        House updated = service.update(id, changes);
+
+        assertEquals("NewName", updated.getName());
+        assertEquals("456 Ave", updated.getAddress());
+        assertEquals("Updated", updated.getDescription());
+        assertEquals(4, updated.getNumberOfRooms());
+        assertEquals(600.0, updated.getMonthlyRent());
+        assertEquals("new.png", updated.getImageUrl());
+
+        verify(repo).findById(id);
+        verify(repo).save(stored);
     }
 
     @Test
-    void testFindById() {
-        BoardingHouse bh = new BoardingHouse();
-        bh.setId(1L);
-        when(repository.findById(1L)).thenReturn(Optional.of(bh));
-        Optional<BoardingHouse> result = service.findById(1L);
-        assertTrue(result.isPresent());
-        assertEquals(1L, result.get().getId());
-    }
+    void update_notFound_throws() {
+        when(repo.findById(id)).thenReturn(Optional.empty());
 
-    @Test
-    void testUpdate() {
-        Long id = 1L;
-        BoardingHouse existing = new BoardingHouse();
-        existing.setId(id);
-        existing.setName("Old Name");
-
-        BoardingHouse updated = new BoardingHouse();
-        updated.setName("New Name");
-        updated.setAddress("New Address");
-        updated.setDescription("New Desc");
-        updated.setRoomCount(4);
-        updated.setMonthlyPrice(1500000);
-
-        when(repository.findById(id)).thenReturn(Optional.of(existing));
-        when(repository.save(any(BoardingHouse.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        BoardingHouse result = service.update(id, updated);
-
-        assertEquals("New Name", result.getName());
-        assertEquals("New Address", result.getAddress());
-        assertEquals("New Desc", result.getDescription());
-        assertEquals(4, result.getRoomCount());
-        assertEquals(1500000, result.getMonthlyPrice());
-    }
-
-    @Test
-    void testUpdateNotFound() {
-        Long id = 99L;
-        BoardingHouse updated = new BoardingHouse();
-
-        when(repository.findById(id)).thenReturn(Optional.empty());
-
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            service.update(id, updated);
-        });
-
-        assertEquals("BoardingHouse not found", exception.getMessage());
-        verify(repository, times(1)).findById(id);
-    }
-
-    @Test
-    void testDelete() {
-        service.delete(1L);
-        verify(repository, times(1)).deleteById(1L);
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> service.update(id, baseHouse())
+        );
+        assertTrue(ex.getMessage().contains("House not found"));
+        verify(repo).findById(id);
+        verify(repo, never()).save(any());
     }
 }
