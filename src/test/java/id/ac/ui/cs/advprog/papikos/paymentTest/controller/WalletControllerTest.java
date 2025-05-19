@@ -123,11 +123,4 @@ public class WalletControllerTest {
     }
 
 
-    public TransactionService getTransactionService() {
-        return transactionService;
-    }
-
-    public void setTransactionService(TransactionService transactionService) {
-        this.transactionService = transactionService;
-    }
 }
