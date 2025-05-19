@@ -4,6 +4,8 @@ import id.ac.ui.cs.advprog.papikos.model.Transaction;
 import id.ac.ui.cs.advprog.papikos.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,8 +37,8 @@ public class TransactionService {
         return transactionRepository.findByUserIdAndType(userId, type);
     }
 
-    public List<Transaction> getTransactionsByUserAndDate(String userId, LocalDateTime from, LocalDateTime to) {
-        return transactionRepository.findByUserIdAndTimestampBetween(userId, from, to);
+    public Page<Transaction> getTransactionsByUserAndDate(String userId, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+        return transactionRepository.findByUserIdAndTimestampBetween(userId, from, to, pageable);
     }
 
 }
