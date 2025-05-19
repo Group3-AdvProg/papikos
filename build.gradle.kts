@@ -36,14 +36,14 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 
-	// ✅ Add for WebSocket & Messaging support
+	// ✅ WebSocket & Messaging support
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
 	implementation("org.springframework:spring-messaging")
 
-	// ─── JPA & Hibernate ───────────────────────────────────────────────
+	// ─── JPA & Hibernate ─────────────────────────────────
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-	// ─── Database (H2 for dev; switch to Postgres/MySQL in prod) ───────
+	// ─── Database (H2 for dev; switch to Postgres/MySQL in prod) ──
 	runtimeOnly("com.h2database:h2")
 
 	// Lombok
@@ -59,11 +59,6 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 	// Selenium and JUnit dependencies
-	val seleniumJavaVersion = "4.14.1"
-	val seleniumJupiterVersion = "5.0.1"
-	val webdriverManagerVersion = "5.6.3"
-	val junitJupiterVersion = "5.9.1"
-
 	testImplementation("org.seleniumhq.selenium:selenium-java:$seleniumJavaVersion")
 	testImplementation("io.github.bonigarcia:selenium-jupiter:$seleniumJupiterVersion")
 	testImplementation("io.github.bonigarcia:webdrivermanager:$webdriverManagerVersion")
@@ -71,12 +66,10 @@ dependencies {
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
 }
 
-
 // Optional: custom test tasks
 tasks.register<Test>("unitTest") {
 	description = "Runs unit tests."
 	group = "verification"
-
 	filter {
 		excludeTestsMatching("*FunctionalTest")
 	}
@@ -85,20 +78,16 @@ tasks.register<Test>("unitTest") {
 tasks.register<Test>("functionalTest") {
 	description = "Runs functional tests."
 	group = "verification"
-
 	filter {
 		includeTestsMatching("*FunctionalTest")
 	}
 }
 
-// ----- Key part: Exclude FunctionalTest from the built-in `test` task and finalize with Jacoco -----
-
+// Exclude FunctionalTest from the built-in `test` task and finalize with Jacoco
 tasks.test {
-	// 1) Exclude functional tests (they will NOT be run by `./gradlew test`)
 	filter {
 		excludeTestsMatching("*FunctionalTest")
 	}
-	// 2) Ensure code coverage report (jacocoTestReport) runs right after `test`
 	finalizedBy(tasks.jacocoTestReport)
 }
 
@@ -107,7 +96,7 @@ tasks.jacocoTestReport {
 	dependsOn(tasks.test)
 }
 
-// ----- Ensure JUnit Platform is used for ALL test tasks -----
+// Ensure JUnit Platform is used for ALL test tasks
 tasks.withType<Test>().configureEach {
 	useJUnitPlatform()
 }
