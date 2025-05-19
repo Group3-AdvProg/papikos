@@ -47,9 +47,13 @@ dependencies {
 	runtimeOnly("com.h2database:h2")
 
 	// Lombok
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	compileOnly("org.projectlombok:lombok")
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 	annotationProcessor("org.projectlombok:lombok")
+	runtimeOnly("com.h2database:h2")
+
 
 	// Devtools
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
