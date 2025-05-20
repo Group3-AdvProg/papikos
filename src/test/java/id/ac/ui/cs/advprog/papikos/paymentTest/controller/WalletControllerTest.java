@@ -1,6 +1,8 @@
 package id.ac.ui.cs.advprog.papikos.paymentTest.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.papikos.auth.filter.JwtFilter;
+import id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil;
 import id.ac.ui.cs.advprog.papikos.paymentMain.controller.WalletController;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payload.request.TopUpRequest;
@@ -8,6 +10,7 @@ import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.paymentMain.service.TransactionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -23,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @WebMvcTest(controllers = WalletController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class WalletControllerTest {
 
     @Autowired
@@ -36,6 +40,13 @@ public class WalletControllerTest {
 
     @MockBean
     private UserRepository userRepository;
+
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private JwtFilter jwtFilter;
+
 
     private TopUpRequest buildRequest(String method) {
         TopUpRequest request = new TopUpRequest();
