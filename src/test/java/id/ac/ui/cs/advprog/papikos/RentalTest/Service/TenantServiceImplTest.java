@@ -1,7 +1,8 @@
-package id.ac.ui.cs.advprog.papikos.house.Rental.service;
+package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.repository.TenantRepository;
+import id.ac.ui.cs.advprog.papikos.house.Rental.service.TenantServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -11,7 +12,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class TenantServiceImplTest {
+public class TenantServiceImplTest {
 
     @Mock
     private TenantRepository repo;
@@ -19,7 +20,7 @@ class TenantServiceImplTest {
     @InjectMocks
     private TenantServiceImpl service;
 
-    private final UUID id = UUID.randomUUID();
+    private final Long id = 1L; //  pakai Long
 
     @BeforeEach
     void setUp() {
@@ -87,6 +88,7 @@ class TenantServiceImplTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             service.updateTenant(id, baseTenant());
         });
+
         assertTrue(ex.getMessage().contains("Tenant not found"));
         verify(repo).findById(id);
         verify(repo, never()).save(any());

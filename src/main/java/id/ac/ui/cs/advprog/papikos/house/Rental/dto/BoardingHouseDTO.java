@@ -12,8 +12,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BoardingHouseDTO {
-    private String id;
+    private Long id; // sesuaikan dengan entitas House
     private String name;
-    private int monthlyPrice;
-    private UUID landlordId;
+    private double monthlyRent; // sesuaikan dengan House
+    private UUID landlordId; // bisa didapat dari house.getOwner().getId()
 }

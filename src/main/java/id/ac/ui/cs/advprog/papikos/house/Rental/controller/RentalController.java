@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,19 +27,19 @@ public class RentalController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Rental> findById(@PathVariable UUID id) {
+    public ResponseEntity<Rental> findById(@PathVariable Long id) { //  UUID → Long
         return service.getRentalById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Rental> update(@PathVariable UUID id, @RequestBody Rental rental) {
+    public ResponseEntity<Rental> update(@PathVariable Long id, @RequestBody Rental rental) { //  UUID → Long
         return ResponseEntity.ok(service.updateRental(id, rental));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) { //  UUID → Long
         service.deleteRental(id);
         return ResponseEntity.noContent().build();
     }

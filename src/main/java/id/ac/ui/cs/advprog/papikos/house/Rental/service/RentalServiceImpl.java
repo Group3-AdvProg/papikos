@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,18 +25,20 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
-    public Optional<Rental> getRentalById(UUID id) {
+    public Optional<Rental> getRentalById(Long id) { //  UUID → Long
         return repo.findById(id);
     }
 
     @Override
-    public Rental updateRental(UUID id, Rental rentalDetails) {
+    public Rental updateRental(Long id, Rental rentalDetails) { //  UUID → Long
         return repo.findById(id)
                 .map(r -> {
                     r.setHouseId(rentalDetails.getHouseId());
                     r.setCheckInDate(rentalDetails.getCheckInDate());
                     r.setDurationInMonths(rentalDetails.getDurationInMonths());
                     r.setApproved(rentalDetails.isApproved());
+                    r.setTotalPrice(rentalDetails.getTotalPrice());
+                    r.setPaid(rentalDetails.isPaid());
                     if (rentalDetails.getTenant() != null) {
                         r.setTenant(rentalDetails.getTenant());
                     }
@@ -47,7 +48,7 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
-    public void deleteRental(UUID id) {
+    public void deleteRental(Long id) { // ✅ UUID → Long
         repo.deleteById(id);
     }
 }
