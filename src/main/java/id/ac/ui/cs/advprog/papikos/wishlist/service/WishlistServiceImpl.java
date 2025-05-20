@@ -4,7 +4,6 @@ import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
-import id.ac.ui.cs.advprog.papikos.wishlist.observer.TenantNotificationObserver;
 import id.ac.ui.cs.advprog.papikos.wishlist.observer.WishlistNotifier;
 import id.ac.ui.cs.advprog.papikos.wishlist.observer.WishlistNotifierImpl;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
@@ -22,7 +21,12 @@ public class WishlistServiceImpl implements WishlistService {
     private final WishlistItemRepository wishlistItemRepo;
     private final NotificationRepository notificationRepo;
     private final HouseRepository houseRepository;
-    private final WishlistNotifier notifier = new WishlistNotifierImpl();
+    private WishlistNotifier notifier;
+
+    @jakarta.annotation.PostConstruct
+    private void initNotifier() {
+        this.notifier = new WishlistNotifierImpl(notificationRepo);
+    }
 
     @Override
     public void registerTenant(String tenantId, String tenantName) {
@@ -31,7 +35,7 @@ public class WishlistServiceImpl implements WishlistService {
 
     @Override
     public void addToWishlist(String tenantId, Long houseId) {
-        houseRepository.findById(houseId)
+        House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new EntityNotFoundException("House not found with id: " + houseId));
 
         WishlistItem existing = wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId);
@@ -45,8 +49,10 @@ public class WishlistServiceImpl implements WishlistService {
                 .build();
         wishlistItemRepo.save(item);
 
-        notifier.registerObserver(houseId, new TenantNotificationObserver(tenantId, notificationRepo));
-        notifier.notifyObservers(houseId);
+        // Notify the owner when a new wishlist entry is added
+        if (house.getOwner() != null && house.getOwner().getId() != null) {
+            notifier.notifyObservers(houseId, house.getOwner().getId().toString());
+        }
     }
 
     @Override
@@ -68,15 +74,25 @@ public class WishlistServiceImpl implements WishlistService {
     @Override
     public List<String> getNotificationsByTenant(String tenantId) {
         return notificationRepo.findByTenantId(tenantId)
-                .stream().map(Notification::getMessage).toList();
+                .stream()
+                .map(Notification::getMessage)
+                .toList();
+    }
+
+    @Override
+    public List<String> getNotificationsByOwner(String ownerId) {
+        return notificationRepo.findByOwnerId(ownerId)
+                .stream()
+                .map(Notification::getMessage)
+                .toList();
     }
 
     @Override
     public void notifyAvailability(Long houseId) {
-        List<WishlistItem> items = wishlistItemRepo.findByHouseId(houseId);
-        if (items.isEmpty()) {
-            return;
-        }
-        notifier.notifyObservers(houseId);
+        houseRepository.findById(houseId).ifPresent(house -> {
+            if (house.getOwner() != null && house.getOwner().getId() != null) {
+                notifier.notifyObservers(houseId, house.getOwner().getId().toString());
+            }
+        });
     }
 }

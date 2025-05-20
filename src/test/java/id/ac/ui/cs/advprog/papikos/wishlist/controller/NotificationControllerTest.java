@@ -27,7 +27,7 @@ public class NotificationControllerTest {
         when(wishlistService.getNotificationsByTenant("tenant123"))
                 .thenReturn(List.of("Room type Kamar AC is now available!"));
 
-        mockMvc.perform(get("http://localhost:8080/api/notifications/tenant123"))
+        mockMvc.perform(get("/api/notifications/tenant123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(1))
                 .andExpect(jsonPath("$[0]").value("Room type Kamar AC is now available!"));
@@ -38,7 +38,7 @@ public class NotificationControllerTest {
         when(wishlistService.getNotificationsByTenant("tenant123"))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("http://localhost:8080/api/notifications/tenant123"))
+        mockMvc.perform(get("/api/notifications/tenant123"))
                 .andExpect(status().isNoContent());
     }
 }
