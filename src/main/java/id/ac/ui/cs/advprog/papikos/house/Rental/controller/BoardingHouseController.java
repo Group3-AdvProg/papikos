@@ -2,20 +2,18 @@ package id.ac.ui.cs.advprog.papikos.house.Rental.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.BoardingHouseService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/houses")
 public class BoardingHouseController {
 
     private final BoardingHouseService service;
-
-    public BoardingHouseController(BoardingHouseService service) {
-        this.service = service;
-    }
 
     @PostMapping
     public ResponseEntity<House> create(@RequestBody House house) {
@@ -36,11 +34,7 @@ public class BoardingHouseController {
 
     @PutMapping("/{id}")
     public ResponseEntity<House> update(@PathVariable Long id, @RequestBody House house) {
-        try {
-            return ResponseEntity.ok(service.update(id, house));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(service.update(id, house));
     }
 
     @DeleteMapping("/{id}")

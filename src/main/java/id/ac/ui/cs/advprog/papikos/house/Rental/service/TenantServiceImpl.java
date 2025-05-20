@@ -2,7 +2,7 @@ package id.ac.ui.cs.advprog.papikos.house.Rental.service;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.repository.TenantRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,14 +10,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class TenantServiceImpl implements TenantService {
 
     private final TenantRepository repo;
-
-    @Autowired
-    public TenantServiceImpl(TenantRepository repo) {
-        this.repo = repo;
-    }
 
     @Override
     public Tenant createTenant(Tenant tenant) {

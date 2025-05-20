@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.papikos.house.Rental.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,14 +10,11 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/rentals")
 public class RentalController {
 
     private final RentalService service;
-
-    public RentalController(RentalService service) {
-        this.service = service;
-    }
 
     @PostMapping
     public ResponseEntity<Rental> create(@RequestBody Rental rental) {
@@ -38,16 +36,11 @@ public class RentalController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Rental> update(@PathVariable UUID id, @RequestBody Rental rental) {
-        try {
-            Rental updated = service.updateRental(id, rental);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(service.updateRental(id, rental));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancel(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.deleteRental(id);
         return ResponseEntity.noContent().build();
     }

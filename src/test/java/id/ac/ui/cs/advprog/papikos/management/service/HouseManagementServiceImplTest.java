@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.management.service;
 
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementServiceImpl;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
@@ -25,29 +26,30 @@ class HouseManagementServiceImplTest {
     @InjectMocks
     private HouseManagementServiceImpl houseService;
 
+    private User owner;
+    private House house;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        owner = new User();
+        owner.setId(1L);
+        owner.setEmail("owner@example.com");
+
+        house = new House("Kos A", "Jakarta", "Desc", 4, 1200000,
+                "https://dummyimage.com/kos.jpg", owner);
+        house.setId(1L);
     }
 
     @Test
     void testAddHouse() {
-        House house = new House("Kos A", "Jakarta", "Desc", 4, 1200000, "https://dummyimage.com/kos.jpg");
         houseService.addHouse(house);
         verify(houseRepository, times(1)).save(house);
     }
 
     @Test
-    void testFindAll() {
-        when(houseRepository.findAll()).thenReturn(Arrays.asList(new House(), new House()));
-        List<House> result = houseService.findAll();
-        assertEquals(2, result.size());
-        verify(houseRepository, times(1)).findAll();
-    }
-
-    @Test
     void testFindById() {
-        House house = new House();
         when(houseRepository.findById(1L)).thenReturn(Optional.of(house));
         Optional<House> result = houseService.findById(1L);
         assertTrue(result.isPresent());
@@ -55,22 +57,36 @@ class HouseManagementServiceImplTest {
     }
 
     @Test
+    void testFindAllByOwner() {
+        when(houseRepository.findByOwner(owner)).thenReturn(List.of(house));
+        List<House> result = houseService.findAllByOwner(owner);
+        assertEquals(1, result.size());
+        assertEquals(house.getId(), result.get(0).getId());
+    }
+
+    @Test
+    void testFindByIdAndOwner() {
+        when(houseRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(house));
+        Optional<House> result = houseService.findByIdAndOwner(1L, owner);
+        assertTrue(result.isPresent());
+        assertEquals(house, result.get());
+    }
+
+    @Test
     void testUpdateHouse() {
-        House updated = new House(1L, "New Kos", "New Addr", "Updated", 5, 1500000, "https://dummyimage.com/kos.jpg");
-        when(houseRepository.findById(1L)).thenReturn(Optional.of(updated));
+        when(houseRepository.findById(1L)).thenReturn(Optional.of(house));
+        house.setName("Updated Name");
 
-        houseService.updateHouse(1L, updated);
-
-        verify(houseRepository).save(updated);
+        houseService.updateHouse(1L, house);
+        verify(houseRepository).save(house);
     }
 
     @Test
     void testUpdateHouseNotFound() {
-        House updated = new House(1L, "New Kos", "New Addr", "Updated", 5, 1500000, "https://dummyimage.com/kos.jpg");
         when(houseRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> {
-            houseService.updateHouse(1L, updated);
+            houseService.updateHouse(1L, house);
         });
 
         verify(houseRepository, never()).save(any());

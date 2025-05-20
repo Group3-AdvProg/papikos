@@ -1,10 +1,16 @@
 package id.ac.ui.cs.advprog.papikos.house.Rental.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Tenant {
 
@@ -22,40 +28,9 @@ public class Tenant {
     )
     private List<Rental> rentals = new ArrayList<>();
 
-    public Tenant() {}
-
     public Tenant(String fullName, String phoneNumber) {
         this.fullName = fullName;
         this.phoneNumber = phoneNumber;
-    }
-
-    // --- Getters & Setters ---
-    public UUID getId() {
-        return id;
-    }
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public List<Rental> getRentals() {
-        return rentals;
-    }
-    public void setRentals(List<Rental> rentals) {
-        this.rentals = rentals;
     }
 
     // Optional helpers
