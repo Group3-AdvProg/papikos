@@ -18,7 +18,7 @@ public class RentalServiceImplTest {
 
     @Mock private RentalRepository repo;
     @InjectMocks private RentalServiceImpl service;
-    private final UUID id = UUID.randomUUID();
+    private final Long id = 1L;  //  pakai Long, bukan UUID
 
     @BeforeEach
     void init() {
@@ -31,7 +31,7 @@ public class RentalServiceImplTest {
         r.setHouseId("H1");
         r.setFullName("Foo");
         r.setPhoneNumber("081234");
-        r.setCheckInDate(LocalDate.of(2025,1,1));
+        r.setCheckInDate(LocalDate.of(2025, 1, 1));
         r.setDurationInMonths(3);
         r.setApproved(false);
         return r;
@@ -82,8 +82,7 @@ public class RentalServiceImplTest {
         assertEquals("H2", updated.getHouseId());
         assertEquals(5, updated.getDurationInMonths());
         assertTrue(updated.isApproved());
-        // original fullName, phoneNumber, checkInDate unchanged
-        assertEquals("Foo", updated.getFullName());
+        assertEquals("Foo", updated.getFullName()); // tidak berubah
         verify(repo).findById(id);
         verify(repo).save(stored);
     }
@@ -91,7 +90,7 @@ public class RentalServiceImplTest {
     @Test
     void update_with_new_tenant() {
         Rental stored = baseRental();
-        Tenant t = new Tenant("Bar","082");
+        Tenant t = new Tenant("Bar", "082");
         stored.setTenant(null);
 
         Rental details = baseRental();
@@ -114,6 +113,7 @@ public class RentalServiceImplTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             service.updateRental(id, baseRental());
         });
+
         assertTrue(ex.getMessage().contains("Rental not found"));
         verify(repo).findById(id);
         verify(repo, never()).save(any());

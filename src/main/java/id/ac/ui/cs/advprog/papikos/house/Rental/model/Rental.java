@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -14,8 +13,8 @@ import java.util.UUID;
 public class Rental {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //  pakai Long-compatible strategy
+    private Long id; //  Ganti UUID → Long
 
     private String houseId;
     private String fullName;

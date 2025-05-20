@@ -20,7 +20,7 @@ public class TenantServiceImplTest {
     @InjectMocks
     private TenantServiceImpl service;
 
-    private final UUID id = UUID.randomUUID();
+    private final Long id = 1L; //  pakai Long
 
     @BeforeEach
     void setUp() {
@@ -88,6 +88,7 @@ public class TenantServiceImplTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             service.updateTenant(id, baseTenant());
         });
+
         assertTrue(ex.getMessage().contains("Tenant not found"));
         verify(repo).findById(id);
         verify(repo, never()).save(any());

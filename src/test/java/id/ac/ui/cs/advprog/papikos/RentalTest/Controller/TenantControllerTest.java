@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.papikos.RentalTest.Controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.house.Rental.controller.TenantController;
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.TenantService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.*; //  Make sure this is imported
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -30,9 +32,8 @@ class TenantControllerTest {
 
     private MockMvc mockMvc;
     private ObjectMapper mapper;
-    private final UUID sampleId = UUID.randomUUID();
+    private final Long sampleId = 100L;
 
-    // Local exception handler untuk unit test
     @RestControllerAdvice
     static class TestExceptionHandler {
         @ExceptionHandler(RuntimeException.class)
@@ -49,17 +50,27 @@ class TenantControllerTest {
         MockitoAnnotations.openMocks(this);
         mapper = new ObjectMapper();
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new TestExceptionHandler()) // ✅ inject error handler
+                .setControllerAdvice(new TestExceptionHandler())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .build();
     }
 
+    private Tenant makeTenant(String name, String phone, String email) {
+        Tenant t = new Tenant(name, phone);
+        t.setId(sampleId);
+        t.setEmail(email);
+        t.setPassword("secure123");
+        t.setRole("TENANT");
+        t.setBalance(1000.0);
+        return t;
+    }
+
     @Test
     void testListTenants() throws Exception {
-        Tenant t1 = new Tenant("Alice", "081");
-        Tenant t2 = new Tenant("Bob", "082");
-        t1.setId(sampleId);
-        t2.setId(UUID.randomUUID());
+        Tenant t1 = makeTenant("Alice", "081", "alice@mail.com");
+        Tenant t2 = makeTenant("Bob", "082", "bob@mail.com");
+        t2.setId(101L);
+
         when(tenantService.getAllTenants()).thenReturn(Arrays.asList(t1, t2));
 
         mockMvc.perform(get("/api/tenants"))
@@ -70,8 +81,7 @@ class TenantControllerTest {
 
     @Test
     void testGetById_Found() throws Exception {
-        Tenant t = new Tenant("Carol", "083");
-        t.setId(sampleId);
+        Tenant t = makeTenant("Carol", "083", "carol@mail.com");
         when(tenantService.getTenantById(sampleId)).thenReturn(Optional.of(t));
 
         mockMvc.perform(get("/api/tenants/" + sampleId))
@@ -89,23 +99,23 @@ class TenantControllerTest {
 
     @Test
     void testCreateTenant() throws Exception {
-        Tenant in = new Tenant("Dave", "084");
-        Tenant out = new Tenant("Dave", "084");
+        Tenant in = makeTenant("Dave", "084", "dave@mail.com");
+        Tenant out = makeTenant("Dave", "084", "dave@mail.com");
         out.setId(sampleId);
+
         when(tenantService.createTenant(any(Tenant.class))).thenReturn(out);
 
         mockMvc.perform(post("/api/tenants")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(in)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(sampleId.toString()))
+                .andExpect(jsonPath("$.id").value(sampleId))
                 .andExpect(jsonPath("$.fullName").value("Dave"));
     }
 
     @Test
     void testUpdateTenant_Success() throws Exception {
-        Tenant in = new Tenant("Eve", "085");
-        in.setId(sampleId);
+        Tenant in = makeTenant("Eve", "085", "eve@mail.com");
         when(tenantService.updateTenant(eq(sampleId), any(Tenant.class))).thenReturn(in);
 
         mockMvc.perform(put("/api/tenants/" + sampleId)
@@ -117,7 +127,8 @@ class TenantControllerTest {
 
     @Test
     void testUpdateTenant_NotFound() throws Exception {
-        Tenant in = new Tenant("Eve", "085");
+        Tenant in = makeTenant("Eve", "085", "eve@mail.com");
+
         when(tenantService.updateTenant(eq(sampleId), any(Tenant.class)))
                 .thenThrow(new RuntimeException("Tenant not found"));
 
@@ -133,5 +144,23 @@ class TenantControllerTest {
 
         mockMvc.perform(delete("/api/tenants/" + sampleId))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testAddAndRemoveRentalHelpers() {
+        Tenant tenant = new Tenant("Fiona", "086");
+        tenant.setId(200L);
+
+        Rental rental = new Rental();
+        rental.setId(1L);
+        rental.setHouseId("H001");
+
+        tenant.addRental(rental);
+        assertEquals(1, tenant.getRentals().size());
+        assertEquals(tenant, rental.getTenant());
+
+        tenant.removeRental(rental);
+        assertTrue(tenant.getRentals().isEmpty());
+        assertNull(rental.getTenant());
     }
 }

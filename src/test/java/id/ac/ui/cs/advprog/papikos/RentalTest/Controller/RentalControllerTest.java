@@ -32,9 +32,8 @@ class RentalControllerTest {
     @InjectMocks private RentalController controller;
     private MockMvc mockMvc;
     private ObjectMapper mapper;
-    private final UUID sampleId = UUID.randomUUID();
+    private final Long sampleId = 1L; //  pakai Long
 
-    // Error handler untuk test
     @RestControllerAdvice
     static class TestExceptionHandler {
         @ExceptionHandler(RuntimeException.class)
@@ -54,7 +53,7 @@ class RentalControllerTest {
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new TestExceptionHandler()) // ✅ tambahkan error handler
+                .setControllerAdvice(new TestExceptionHandler())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .build();
     }
@@ -100,7 +99,7 @@ class RentalControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(in)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(out.getId().toString()))
+                .andExpect(jsonPath("$.id").value(out.getId())) //  Gak perlu toString()
                 .andExpect(jsonPath("$.durationInMonths").value(1));
     }
 
@@ -120,7 +119,7 @@ class RentalControllerTest {
     void testUpdateRental_NotFound() throws Exception {
         Rental update = createRental("U");
         when(rentalService.updateRental(eq(sampleId), any(Rental.class)))
-                .thenThrow(new RuntimeException("not found")); // ini akan ditangkap oleh handler
+                .thenThrow(new RuntimeException("not found"));
 
         mockMvc.perform(put("/api/rentals/" + sampleId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -136,10 +135,9 @@ class RentalControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    // helper to build a sample Rental
     private Rental createRental(String suffix) {
         Rental r = new Rental();
-        r.setId(sampleId);
+        r.setId(sampleId); //  pakai Long
         r.setHouseId("house" + suffix);
         r.setFullName("Name" + suffix);
         r.setPhoneNumber("08123");

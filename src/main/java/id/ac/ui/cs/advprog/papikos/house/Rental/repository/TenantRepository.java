@@ -4,9 +4,7 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
-
 @Repository
-public interface TenantRepository extends JpaRepository<Tenant, UUID> {
-    // juga pakai UUID
+public interface TenantRepository extends JpaRepository<Tenant, Long> {
+    //  pakai Long, karena Tenant.java juga pakai Long sebagai ID
 }
