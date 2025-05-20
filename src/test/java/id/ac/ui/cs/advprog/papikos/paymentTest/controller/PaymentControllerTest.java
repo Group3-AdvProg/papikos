@@ -1,32 +1,41 @@
 package id.ac.ui.cs.advprog.papikos.paymentTest.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.papikos.auth.filter.JwtFilter;
+import id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil;
 import id.ac.ui.cs.advprog.papikos.paymentMain.controller.PaymentController;
 import id.ac.ui.cs.advprog.papikos.paymentMain.service.PaymentService;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payload.request.PaymentRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 @WebMvcTest(PaymentController.class)
+@AutoConfigureMockMvc(addFilters = false) //
 public class PaymentControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockBean
     private PaymentService paymentService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private JwtFilter jwtFilter;
 
     @Test
     void shouldReturnSuccessWhenPaymentIsValid() throws Exception {

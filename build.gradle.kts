@@ -32,6 +32,9 @@ val webdriverManagerVersion = "5.6.3"
 val junitJupiterVersion = "5.9.1"
 
 dependencies {
+	// Security
+	testImplementation("org.springframework.security:spring-security-test")
+
 	// Spring Boot starters
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.springframework.boot:spring-boot-starter-web")
