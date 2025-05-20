@@ -9,10 +9,13 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -29,17 +32,28 @@ class RentalControllerTest {
     @InjectMocks private RentalController controller;
     private MockMvc mockMvc;
     private ObjectMapper mapper;
-    private final UUID sampleId = UUID.randomUUID();
+    private final Long sampleId = 1L; //  pakai Long
+
+    @RestControllerAdvice
+    static class TestExceptionHandler {
+        @ExceptionHandler(RuntimeException.class)
+        public ResponseEntity<String> handleRuntime(RuntimeException ex) {
+            if (ex.getMessage().toLowerCase().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.internalServerError().body("Unexpected error: " + ex.getMessage());
+        }
+    }
 
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
-        // configure ObjectMapper for Java 8 dates
         mapper = new ObjectMapper()
                 .registerModule(new JavaTimeModule())
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new TestExceptionHandler())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .build();
     }
@@ -85,7 +99,7 @@ class RentalControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(in)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(out.getId().toString()))
+                .andExpect(jsonPath("$.id").value(out.getId())) //  Gak perlu toString()
                 .andExpect(jsonPath("$.durationInMonths").value(1));
     }
 
@@ -121,10 +135,9 @@ class RentalControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    // helper to build a sample Rental
     private Rental createRental(String suffix) {
         Rental r = new Rental();
-        r.setId(sampleId);
+        r.setId(sampleId); //  pakai Long
         r.setHouseId("house" + suffix);
         r.setFullName("Name" + suffix);
         r.setPhoneNumber("08123");

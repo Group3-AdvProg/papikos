@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface RentalRepository extends JpaRepository<Rental, UUID> {
+public interface RentalRepository extends JpaRepository<Rental, Long>{
     // sekarang UUID, bukan Long
 }

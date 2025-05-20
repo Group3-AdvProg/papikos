@@ -1,8 +1,9 @@
-package id.ac.ui.cs.advprog.papikos.house.Rental.service;
+package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.repository.RentalRepository;
+import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -13,11 +14,11 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class RentalServiceImplTest {
+public class RentalServiceImplTest {
 
     @Mock private RentalRepository repo;
     @InjectMocks private RentalServiceImpl service;
-    private final UUID id = UUID.randomUUID();
+    private final Long id = 1L;  //  pakai Long, bukan UUID
 
     @BeforeEach
     void init() {
@@ -30,7 +31,7 @@ class RentalServiceImplTest {
         r.setHouseId("H1");
         r.setFullName("Foo");
         r.setPhoneNumber("081234");
-        r.setCheckInDate(LocalDate.of(2025,1,1));
+        r.setCheckInDate(LocalDate.of(2025, 1, 1));
         r.setDurationInMonths(3);
         r.setApproved(false);
         return r;
@@ -81,8 +82,7 @@ class RentalServiceImplTest {
         assertEquals("H2", updated.getHouseId());
         assertEquals(5, updated.getDurationInMonths());
         assertTrue(updated.isApproved());
-        // original fullName, phoneNumber, checkInDate unchanged
-        assertEquals("Foo", updated.getFullName());
+        assertEquals("Foo", updated.getFullName()); // tidak berubah
         verify(repo).findById(id);
         verify(repo).save(stored);
     }
@@ -90,8 +90,7 @@ class RentalServiceImplTest {
     @Test
     void update_with_new_tenant() {
         Rental stored = baseRental();
-        Tenant t = new Tenant("Bar","082");
-        // attach existing or null tenant in store
+        Tenant t = new Tenant("Bar", "082");
         stored.setTenant(null);
 
         Rental details = baseRental();
@@ -114,6 +113,7 @@ class RentalServiceImplTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             service.updateRental(id, baseRental());
         });
+
         assertTrue(ex.getMessage().contains("Rental not found"));
         verify(repo).findById(id);
         verify(repo, never()).save(any());
