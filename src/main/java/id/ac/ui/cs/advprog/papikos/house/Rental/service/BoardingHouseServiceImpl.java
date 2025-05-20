@@ -15,11 +15,6 @@ public class BoardingHouseServiceImpl implements BoardingHouseService {
     private final HouseRepository repo;
 
     @Override
-    public House create(House house) {
-        return repo.save(house);
-    }
-
-    @Override
     public List<House> findAll() {
         return repo.findAll();
     }
@@ -27,25 +22,5 @@ public class BoardingHouseServiceImpl implements BoardingHouseService {
     @Override
     public Optional<House> findById(Long id) {
         return repo.findById(id);
-    }
-
-    @Override
-    public House update(Long id, House updatedHouse) {
-        return repo.findById(id)
-                .map(h -> {
-                    h.setName(updatedHouse.getName());
-                    h.setAddress(updatedHouse.getAddress());
-                    h.setDescription(updatedHouse.getDescription());
-                    h.setNumberOfRooms(updatedHouse.getNumberOfRooms());
-                    h.setMonthlyRent(updatedHouse.getMonthlyRent());
-                    h.setImageUrl(updatedHouse.getImageUrl());
-                    return repo.save(h);
-                })
-                .orElseThrow(() -> new RuntimeException("House not found: " + id));
-    }
-
-    @Override
-    public void delete(Long id) {
-        repo.deleteById(id);
     }
 }

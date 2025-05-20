@@ -7,18 +7,16 @@ import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.http.ResponseEntity;
 
 import java.util.*;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,7 +32,7 @@ class BoardingHouseControllerTest {
     private MockMvc mockMvc;
     private ObjectMapper mapper;
 
-    // Error handler biar test bisa interpretasi RuntimeException jadi 404
+    // Handler untuk runtime error jadi 404
     @RestControllerAdvice
     static class TestExceptionHandler {
         @ExceptionHandler(RuntimeException.class)
@@ -51,7 +49,7 @@ class BoardingHouseControllerTest {
         MockitoAnnotations.openMocks(this);
         mapper = new ObjectMapper();
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                .setControllerAdvice(new TestExceptionHandler()) // ✅ inject error handler
+                .setControllerAdvice(new TestExceptionHandler())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper))
                 .build();
     }
@@ -96,52 +94,5 @@ class BoardingHouseControllerTest {
 
         mockMvc.perform(get("/api/houses/99"))
                 .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void testCreateHouse() throws Exception {
-        House in = makeHouse(null, "New");
-        in.setId(null);
-        House out = makeHouse(7L, "New");
-        when(service.create(any(House.class))).thenReturn(out);
-
-        mockMvc.perform(post("/api/houses")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(in)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(7))
-                .andExpect(jsonPath("$.name").value("New"));
-    }
-
-    @Test
-    void testUpdateHouse_Success() throws Exception {
-        House updated = makeHouse(5L, "Upd");
-        when(service.update(eq(5L), any(House.class))).thenReturn(updated);
-
-        mockMvc.perform(put("/api/houses/5")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(updated)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.description").value("Upd Desc"));
-    }
-
-    @Test
-    void testUpdateHouse_NotFound() throws Exception {
-        House body = makeHouse(5L, "Nope");
-        when(service.update(eq(5L), any(House.class)))
-                .thenThrow(new RuntimeException("House not found"));
-
-        mockMvc.perform(put("/api/houses/5")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(body)))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void testDeleteHouse() throws Exception {
-        doNothing().when(service).delete(123L);
-
-        mockMvc.perform(delete("/api/houses/123"))
-                .andExpect(status().isNoContent());
     }
 }

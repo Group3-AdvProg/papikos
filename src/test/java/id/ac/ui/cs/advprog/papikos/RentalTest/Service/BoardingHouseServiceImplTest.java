@@ -40,18 +40,6 @@ public class BoardingHouseServiceImplTest {
     }
 
     @Test
-    void create_shouldSaveHouse() {
-        House h = baseHouse();
-
-        when(repo.save(h)).thenReturn(h);
-
-        House created = service.create(h);
-
-        assertSame(h, created);
-        verify(repo).save(h);
-    }
-
-    @Test
     void findAll_shouldReturnListOfHouses() {
         House h = baseHouse();
         when(repo.findAll()).thenReturn(List.of(h));
@@ -93,55 +81,5 @@ public class BoardingHouseServiceImplTest {
 
         assertTrue(result.isEmpty());
         verify(repo).findById(id);
-    }
-
-    @Test
-    void delete_shouldCallDeleteById() {
-        doNothing().when(repo).deleteById(id);
-
-        assertDoesNotThrow(() -> service.delete(id));
-
-        verify(repo).deleteById(id);
-    }
-
-    @Test
-    void update_successful() {
-        House stored = baseHouse();
-        House changes = new House();
-        changes.setName("NewName");
-        changes.setAddress("456 Ave");
-        changes.setDescription("Updated");
-        changes.setNumberOfRooms(4);
-        changes.setMonthlyRent(600.0);
-        changes.setImageUrl("new.png");
-
-        when(repo.findById(id)).thenReturn(Optional.of(stored));
-        when(repo.save(any(House.class))).thenAnswer(i -> i.getArgument(0));
-
-        House updated = service.update(id, changes);
-
-        assertEquals("NewName", updated.getName());
-        assertEquals("456 Ave", updated.getAddress());
-        assertEquals("Updated", updated.getDescription());
-        assertEquals(4, updated.getNumberOfRooms());
-        assertEquals(600.0, updated.getMonthlyRent());
-        assertEquals("new.png", updated.getImageUrl());
-
-        verify(repo).findById(id);
-        verify(repo).save(stored);
-    }
-
-    @Test
-    void update_notFound_throwsException() {
-        when(repo.findById(id)).thenReturn(Optional.empty());
-
-        RuntimeException ex = assertThrows(
-                RuntimeException.class,
-                () -> service.update(id, baseHouse())
-        );
-
-        assertTrue(ex.getMessage().contains("House not found"));
-        verify(repo).findById(id);
-        verify(repo, never()).save(any());
     }
 }

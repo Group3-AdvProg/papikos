@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BoardingHouseService {
-    House create(House house);
+
     List<House> findAll();
+
     Optional<House> findById(Long id);
-    House update(Long id, House updatedHouse);
-    void delete(Long id);
 }
