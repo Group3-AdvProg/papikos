@@ -12,4 +12,5 @@ public interface HouseManagementService {
     void updateHouse(Long id, House updatedHouse);
     void deleteHouse(Long id);
     Optional<House> findByIdAndOwner(Long id, User owner);
+    List<House> searchHouses(User owner, String keyword, Double minRent, Double maxRent);
 }

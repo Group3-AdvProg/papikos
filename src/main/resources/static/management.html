@@ -82,6 +82,10 @@
         ➕ Add New House
     </button>
 
+    <form id="searchForm" class="row g-2 mb-3">
+        <input type="text" id="keyword" name="keyword" class="form-control" placeholder="Search by name or location..." />
+    </form>
+
     <div class="row row-cols-1 row-cols-md-3 g-4" id="houseContainer"></div>
 </div>
 
@@ -261,6 +265,32 @@
     }
 
     window.onload = fetchHouses;
+
+    document.getElementById("keyword").addEventListener("input", debounce(async function () {
+        const keyword = this.value;
+
+        const params = new URLSearchParams();
+        if (keyword) params.append("keyword", keyword);
+
+        const res = await fetch(`/api/management/houses/search?${params.toString()}`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+
+        if (!res.ok) {
+            return; // silent fail
+        }
+
+        const filteredHouses = await res.json();
+        renderHouses(filteredHouses);
+    }, 300)); // ← debounce delay in ms
+
+    function debounce(func, delay) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
 </script>
 </body>
 </html>

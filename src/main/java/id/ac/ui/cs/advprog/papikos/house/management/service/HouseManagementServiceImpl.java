@@ -47,4 +47,15 @@ public class HouseManagementServiceImpl implements HouseManagementService {
     public void deleteHouse(Long id) {
         houseRepository.deleteById(id);
     }
+
+    @Override
+    public List<House> searchHouses(User owner, String keyword, Double minRent, Double maxRent) {
+        return houseRepository.findAll().stream()
+                .filter(h -> h.getOwner().equals(owner))
+                .filter(h -> keyword == null || h.getName().toLowerCase().contains(keyword.toLowerCase()) || h.getAddress().toLowerCase().contains(keyword.toLowerCase()))
+                .filter(h -> minRent == null || h.getMonthlyRent() >= minRent)
+                .filter(h -> maxRent == null || h.getMonthlyRent() <= maxRent)
+                .toList();
+    }
+
 }
