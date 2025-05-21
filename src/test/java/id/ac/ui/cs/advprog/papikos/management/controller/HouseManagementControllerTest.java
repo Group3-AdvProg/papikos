@@ -113,4 +113,32 @@ class HouseManagementControllerTest {
 
         verify(houseManagementService, times(1)).deleteHouse(1L);
     }
+
+    @Test
+    void testSearchHouses_KeywordOnly() throws Exception {
+        when(houseManagementService.searchHouses(owner, "UI", null, null))
+                .thenReturn(List.of(house));
+
+        mockMvc.perform(get("/api/management/houses/search")
+                        .principal(() -> "owner@example.com")
+                        .param("keyword", "UI"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Kos A"))
+                .andExpect(jsonPath("$[0].address").value("Jl. UI"));
+    }
+
+    @Test
+    void testSearchHouses_AllFilters() throws Exception {
+        when(houseManagementService.searchHouses(owner, "Kos", 1000000.0, 2000000.0))
+                .thenReturn(List.of(house));
+
+        mockMvc.perform(get("/api/management/houses/search")
+                        .principal(() -> "owner@example.com")
+                        .param("keyword", "Kos")
+                        .param("minRent", "1000000")
+                        .param("maxRent", "2000000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].monthlyRent").value(1500000.0));
+    }
+
 }

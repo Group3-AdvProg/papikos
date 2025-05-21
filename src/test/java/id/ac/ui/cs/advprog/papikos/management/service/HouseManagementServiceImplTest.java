@@ -97,4 +97,46 @@ class HouseManagementServiceImplTest {
         houseService.deleteHouse(1L);
         verify(houseRepository).deleteById(1L);
     }
+
+    @Test
+    void testSearchHouses_All() {
+        House otherHouse = new House("Kos B", "Depok", "Other Desc", 3, 1000000,
+                "https://dummyimage.com/other.jpg", owner);
+        otherHouse.setId(2L);
+
+        when(houseRepository.findAll()).thenReturn(List.of(house, otherHouse));
+        List<House> results = houseService.searchHouses(owner, "Jakarta", 1000000.0, 1300000.0);
+        assertEquals(1, results.size());
+        assertEquals(house, results.get(0));
+    }
+
+    @Test
+    void testSearchHouses_KeywordOnly() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseService.searchHouses(owner, "Jakarta", null, null);
+        assertEquals(1, results.size());
+        assertEquals(house, results.get(0));
+    }
+
+    @Test
+    void testSearchHouses_MinRentOnly() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseService.searchHouses(owner, null, 1000000.0, null);
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    void testSearchHouses_MaxRentOnly() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseService.searchHouses(owner, null, null, 1300000.0);
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    void testSearchHouses_NoFilters() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseService.searchHouses(owner, null, null, null);
+        assertEquals(1, results.size());
+    }
+
 }
