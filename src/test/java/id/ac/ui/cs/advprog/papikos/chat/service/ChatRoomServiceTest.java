@@ -1,162 +1,200 @@
-// src/test/java/id/ac/ui/cs/advprog/papikos/chat/service/ChatRoomServiceTest.java
 package id.ac.ui.cs.advprog.papikos.chat.service;
 
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatRoom;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
-import id.ac.ui.cs.advprog.papikos.chat.repository.ChatMessageRepository;
 import id.ac.ui.cs.advprog.papikos.chat.repository.ChatRoomRepository;
+import id.ac.ui.cs.advprog.papikos.chat.repository.ChatMessageRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 
-import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ChatRoomServiceTest {
-    private ChatRoomRepository roomRepo;
-    private ChatMessageRepository msgRepo;
-    private ChatRoomService service;
+    @Mock private ChatRoomRepository roomRepo;
+    @Mock private ChatMessageRepository msgRepo;
+    @Mock private UserRepository userRepo;
+    @InjectMocks private ChatRoomService service;
+
+    private User tenant, landlord, sender;
+    private ChatRoom room;
 
     @BeforeEach
     void setUp() {
-        roomRepo = mock(ChatRoomRepository.class);
-        msgRepo  = mock(ChatMessageRepository.class);
-        service  = new ChatRoomService(roomRepo, msgRepo);
+        tenant   = new User(); tenant.setId(10L);
+        landlord = new User(); landlord.setId(20L);
+        sender   = new User(); sender.setId(30L);
+
+        room = ChatRoom.builder()
+                .id(100L)
+                .tenant(tenant)
+                .landlord(landlord)
+                .build();
     }
 
     @Test
-    void createRoom_assignsNameAndTimestamp() {
-        when(roomRepo.save(any(ChatRoom.class))).thenAnswer(invocation -> {
-            ChatRoom r = invocation.getArgument(0);
-            r.setId(1L);
-            r.setCreatedAt(Instant.now());
-            return r;
-        });
+    void createRoom_existingUsers_savesRoom() {
+        when(userRepo.findById(tenant.getId())).thenReturn(Optional.of(tenant));
+        when(userRepo.findById(landlord.getId())).thenReturn(Optional.of(landlord));
+        when(roomRepo.save(any(ChatRoom.class))).thenAnswer(i -> i.getArgument(0));
 
-        ChatRoom result = service.createRoom("MyRoom");
-        assertEquals("MyRoom", result.getName());
-        assertNotNull(result.getId());
-        assertNotNull(result.getCreatedAt());
+        ChatRoom created = service.createRoom(tenant.getId(), landlord.getId());
+        assertEquals(tenant,   created.getTenant());
+        assertEquals(landlord, created.getLandlord());
         verify(roomRepo).save(any(ChatRoom.class));
     }
 
     @Test
-    void listRooms_delegatesToRepo() {
-        ChatRoom a = new ChatRoom(1L, "A", Instant.now());
-        ChatRoom b = new ChatRoom(2L, "B", Instant.now());
-        when(roomRepo.findAll(any(Sort.class))).thenReturn(Arrays.asList(a, b));
+    void createRoom_missingTenant_throws() {
+        when(userRepo.findById(tenant.getId())).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> service.createRoom(tenant.getId(), landlord.getId()));
+    }
 
-        assertEquals(2, service.listRooms().size());
+    @Test
+    void createRoom_missingLandlord_throws() {
+        when(userRepo.findById(tenant.getId())).thenReturn(Optional.of(tenant));
+        when(userRepo.findById(landlord.getId())).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> service.createRoom(tenant.getId(), landlord.getId()));
+    }
+
+    @Test
+    void listRooms_delegatesToRepo() {
+        when(roomRepo.findAll(any(Sort.class))).thenReturn(List.of(room));
+        List<ChatRoom> list = service.listRooms();
+        assertEquals(1, list.size());
         verify(roomRepo).findAll(any(Sort.class));
     }
 
     @Test
-    void saveMessage_existingRoom_savesWithRoom() {
-        ChatRoom room = new ChatRoom(1L, "R", Instant.now());
+    void saveMessage_existingRoomAndSender_savesWithRoomAndSender() {
         ChatMessage msg = ChatMessage.builder()
                 .type(ChatMessage.MessageType.CHAT)
                 .content("hi")
-                .sender("user")
-                .timestamp(Instant.now())
                 .build();
-
-        when(roomRepo.findById(1L)).thenReturn(Optional.of(room));
+        when(roomRepo.findById(room.getId())).thenReturn(Optional.of(room));
+        when(userRepo.findById(sender.getId())).thenReturn(Optional.of(sender));
         when(msgRepo.save(any(ChatMessage.class))).thenAnswer(i -> i.getArgument(0));
 
-        ChatMessage saved = service.saveMessage(1L, msg);
-        assertEquals(room, saved.getRoom());
+        ChatMessage saved = service.saveMessage(room.getId(), sender.getId(), msg);
+        assertEquals(room,  saved.getRoom());
+        assertEquals(sender, saved.getSender());
         verify(msgRepo).save(msg);
     }
 
     @Test
-    void saveMessage_unknownRoom_throwsException() {
-        when(roomRepo.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> service.saveMessage(1L, new ChatMessage()));
+    void saveMessage_unknownRoom_throws() {
+        when(roomRepo.findById(room.getId())).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> service.saveMessage(room.getId(), sender.getId(), new ChatMessage()));
+    }
+
+    @Test
+    void saveMessage_unknownSender_throws() {
+        when(roomRepo.findById(room.getId())).thenReturn(Optional.of(room));
+        when(userRepo.findById(sender.getId())).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> service.saveMessage(room.getId(), sender.getId(), new ChatMessage()));
+    }
+
+    @Test
+    void listMessages_unknownRoom_throws() {
+        when(roomRepo.findById(room.getId())).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> service.listMessages(room.getId()));
     }
 
     @Test
     void listMessages_delegatesToRepo() {
-        // stub room lookup to prevent EntityNotFoundException
-        ChatRoom room = new ChatRoom(1L, "R", Instant.now());
-        when(roomRepo.findById(1L)).thenReturn(Optional.of(room));
-
-        // stub message lookup
-        when(msgRepo.findByRoomIdOrderByTimestampAsc(1L))
+        when(roomRepo.findById(room.getId())).thenReturn(Optional.of(room));
+        when(msgRepo.findByRoomIdOrderByTimestampAsc(room.getId()))
                 .thenReturn(Collections.emptyList());
 
-        assertNotNull(service.listMessages(1L));
-        verify(msgRepo).findByRoomIdOrderByTimestampAsc(1L);
+        assertNotNull(service.listMessages(room.getId()));
+        verify(msgRepo).findByRoomIdOrderByTimestampAsc(room.getId());
+    }
+
+    @Test
+    void updateMessage_messageNotFound_throws() {
+        when(msgRepo.findById(55L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> service.updateMessage(room.getId(), 55L, new ChatMessage()));
+    }
+
+    @Test
+    void updateMessage_wrongRoom_throws() {
+        ChatRoom otherRoom = ChatRoom.builder().id(999L).build();
+        ChatMessage existing = ChatMessage.builder()
+                .id(5L)
+                .room(otherRoom)
+                .build();
+        when(msgRepo.findById(5L)).thenReturn(Optional.of(existing));
+
+        assertThrows(EntityNotFoundException.class,
+                () -> service.updateMessage(room.getId(), 5L, new ChatMessage()));
     }
 
     @Test
     void updateMessage_existingMessage_updatesContent() {
-        ChatRoom room = new ChatRoom(1L, "R", Instant.now());
         ChatMessage existing = ChatMessage.builder()
                 .id(5L)
-                .content("old")
                 .room(room)
+                .content("old")
                 .build();
-        ChatMessage update = new ChatMessage();
-        update.setContent("new");
+        ChatMessage update = new ChatMessage(); update.setContent("new");
 
         when(msgRepo.findById(5L)).thenReturn(Optional.of(existing));
         when(msgRepo.save(any(ChatMessage.class))).thenAnswer(i -> i.getArgument(0));
 
-        ChatMessage result = service.updateMessage(1L, 5L, update);
+        ChatMessage result = service.updateMessage(room.getId(), 5L, update);
         assertEquals("new", result.getContent());
         verify(msgRepo).save(existing);
     }
 
     @Test
-    void updateMessage_wrongRoom_throwsException() {
-        ChatRoom otherRoom = new ChatRoom(2L, "R2", Instant.now());
+    void deleteMessage_messageNotFound_throws() {
+        when(msgRepo.findById(88L)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> service.deleteMessage(room.getId(), 88L));
+    }
+
+    @Test
+    void deleteMessage_wrongRoom_throws() {
+        ChatRoom otherRoom = ChatRoom.builder().id(777L).build();
         ChatMessage existing = ChatMessage.builder()
-                .id(5L)
-                .content("old")
+                .id(6L)
                 .room(otherRoom)
                 .build();
+        when(msgRepo.findById(6L)).thenReturn(Optional.of(existing));
 
-        when(msgRepo.findById(5L)).thenReturn(Optional.of(existing));
         assertThrows(EntityNotFoundException.class,
-                () -> service.updateMessage(1L, 5L, new ChatMessage()));
+                () -> service.deleteMessage(room.getId(), 6L));
     }
 
     @Test
     void deleteMessage_existingMessage_deletes() {
-        ChatRoom room = new ChatRoom(1L, "R", Instant.now());
         ChatMessage existing = ChatMessage.builder()
                 .id(6L)
                 .room(room)
                 .build();
-
         when(msgRepo.findById(6L)).thenReturn(Optional.of(existing));
         doNothing().when(msgRepo).delete(existing);
 
-        service.deleteMessage(1L, 6L);
+        service.deleteMessage(room.getId(), 6L);
         verify(msgRepo).delete(existing);
-    }
-
-    @Test
-    void deleteMessage_wrongRoom_throwsException() {
-        ChatRoom otherRoom = new ChatRoom(2L, "R2", Instant.now());
-        ChatMessage existing = ChatMessage.builder()
-                .id(6L)
-                .room(otherRoom)
-                .build();
-
-        when(msgRepo.findById(6L)).thenReturn(Optional.of(existing));
-        assertThrows(EntityNotFoundException.class, () -> service.deleteMessage(1L, 6L));
-    }
-
-    @Test
-    void deleteMessage_notFound_throwsException() {
-        when(msgRepo.findById(7L)).thenReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> service.deleteMessage(1L, 7L));
     }
 }
