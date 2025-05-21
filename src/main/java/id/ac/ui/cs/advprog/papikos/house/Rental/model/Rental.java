@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.house.Rental.model;
 
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,10 +14,13 @@ import java.time.LocalDate;
 public class Rental {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //  pakai Long-compatible strategy
-    private Long id; //  Ganti UUID → Long
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private String houseId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "house_id", nullable = false)
+    private House house;
+
     private String fullName;
     private String phoneNumber;
     private LocalDate checkInDate;

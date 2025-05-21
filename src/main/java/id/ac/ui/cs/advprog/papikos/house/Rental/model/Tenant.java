@@ -11,6 +11,8 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @Entity
+@DiscriminatorValue("TENANT") // optional but helps to distinguish subclass in DB
+@Table(name = "tenants") // optional: give the table a clean name
 public class Tenant extends User {
 
     @Column(nullable = false)
