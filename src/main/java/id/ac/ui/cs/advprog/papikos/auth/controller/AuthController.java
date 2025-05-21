@@ -46,6 +46,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
+        System.out.println("Received register request: " + registerRequest);
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
             return ResponseEntity.badRequest().body("User already exists");
         }
@@ -53,6 +54,8 @@ public class AuthController {
         newUser.setEmail(registerRequest.getEmail());
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         newUser.setRole(registerRequest.getRole());
+        newUser.setFullName(registerRequest.getFullName());
+        newUser.setPhoneNumber(registerRequest.getPhoneNumber());
         userRepository.save(newUser);
         return ResponseEntity.ok("User registered successfully");
     }
