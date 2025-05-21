@@ -83,7 +83,18 @@
     </button>
 
     <form id="searchForm" class="row g-2 mb-3">
-        <input type="text" id="keyword" name="keyword" class="form-control" placeholder="Search by name or location..." />
+        <div class="col-md-4">
+            <input type="text" id="keyword" name="keyword" class="form-control" placeholder="Search by name or location..." />
+        </div>
+        <div class="col-md-3">
+            <input type="number" id="minRent" name="minRent" class="form-control" placeholder="Min Rent" />
+        </div>
+        <div class="col-md-3">
+            <input type="number" id="maxRent" name="maxRent" class="form-control" placeholder="Max Rent" />
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-secondary w-100" type="button" onclick="resetFilters()">Reset</button>
+        </div>
     </form>
 
     <div class="row row-cols-1 row-cols-md-3 g-4" id="houseContainer"></div>
@@ -266,23 +277,34 @@
 
     window.onload = fetchHouses;
 
-    document.getElementById("keyword").addEventListener("input", debounce(async function () {
-        const keyword = this.value;
+    ["keyword", "minRent", "maxRent"].forEach(id => {
+        document.getElementById(id).addEventListener("input", debounce(async function () {
+            const keyword = document.getElementById("keyword").value;
+            const minRent = document.getElementById("minRent").value;
+            const maxRent = document.getElementById("maxRent").value;
 
-        const params = new URLSearchParams();
-        if (keyword) params.append("keyword", keyword);
+            const params = new URLSearchParams();
+            if (keyword) params.append("keyword", keyword);
+            if (minRent) params.append("minRent", minRent);
+            if (maxRent) params.append("maxRent", maxRent);
 
-        const res = await fetch(`/api/management/houses/search?${params.toString()}`, {
-            headers: { Authorization: "Bearer " + token }
-        });
+            const res = await fetch(`/api/management/houses/search?${params.toString()}`, {
+                headers: { Authorization: "Bearer " + token }
+            });
 
-        if (!res.ok) {
-            return; // silent fail
-        }
+            if (!res.ok) return;
 
-        const filteredHouses = await res.json();
-        renderHouses(filteredHouses);
-    }, 300)); // ← debounce delay in ms
+            const filteredHouses = await res.json();
+            renderHouses(filteredHouses);
+        }, 300));
+    });
+
+    function resetFilters() {
+        document.getElementById("keyword").value = "";
+        document.getElementById("minRent").value = "";
+        document.getElementById("maxRent").value = "";
+        fetchHouses();
+    }
 
     function debounce(func, delay) {
         let timeout;
