@@ -68,7 +68,9 @@ class HouseManagementControllerTest {
     }
 
     @Test
-    void testCreateHouse() throws Exception {
+    void testCreateHouse_ApprovedLandlord() throws Exception {
+        owner.setApproved(true);
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
         doNothing().when(houseManagementService).addHouse(any(House.class));
 
         mockMvc.perform(post("/api/management/houses")
@@ -77,6 +79,19 @@ class HouseManagementControllerTest {
                         .content(objectMapper.writeValueAsString(house)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Kos A"));
+    }
+
+    @Test
+    void testCreateHouse_UnapprovedLandlord() throws Exception {
+        owner.setApproved(false);
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+
+        mockMvc.perform(post("/api/management/houses")
+                        .principal(() -> "owner@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(house)))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Account not approved by admin yet"));
     }
 
     @Test
