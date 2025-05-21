@@ -5,6 +5,7 @@ import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
 import id.ac.ui.cs.advprog.papikos.chat.service.ChatRoomService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +21,7 @@ public class ChatRoomRestController {
     // C: create a new room
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ChatRoom createRoom(@RequestBody Map<String,String> body) {
+    public ChatRoom createRoom(@RequestBody Map<String, String> body) {
         return service.createRoom(body.get("name"));
     }
 
@@ -44,5 +45,19 @@ public class ChatRoomRestController {
         return service.saveMessage(roomId, message);
     }
 
-    // (You can add PUT /{roomId}/messages/{id} and DELETE /{roomId}/messages/{id} here for U/D)
+    // U: edit/update a message in a room
+    @PutMapping("/{roomId}/messages/{messageId}")
+    public ChatMessage updateMessage(@PathVariable Long roomId,
+                                     @PathVariable Long messageId,
+                                     @RequestBody ChatMessage message) {
+        return service.updateMessage(roomId, messageId, message);
+    }
+
+    // D: delete a message from a room
+    @DeleteMapping("/{roomId}/messages/{messageId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMessage(@PathVariable Long roomId,
+                              @PathVariable Long messageId) {
+        service.deleteMessage(roomId, messageId);
+    }
 }
