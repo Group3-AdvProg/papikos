@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Panel – Approve Landlords</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        :root {
+            --bs-primary: #7065F0;
+        }
+
+        .text-primary {
+            color: var(--bs-primary) !important;
+        }
+
+        .bg-primary {
+            background-color: var(--bs-primary) !important;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f9f9ff;
+        }
+
+        .btn-primary {
+            background-color: var(--bs-primary);
+            border-color: var(--bs-primary);
+        }
+
+        .btn-outline-primary {
+            color: var(--bs-primary);
+            border-color: var(--bs-primary);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--bs-primary);
+            color: white;
+        }
+
+        .card {
+            transition: box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-white shadow-sm w-100">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="#">Papikos Admin</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="btn btn-outline-primary" href="/logout">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <h1 class="fw-bold mb-4">Pending Landlord Approvals</h1>
+    <div id="landlordContainer" class="row g-4"></div>
+</div>
+
+<script>
+    const token = localStorage.getItem("token");
+
+    async function fetchPendingLandlords() {
+        try {
+            const res = await fetch("/api/auth/users/pending-landlords", {
+                headers: {
+                    Authorization: "Bearer " + token
+                }
+            });
+
+            if (!res.ok) throw new Error("Unauthorized");
+
+            const landlords = await res.json();
+            renderLandlords(landlords);
+        } catch (err) {
+            document.getElementById("landlordContainer").innerHTML =
+                `<div class="alert alert-danger">Failed to load landlord accounts. Make sure you are logged in as admin.</div>`;
+        }
+    }
+
+    function renderLandlords(landlords) {
+        const container = document.getElementById("landlordContainer");
+        container.innerHTML = "";
+
+        if (landlords.length === 0) {
+            container.innerHTML = `<div class="alert alert-info">No pending landlord accounts.</div>`;
+            return;
+        }
+
+        landlords.forEach(landlord => {
+            container.innerHTML += `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">${landlord.fullName}</h5>
+                            <p class="card-text mb-1"><i class="bi bi-envelope"></i> ${landlord.email}</p>
+                            <p class="card-text mb-1"><i class="bi bi-telephone"></i> ${landlord.phoneNumber}</p>
+                            <p class="card-text"><i class="bi bi-person-badge-fill"></i> ${landlord.role}</p>
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-sm btn-success" onclick="approveLandlord(${landlord.id})">✅ Approve</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="rejectLandlord(${landlord.id})">❌ Reject</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    async function approveLandlord(id) {
+        const res = await fetch(`/api/auth/users/approve/${id}`, {
+            method: "PUT",
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (res.ok) {
+            fetchPendingLandlords();
+        }
+    }
+
+    async function rejectLandlord(id) {
+        const confirmDelete = confirm("Are you sure you want to reject and delete this landlord account?");
+        if (!confirmDelete) return;
+
+        await fetch(`/api/auth/users/reject/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: "Bearer " + token }
+        });
+        fetchPendingLandlords();
+    }
+
+    window.onload = fetchPendingLandlords;
+</script>
+
+</body>
+</html>

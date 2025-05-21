@@ -29,33 +29,44 @@ public class SecurityConfig {
                 // Disable CSRF for stateless session (JWT based)
                 .csrf(csrf -> csrf.disable())
 
-                // Setup authorization rules
+                // Authorization rules
                 .authorizeHttpRequests(auth -> auth
+                        // Your public HTTP endpoints
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/",
                                 "/index.html",
                                 "/login.html",
-                                "/register.html"
-                        ).permitAll()  // Public endpoints (e.g., registration, login)
+                                "/register.html",
+                                "/management.html",
+                                "/houseDetails.html",
+                                "/admin.html",
+                                // <-- allow SockJS handshake & WS connect
+                                "/ws/**",
+                                // <-- allow topic subscriptions over HTTP fallback if used
+                                "/topic/**"
+                        ).permitAll()
+                        // Landlord-only REST
                         .requestMatchers("/api/management/**").hasRole("LANDLORD")
-                        .anyRequest().authenticated()                 // All other endpoints require authentication
+
+                        // Admin-only
+                        .requestMatchers("/api/auth/users/**").hasRole("ADMIN")
+
+                        // everything else needs a valid JWT
+                        .anyRequest().authenticated()
                 )
 
-                // Set stateless session management (JWTs are used instead of sessions)
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                // Stateless sessions
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // Disable anonymous authentication so unauthenticated requests trigger a 401 instead
-                .anonymous(anonymous -> anonymous.disable())
-
-                // Configure an entry point that sends a 401 Unauthorized error for auth failures
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                // Send 401 on auth failures
+                .exceptionHandling(ex ->
+                        ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 );
 
-        // Add your JWT filter before the UsernamePasswordAuthenticationFilter
+        // Add your JWT filter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -67,7 +78,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration authConfig
+    ) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 }

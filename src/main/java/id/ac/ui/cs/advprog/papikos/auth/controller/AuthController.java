@@ -32,7 +32,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
         try {
-            // This call authenticates the user; an exception is thrown if credentials are invalid.
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
             );
@@ -56,11 +55,17 @@ public class AuthController {
         newUser.setRole(registerRequest.getRole());
         newUser.setFullName(registerRequest.getFullName());
         newUser.setPhoneNumber(registerRequest.getPhoneNumber());
+
+        if ("ROLE_LANDLORD".equals(newUser.getRole())) {
+            newUser.setApproved(false);
+        } else {
+            newUser.setApproved(true);
+        }
+
         userRepository.save(newUser);
         return ResponseEntity.ok("User registered successfully");
     }
 
-    // This GET endpoint is added for testing that public endpoints are accessible.
     @GetMapping("/register")
     public ResponseEntity<?> registerGet() {
         return ResponseEntity.ok("Register endpoint is public");
