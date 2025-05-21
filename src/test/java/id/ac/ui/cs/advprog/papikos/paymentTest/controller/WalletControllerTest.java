@@ -23,8 +23,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-
 @WebMvcTest(controllers = WalletController.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class WalletControllerTest {
@@ -47,10 +45,9 @@ public class WalletControllerTest {
     @MockBean
     private JwtFilter jwtFilter;
 
-
     private TopUpRequest buildRequest(String method) {
         TopUpRequest request = new TopUpRequest();
-        request.setUserId("tenant123");
+        request.setUserId(1L); // Use Long for compatibility with controller
         request.setAmount(100_000);
         request.setMethod(method);
         return request;
@@ -59,6 +56,11 @@ public class WalletControllerTest {
     @Test
     void topUpBank_shouldSucceed() throws Exception {
         TopUpRequest request = buildRequest("bank");
+
+        User user = new User();
+        user.setId(1L);
+        user.setBalance(0.0);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         mockMvc.perform(post("/api/wallet/topup")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -73,6 +75,11 @@ public class WalletControllerTest {
     void topUpVirtual_shouldSucceed() throws Exception {
         TopUpRequest request = buildRequest("virtual");
 
+        User user = new User();
+        user.setId(1L);
+        user.setBalance(0.0);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
         mockMvc.perform(post("/api/wallet/topup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -84,7 +91,7 @@ public class WalletControllerTest {
 
     @Test
     void topUpInvalidMethod_shouldFail() throws Exception {
-        TopUpRequest request = buildRequest("crypto");
+        TopUpRequest request = buildRequest("crypto"); // Invalid method
 
         mockMvc.perform(post("/api/wallet/topup")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -92,6 +99,25 @@ public class WalletControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Invalid top-up method."))
+                .andExpect(jsonPath("$.redirectTo").value("/wallet/topup"));
+    }
+
+    @Test
+    void topUp_shouldFailDueToForcedExecutionFailure() throws Exception {
+        TopUpRequest request = buildRequest("bank");
+        request.setAmount(9999); // Triggers the controller's test-only failure logic
+
+        User user = new User();
+        user.setId(1L);
+        user.setBalance(0.0);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        mockMvc.perform(post("/api/wallet/topup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FAILED"))
+                .andExpect(jsonPath("$.message").value("Top-up failed."))
                 .andExpect(jsonPath("$.redirectTo").value("/wallet/topup"));
     }
 
@@ -118,20 +144,4 @@ public class WalletControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(status().reason("User not found"));
     }
-
-    @Test
-    void topUp_shouldFailDueToForcedExecutionFailure() throws Exception {
-        TopUpRequest request = buildRequest("bank");
-        request.setAmount(9999); // Triggers the forced failure in controller
-
-        mockMvc.perform(post("/api/wallet/topup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("FAILED"))
-                .andExpect(jsonPath("$.message").value("Top-up failed."))
-                .andExpect(jsonPath("$.redirectTo").value("/wallet/topup"));
-    }
-
-
 }
