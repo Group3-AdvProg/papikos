@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tenant List - PapiKos</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            margin: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: #4B0082; /* ungu tua */
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            background-color: #800080; /* ungu */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2e6f9; /* ungu muda */
+            color: #4B0082;
+        }
+
+        .btn-edit, .btn-delete {
+            margin-right: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .btn-edit {
+            background-color: #6a0dad;
+        }
+
+        .btn-delete {
+            background-color: #d32f2f;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Daftar Tenant</h1>
+        <a href="/tenant/create.html" class="btn">+ Tambah Tenant</a>
+    </header>
+
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama Lengkap</th>
+                    <th>Nomor HP</th>
+                    <th>Email</th>
+                    <th>Saldo</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tenantTableBody">
+                <!-- Data tenant dimasukkan lewat JS -->
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        fetch('/api/tenants')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('tenantTableBody');
+                data.forEach(tenant => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${tenant.id}</td>
+                        <td>${tenant.fullName}</td>
+                        <td>${tenant.phoneNumber}</td>
+                        <td>${tenant.email}</td>
+                        <td>Rp ${tenant.balance.toLocaleString()}</td>
+                        <td>
+                            <a href="/tenant/edit.html?id=${tenant.id}" class="btn-edit">Edit</a>
+                            <button onclick="deleteTenant(${tenant.id})" class="btn-delete">Hapus</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+
+        function deleteTenant(id) {
+            if (confirm("Yakin ingin menghapus tenant ini?")) {
+                fetch('/api/tenants/' + id, { method: 'DELETE' })
+                    .then(() => location.reload());
+            }
+        }
+    </script>
+</body>
+</html>

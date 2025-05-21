@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Sewa Kos - PapiKos</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            margin: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: #4B0082;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            background-color: #800080;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2e6f9;
+            color: #4B0082;
+        }
+
+        .btn-delete {
+            background-color: #d32f2f;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Daftar Sewa Kos</h1>
+        <a href="/rental/create.html" class="btn">+ Tambah Sewa</a>
+    </header>
+
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama Penyewa</th>
+                    <th>Nomor HP</th>
+                    <th>Tanggal Masuk</th>
+                    <th>Durasi (bulan)</th>
+                    <th>Status Disetujui</th>
+                    <th>Status Pembayaran</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="rentalTableBody">
+                <!-- Data akan dimasukkan lewat JavaScript -->
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        fetch('/api/rentals')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('rentalTableBody');
+                data.forEach(rental => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${rental.id}</td>
+                        <td>${rental.fullName}</td>
+                        <td>${rental.phoneNumber}</td>
+                        <td>${rental.checkInDate}</td>
+                        <td>${rental.durationInMonths}</td>
+                        <td>${rental.approved ? '✔️' : '❌'}</td>
+                        <td>${rental.paid ? '✔️' : '❌'}</td>
+                        <td>
+                            <button onclick="deleteRental(${rental.id})" class="btn-delete">Hapus</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+
+        function deleteRental(id) {
+            if (confirm("Yakin ingin menghapus data sewa ini?")) {
+                fetch('/api/rentals/' + id, { method: 'DELETE' })
+                    .then(() => location.reload());
+            }
+        }
+    </script>
+</body>
+</html>
