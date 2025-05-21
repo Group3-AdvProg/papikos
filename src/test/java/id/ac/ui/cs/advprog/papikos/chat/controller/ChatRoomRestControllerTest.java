@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -96,5 +97,33 @@ class ChatRoomRestControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(5))
                 .andExpect(jsonPath("$.content").value("hi"));
+    }
+
+    @Test
+    void updateMessage_returnsUpdatedMessage() throws Exception {
+        ChatMessage updated = ChatMessage.builder()
+                .id(5L)
+                .type(ChatMessage.MessageType.CHAT)
+                .content("updated content")
+                .sender("u")
+                .timestamp(Instant.now())
+                .build();
+        when(service.updateMessage(eq(1L), eq(5L), any(ChatMessage.class)))
+                .thenReturn(updated);
+
+        mvc.perform(put("/api/chat/rooms/1/messages/5")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"updated content\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(5))
+                .andExpect(jsonPath("$.content").value("updated content"));
+    }
+
+    @Test
+    void deleteMessage_returnsNoContent() throws Exception {
+        doNothing().when(service).deleteMessage(1L, 5L);
+
+        mvc.perform(delete("/api/chat/rooms/1/messages/5"))
+                .andExpect(status().isNoContent());
     }
 }
