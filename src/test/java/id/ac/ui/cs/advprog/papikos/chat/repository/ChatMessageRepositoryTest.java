@@ -12,7 +12,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@DataJpaTest(
+        properties = "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+)
 class ChatMessageRepositoryTest {
 
     @Autowired
@@ -34,8 +36,7 @@ class ChatMessageRepositoryTest {
                 .type(ChatMessage.MessageType.JOIN)
                 .content("User joined")
                 .sender("Carol")
-                .room(room)              // ← critical: set a non-null, managed room
-                // no need to set timestamp; @PrePersist will handle it
+                .room(room)
                 .build();
 
         // 3. Save via repository (triggers @PrePersist)
