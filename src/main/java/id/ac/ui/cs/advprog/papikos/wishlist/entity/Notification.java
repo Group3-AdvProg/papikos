@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.entity;
 
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,14 +12,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-public class Notification {
+public class Notification extends Tenant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String tenantId;
-    private String ownerId;
+    private Long tenantId;
+    private Long ownerId;
     private String message;
     private LocalDateTime createdAt;
     private boolean isRead;

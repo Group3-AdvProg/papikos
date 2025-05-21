@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long> {
-    List<WishlistItem> findByTenantId(String tenantId);
+    List<WishlistItem> findByTenantId(Long tenantId);
     List<WishlistItem> findByHouseId(Long houseId);
-    WishlistItem findByTenantIdAndHouseId(String tenantId, Long houseId);
+    WishlistItem findByTenantIdAndHouseId(Long tenantId, Long houseId);
 }

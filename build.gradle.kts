@@ -48,6 +48,7 @@ dependencies {
 
 	// ─── Database (H2 for dev; switch to Postgres/MySQL in prod) ──
 	runtimeOnly("com.h2database:h2")
+	runtimeOnly("org.postgresql:postgresql:42.7.3")
 
 	// Lombok
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -125,3 +126,4 @@ sonar {
 		property("sonar.host.url", "https://sonarcloud.io")
 	}
 }
+

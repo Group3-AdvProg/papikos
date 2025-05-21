@@ -3,6 +3,8 @@ package id.ac.ui.cs.advprog.papikos.wishlist.observer;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Service
 @RequiredArgsConstructor
 public class WishlistNotifierImpl implements WishlistNotifier {
 
@@ -32,7 +35,7 @@ public class WishlistNotifierImpl implements WishlistNotifier {
     }
 
     @Override
-    public void notifyObservers(Long houseId, String ownerId) {
+    public void notifyObservers(Long houseId, Long ownerId) {
         Notification notification = Notification.builder()
                 .ownerId(ownerId)
                 .message("House with ID " + houseId + " has been updated.")

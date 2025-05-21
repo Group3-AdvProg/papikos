@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    List<Notification> findByOwnerId(String ownerId);
-    List<Notification> findByTenantId(String tenantId);
+    List<Notification> findByOwnerId(Long ownerId);
+    List<Notification> findByTenantId(Long tenantId);
 }

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 
-
 @Entity
 @Getter
 @Setter
@@ -17,7 +16,7 @@ public class WishlistItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String tenantId;
+    private Long tenantId;
     private Long houseId;
 
     // You could use @ManyToOne for a real Tenant entity

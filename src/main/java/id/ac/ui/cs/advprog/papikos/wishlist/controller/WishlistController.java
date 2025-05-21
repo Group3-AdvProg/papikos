@@ -23,14 +23,14 @@ public class WishlistController {
 
     // For test compatibility: GET /api/wishlist/tenant/{tenantId}
     @GetMapping("/tenant/{tenantId}")
-    public ResponseEntity<List<Long>> getWishlistByTenant(@PathVariable String tenantId) {
+    public ResponseEntity<List<Long>> getWishlistByTenant(@PathVariable Long tenantId) {
         List<Long> wishlist = wishlistService.getWishlistByTenant(tenantId);
         return ResponseEntity.ok(wishlist);
     }
 
     // For test compatibility: GET /api/wishlist/notifications/{tenantId}
     @GetMapping("/notifications/{tenantId}")
-    public ResponseEntity<List<String>> getNotificationsByTenant(@PathVariable String tenantId) {
+    public ResponseEntity<List<String>> getNotificationsByTenant(@PathVariable Long tenantId) {
         List<String> notifications = wishlistService.getNotificationsByTenant(tenantId);
         return ResponseEntity.ok(notifications);
     }
@@ -49,7 +49,7 @@ public class WishlistController {
     }
 
     @GetMapping("/{tenantId}")
-    public ResponseEntity<List<Long>> getWishlist(@PathVariable String tenantId) {
+    public ResponseEntity<List<Long>> getWishlist(@PathVariable Long tenantId) {
         List<Long> wishlist = wishlistService.getWishlistByTenant(tenantId);
         return ResponseEntity.ok(wishlist);
     }

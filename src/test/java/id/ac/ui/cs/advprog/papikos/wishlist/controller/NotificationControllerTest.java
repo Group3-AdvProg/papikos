@@ -24,10 +24,10 @@ public class NotificationControllerTest {
 
     @Test
     void testGetNotificationsByTenant() throws Exception {
-        when(wishlistService.getNotificationsByTenant("tenant123"))
+        when(wishlistService.getNotificationsByTenant(123L))
                 .thenReturn(List.of("Room type Kamar AC is now available!"));
 
-        mockMvc.perform(get("/api/notifications/tenant123"))
+        mockMvc.perform(get("/api/notifications/123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(1))
                 .andExpect(jsonPath("$[0]").value("Room type Kamar AC is now available!"));
@@ -35,10 +35,10 @@ public class NotificationControllerTest {
 
     @Test
     void testGetNotificationsByTenantEmpty() throws Exception {
-        when(wishlistService.getNotificationsByTenant("tenant123"))
+        when(wishlistService.getNotificationsByTenant(123L))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/notifications/tenant123"))
+        mockMvc.perform(get("/api/notifications/123"))
                 .andExpect(status().isNoContent());
     }
 }

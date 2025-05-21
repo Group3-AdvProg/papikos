@@ -6,6 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class WishlistRequest {
-    private String tenantId;
+    private Long tenantId;
     private Long houseId;
 }
