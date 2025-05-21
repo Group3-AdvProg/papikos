@@ -9,7 +9,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
-@DataJpaTest
+@DataJpaTest(
+        properties = "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+)
 class ChatRoomRepositoryTest {
 
     @Autowired
