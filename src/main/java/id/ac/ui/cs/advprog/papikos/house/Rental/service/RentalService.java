@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface RentalService {
     Rental createRental(Rental rental);
     List<Rental> getAllRentals();
-    Optional<Rental> getRentalById(Long id);            //  UUID → Long
-    Rental updateRental(Long id, Rental rentalDetails); //  UUID → Long
-    void deleteRental(Long id);                         //  UUID → Long
+    Optional<Rental> getRentalById(Long id);
+    Rental updateRental(Long id, Rental rentalDetails);
+    void deleteRental(Long id);
 }

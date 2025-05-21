@@ -7,7 +7,9 @@ import jakarta.persistence.*;
 @Entity
 @Data
 @NoArgsConstructor
-@Table(name = "users") // Renamed table to avoid reserved keywords like "user"
+@Table(name = "users") // avoid keyword conflict
+@Inheritance(strategy = InheritanceType.JOINED) // enable JOINED inheritance
+@DiscriminatorColumn(name = "user_type") // optional, to help identify subclass
 public class User {
 
     @Id
