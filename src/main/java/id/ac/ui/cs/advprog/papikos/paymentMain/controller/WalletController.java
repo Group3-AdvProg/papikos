@@ -15,8 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+@RequestMapping({"/api/wallet", "/api/wallet"})
 @RestController
-@RequestMapping("/api/wallet")
 public class WalletController {
 
     @Autowired
@@ -49,13 +49,20 @@ public class WalletController {
         }
 
         if (success) {
+            User user = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+            user.increaseBalance(request.getAmount());
+            userRepository.save(user);
+
             transactionService.recordTransaction(
-                    request.getUserId(),
+                    user,
                     null,
                     request.getAmount(),
                     "TOP_UP",
                     request.getMethod()
             );
+
             return ResponseEntity.ok(
                     new ApiResponse("SUCCESS", "Top-up successful.", null)
             );
@@ -65,7 +72,6 @@ public class WalletController {
                 new ApiResponse("FAILED", "Top-up failed.", "/wallet/topup")
         );
     }
-
 
     @GetMapping("/balance")
     public ResponseEntity<Double> getBalance(@RequestParam Long userId) {

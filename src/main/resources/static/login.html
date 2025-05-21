@@ -63,10 +63,13 @@
             localStorage.setItem("token", data.token);
 
             const payload = JSON.parse(atob(data.token.split('.')[1]));
+            console.log("JWT Payload:", payload);
             const authorities = payload.authorities || [];
 
             alert("Login successful!");
-            if (authorities.some(role => role.authority === "ROLE_LANDLORD")) {
+            if (authorities.some(role => role.authority === "ROLE_ADMIN")) {
+                window.location.href = "/admin.html";
+            } else if (authorities.some(role => role.authority === "ROLE_LANDLORD")) {
                 window.location.href = "/management.html";
             } else {
                 window.location.href = "/";

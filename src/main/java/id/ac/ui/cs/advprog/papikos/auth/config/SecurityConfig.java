@@ -40,6 +40,7 @@ public class SecurityConfig {
                                 "/register.html",
                                 "/management.html",
                                 "/houseDetails.html",
+                                "/admin.html",
                                 // <-- allow SockJS handshake & WS connect
                                 "/ws/**",
                                 // <-- allow topic subscriptions over HTTP fallback if used
@@ -47,6 +48,10 @@ public class SecurityConfig {
                         ).permitAll()
                         // Landlord-only REST
                         .requestMatchers("/api/management/**").hasRole("LANDLORD")
+
+                        // Admin-only
+                        .requestMatchers("/api/auth/users/**").hasRole("ADMIN")
+
                         // everything else needs a valid JWT
                         .anyRequest().authenticated()
                 )
