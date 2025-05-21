@@ -55,8 +55,8 @@ public class PaymentService {
         userRepository.save(landlord);
 
         transactionService.recordTransaction(
-                tenantId,
-                landlordId,
+                tenant,
+                landlord,
                 rentAmount,
                 "RENT_PAYMENT",
                 "wallet"
