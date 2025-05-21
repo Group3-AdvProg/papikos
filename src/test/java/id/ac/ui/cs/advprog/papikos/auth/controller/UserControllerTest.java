@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.papikos.auth.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +28,15 @@ public class UserControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private User pendingLandlord;
 
     @BeforeEach
     void setup() {
-        // Clean up and insert one unapproved landlord before each test
         userRepository.deleteAll();
 
         pendingLandlord = new User();
@@ -85,5 +88,24 @@ public class UserControllerTest {
 
         mockMvc.perform(put("/api/auth/users/approve/" + tenant.getId()))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testGetCurrentUser() throws Exception {
+        // Generate token for this user
+        String token = jwtUtil.generateToken(
+                org.springframework.security.core.userdetails.User
+                        .withUsername(pendingLandlord.getEmail())
+                        .password("dummy")
+                        .roles("LANDLORD")
+                        .build()
+        );
+
+        mockMvc.perform(get("/api/auth/users/me")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(pendingLandlord.getEmail()))
+                .andExpect(jsonPath("$.role").value("ROLE_LANDLORD"))
+                .andExpect(jsonPath("$.approved").value(false));
     }
 }
