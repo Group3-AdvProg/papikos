@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 @RestController
 @RequestMapping("/api/auth/users")
@@ -40,5 +41,11 @@ public class UserController {
     public ResponseEntity<List<User>> getUnapprovedLandlords() {
         List<User> unapproved = userRepository.findByRoleAndIsApprovedFalse("ROLE_LANDLORD");
         return ResponseEntity.ok(unapproved);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Principal principal) {
+        User user = userRepository.findByEmail(principal.getName()).orElseThrow();
+        return ResponseEntity.ok(user);
     }
 }
