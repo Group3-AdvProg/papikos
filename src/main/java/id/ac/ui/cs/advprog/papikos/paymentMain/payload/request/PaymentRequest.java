@@ -1,10 +1,14 @@
 package id.ac.ui.cs.advprog.papikos.paymentMain.payload.request;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class PaymentRequest {
-    private double amount;
-    private double balance;
-    private String method; //bank or virtual
+    private String userId;     // tenant ID
+    private String targetId;   // landlord ID
+    private Double amount;
+    private String method;
+    private Double balance;    // optional if used by PaymentStrategy
 }

@@ -38,7 +38,17 @@ public class SecurityConfig {
                                 "/login.html",
                                 "/register.html",
                                 "/management.html",
-                                "/houseDetails.html"
+                                "/houseDetails.html",
+                                "/dashboard.html",
+                                "/wallet-topup.html",
+                                "/wallet-pay.html",
+                                "/transaction-history.html",
+                                "/wallet-history.html",
+                                "/js/**",
+                                "/api/auth/**",
+                                "/api/payment/**",
+                                "/api/wallet/**",
+                                "/api/transaction/**"
                                 ).permitAll()  // Public endpoints (e.g., registration, login)
                         .requestMatchers("/api/management/**").hasRole("LANDLORD")
                         .anyRequest().authenticated()                 // All other endpoints require authentication

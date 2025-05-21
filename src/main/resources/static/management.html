@@ -65,16 +65,38 @@
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="/management.html">My Houses</a></li>
-                <li class="nav-item"><a class="btn btn-outline-primary me-2" href="/login.html">Login</a></li>
-                <li class="nav-item"><a class="btn btn-primary" href="/register.html">Sign up</a></li>
+
+                <li class="nav-item dropdown" id="user-dropdown" style="display: none;">
+                    <a class="btn btn-outline-primary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <span id="user-email">User</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" id="logout-btn">Logout</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item" id="login-btn"><a class="btn btn-outline-primary me-2" href="/login.html">Login</a></li>
+                <li class="nav-item" id="signup-btn"><a class="btn btn-primary" href="/register.html">Sign up</a></li>
             </ul>
         </div>
     </div>
 </nav>
-
+<div class="container py-4">
+    <div class="alert alert-primary d-flex justify-content-between align-items-center">
+        <div>
+            👋 <span id="welcome-email"></span>
+            💰 Balance: Rp <span id="wallet-balance">...</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/wallet-history.html" class="btn btn-outline-secondary">Transaction History</a>
+            <a href="/wallet-topup.html" class="btn btn-outline-success">Top Up</a>
+            <a href="/wallet-pay.html" class="btn btn-outline-primary">Pay Rent</a>
+        </div>
+    </div>
+</div>
 <div class="container py-4">
     <h1 class="fw-bold">My Boarding Houses</h1>
 
@@ -260,7 +282,63 @@
         fetchHouses();
     }
 
-    window.onload = fetchHouses;
+    async function loadUserInfo() {
+  const token = localStorage.getItem("token");
+    if (!token) {
+      document.getElementById("welcome-email").textContent = "Welcome, Guest";
+      document.getElementById("wallet-balance").textContent = "0";
+      return;
+    }
+
+
+  try {
+    const res = await fetch("/api/auth/me", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+    const user = await res.json();
+    document.getElementById("welcome-email").textContent = `Welcome ${user.email} (UserID:${user.id})`;
+    document.getElementById("wallet-balance").textContent = user.balance.toLocaleString("id-ID");
+  } catch (err) {
+    console.warn("Failed to load user info");
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  loadUserInfo();
+  fetchHouses();
+  setupNavbar();
+});
+
+
+function setupNavbar() {
+  const token = localStorage.getItem("token");
+  const loginBtn = document.getElementById("login-btn");
+  const signupBtn = document.getElementById("signup-btn");
+  const userDropdown = document.getElementById("user-dropdown");
+  const userEmailSpan = document.getElementById("user-email");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  if (!token) return;
+
+  fetch("/api/auth/me", {
+    headers: { Authorization: "Bearer " + token }
+  })
+    .then(res => res.json())
+    .then(user => {
+      userEmailSpan.textContent = user.email;
+      loginBtn.style.display = "none";
+      signupBtn.style.display = "none";
+      userDropdown.style.display = "block";
+
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("token");
+        window.location.href = "/login.html";
+      });
+    })
+    .catch(() => console.warn("Failed to fetch user info for navbar"));
+}
 </script>
 </body>
 </html>

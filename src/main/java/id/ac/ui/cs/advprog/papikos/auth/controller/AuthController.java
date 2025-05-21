@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.papikos.auth.controller;
 import id.ac.ui.cs.advprog.papikos.auth.dto.AuthRequest;
 import id.ac.ui.cs.advprog.papikos.auth.dto.AuthResponse;
 import id.ac.ui.cs.advprog.papikos.auth.dto.RegisterRequest;
+import id.ac.ui.cs.advprog.papikos.auth.dto.UserProfileDTO;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.auth.service.UserDetailsServiceImpl;
@@ -62,4 +63,23 @@ public class AuthController {
     public ResponseEntity<?> registerGet() {
         return ResponseEntity.ok("Register endpoint is public");
     }
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid token");
+        }
+
+        String token = authHeader.substring(7);
+        String email = jwtUtil.extractUsername(token);
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+        }
+
+        // Only return email and balance (or other fields you want to expose)
+        return ResponseEntity.ok(new UserProfileDTO(user.getId(), user.getEmail(), user.getBalance()));
+
+    }
+
 }
