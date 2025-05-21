@@ -100,7 +100,7 @@ class RentalControllerTest {
     @Test
     void testCreateRental() throws Exception {
         Rental in = createRental("New", 77L);
-        in.setId(null);
+        in.setId(null); // simulate new rental
         Rental out = createRental("New", 77L);
 
         when(houseRepository.findById(77L)).thenReturn(Optional.of(in.getHouse()));
@@ -116,6 +116,37 @@ class RentalControllerTest {
                 .andExpect(jsonPath("$.id").value(sampleId))
                 .andExpect(jsonPath("$.durationInMonths").value(1))
                 .andExpect(jsonPath("$.house.id").value(77));
+    }
+
+    @Test
+    void testCreateRental_HouseNotFound() throws Exception {
+        RentalDTO dto = new RentalDTO();
+        dto.setHouseId(123L); // invalid house ID
+        dto.setTenantId(1L);
+
+        when(houseRepository.findById(123L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/rentals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(dto)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testCreateRental_TenantNotFound() throws Exception {
+        RentalDTO dto = new RentalDTO();
+        dto.setHouseId(10L);
+        dto.setTenantId(999L); // invalid tenant ID
+
+        House house = new House();
+        house.setId(10L);
+        when(houseRepository.findById(10L)).thenReturn(Optional.of(house));
+        when(tenantRepository.findById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/rentals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(dto)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
