@@ -22,4 +22,22 @@ public class User {
 
     @Column(nullable = false)
     private String role; // e.g., "TENANT", "LANDLORD", "ADMIN"
+
+    @Column(nullable = false)
+    private String fullName;
+
+    @Column(nullable = false)
+    private String phoneNumber;
+
+
+    @Column(nullable = false)
+    private double balance = 0.0;
+
+    public void increaseBalance(double amount) {
+        this.balance += amount;
+    }
+
+    public void decreaseBalance(double amount) {
+        this.balance -= amount;
+    }
 }
