@@ -78,7 +78,7 @@
 <div class="container py-4">
     <h1 class="fw-bold">My Boarding Houses</h1>
 
-    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createHouseModal">
+    <button class="btn btn-primary mb-3" onclick="checkApprovalBeforeAdd()">
         ➕ Add New House
     </button>
 
@@ -313,6 +313,26 @@
             timeout = setTimeout(() => func.apply(this, args), delay);
         };
     }
+
+    async function checkApprovalBeforeAdd() {
+        try {
+            const res = await fetch("/api/auth/users/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
+            if (!res.ok) throw new Error("Failed to fetch user");
+
+            const user = await res.json();
+            if (user.approved) {
+                const modal = new bootstrap.Modal(document.getElementById("createHouseModal"));
+                modal.show();
+            } else {
+                alert("Sorry, your account hasn't been approved by the admin yet. You can't add houses until you're approved.");
+            }
+        } catch (err) {
+            alert("Error checking approval status. Please try again.");
+        }
+    }
+
 </script>
 </body>
 </html>

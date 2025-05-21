@@ -5,6 +5,7 @@ import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 //import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,8 +33,11 @@ public class HouseManagementController {
     }
 
     @PostMapping("/houses")
-    public ResponseEntity<House> createHouse(@RequestBody House house, Principal principal) {
+    public ResponseEntity<?> createHouse(@RequestBody House house, Principal principal) {
         User owner = userRepository.findByEmail(principal.getName()).orElseThrow();
+        if (!owner.isApproved()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account not approved by admin yet");
+        }
         house.setOwner(owner);
         houseManagementService.addHouse(house);
         return ResponseEntity.ok(house);
@@ -94,6 +98,4 @@ public class HouseManagementController {
         List<House> result = houseManagementService.searchHouses(owner, keyword, minRent, maxRent);
         return ResponseEntity.ok(result);
     }
-
-
 }
