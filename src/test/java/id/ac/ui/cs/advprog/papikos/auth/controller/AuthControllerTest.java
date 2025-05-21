@@ -41,6 +41,8 @@ class AuthControllerTest {
         regRequest.setEmail("newuser@example.com");
         regRequest.setPassword("password123");
         regRequest.setRole("TENANT");
+        regRequest.setFullName("New User");
+        regRequest.setPhoneNumber("081234567890");
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -54,6 +56,8 @@ class AuthControllerTest {
         regRequest.setEmail("duplicate@example.com");
         regRequest.setPassword("password123");
         regRequest.setRole("TENANT");
+        regRequest.setFullName("Dup User");
+        regRequest.setPhoneNumber("081234567891");
 
         // First registration should succeed.
         mockMvc.perform(post("/api/auth/register")
