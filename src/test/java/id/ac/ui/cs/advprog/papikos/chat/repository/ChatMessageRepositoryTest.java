@@ -2,17 +2,17 @@ package id.ac.ui.cs.advprog.papikos.chat.repository;
 
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatRoom;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@DataJpaTest(properties = "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect")
 class ChatMessageRepositoryTest {
 
     @Autowired
@@ -23,34 +23,55 @@ class ChatMessageRepositoryTest {
 
     @Test
     void save_setsIdRoomAndTimestamp_andFindByIdWorks() {
-        // 1. Create and persist a ChatRoom
+        // 1. Persist tenant and landlord as Tenant entities
+        Tenant tenant = new Tenant("Test Tenant", "111-222-3333");
+        tenant.setEmail("tenant@example.com");
+        tenant.setPassword("pass");
+        tenant.setRole("TENANT");
+        tenant = entityManager.persistAndFlush(tenant);
+
+        Tenant landlord = new Tenant("Test Landlord", "444-555-6666");
+        landlord.setEmail("landlord@example.com");
+        landlord.setPassword("pass");
+        landlord.setRole("LANDLORD");
+        landlord = entityManager.persistAndFlush(landlord);
+
+        // 2. Create and persist a ChatRoom
         ChatRoom room = ChatRoom.builder()
-                .name("TestRoom")
+                .tenant(tenant)
+                .landlord(landlord)
                 .build();
         room = entityManager.persistAndFlush(room);
 
-        // 2. Build a ChatMessage linked to that room
+        // 3. Persist a sender as Tenant
+        Tenant sender = new Tenant("Sender User", "777-888-9999");
+        sender.setEmail("sender@example.com");
+        sender.setPassword("pass");
+        sender.setRole("TENANT");
+        sender = entityManager.persistAndFlush(sender);
+
+        // 4. Build a ChatMessage linked to that room and sender
         ChatMessage msg = ChatMessage.builder()
                 .type(ChatMessage.MessageType.JOIN)
                 .content("User joined")
-                .sender("Carol")
-                .room(room)              // ← critical: set a non-null, managed room
-                // no need to set timestamp; @PrePersist will handle it
+                .sender(sender)
+                .room(room)
                 .build();
 
-        // 3. Save via repository (triggers @PrePersist)
+        // 5. Save via repository (triggers @PrePersist)
         ChatMessage saved = repository.save(msg);
 
-        // 4. Verify id, room, and timestamp are set
-        assertNotNull(saved.getId(),       "ID should be generated");
-        assertNotNull(saved.getRoom(),     "Room should be set and persisted");
+        // 6. Verify id, room, sender, and timestamp are set
+        assertNotNull(saved.getId(), "ID should be generated");
         assertEquals(room.getId(), saved.getRoom().getId(), "Room ID must match");
-        assertNotNull(saved.getTimestamp(),"Timestamp should be set by @PrePersist");
+        assertEquals(sender.getId(), saved.getSender().getId(), "Sender ID must match");
+        assertNotNull(saved.getTimestamp(), "Timestamp should be set by @PrePersist");
 
-        // 5. Clear and fetch from DB to ensure it round-trips
+        // 7. Clear and fetch from DB to ensure it round-trips
         entityManager.clear();
         Optional<ChatMessage> fetched = repository.findById(saved.getId());
         assertTrue(fetched.isPresent(), "Should retrieve by ID");
-        assertEquals("Carol", fetched.get().getSender(), "Sender must match");
+        assertEquals("User joined", fetched.get().getContent(), "Content must match");
+        assertEquals(sender.getId(), fetched.get().getSender().getId(), "Sender must match");
     }
 }
