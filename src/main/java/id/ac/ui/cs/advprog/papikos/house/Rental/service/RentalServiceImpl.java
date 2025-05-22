@@ -25,15 +25,15 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
-    public Optional<Rental> getRentalById(Long id) { //  UUID → Long
+    public Optional<Rental> getRentalById(Long id) {
         return repo.findById(id);
     }
 
     @Override
-    public Rental updateRental(Long id, Rental rentalDetails) { //  UUID → Long
+    public Rental updateRental(Long id, Rental rentalDetails) {
         return repo.findById(id)
                 .map(r -> {
-                    r.setHouseId(rentalDetails.getHouseId());
+                    r.setHouse(rentalDetails.getHouse());
                     r.setCheckInDate(rentalDetails.getCheckInDate());
                     r.setDurationInMonths(rentalDetails.getDurationInMonths());
                     r.setApproved(rentalDetails.isApproved());
@@ -48,7 +48,7 @@ public class RentalServiceImpl implements RentalService {
     }
 
     @Override
-    public void deleteRental(Long id) { // ✅ UUID → Long
+    public void deleteRental(Long id) {
         repo.deleteById(id);
     }
 }

@@ -2,14 +2,15 @@ package id.ac.ui.cs.advprog.papikos.RentalTest.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.house.Rental.controller.TenantController;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.TenantService;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*; //  Make sure this is imported
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -153,7 +154,11 @@ class TenantControllerTest {
 
         Rental rental = new Rental();
         rental.setId(1L);
-        rental.setHouseId("H001");
+
+        House house = new House();
+        house.setId(999L);
+        house.setName("Kos Fiona");
+        rental.setHouse(house);
 
         tenant.addRental(rental);
         assertEquals(1, tenant.getRentals().size());

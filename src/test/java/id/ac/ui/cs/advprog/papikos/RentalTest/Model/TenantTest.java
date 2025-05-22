@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.papikos.RentalTest.Model;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -28,16 +29,20 @@ public class TenantTest {
     @Test
     void testAddAndRemoveRentalHelpers() {
         Tenant tenant = new Tenant("Alice", "08000");
-        tenant.setId(10L);  // pakai Long
+        tenant.setId(10L);
 
         Rental rental = new Rental();
-        rental.setId(20L);  // pakai Long
-        rental.setHouseId("H1");
+        rental.setId(20L);
         rental.setFullName("Alice");
         rental.setPhoneNumber("08000");
         rental.setCheckInDate(LocalDate.of(2025, 1, 1));
         rental.setDurationInMonths(2);
         rental.setApproved(false);
+
+        House house = new House();
+        house.setId(77L);
+        house.setName("Kos Alice");
+        rental.setHouse(house);
 
         // Add rental
         tenant.addRental(rental);

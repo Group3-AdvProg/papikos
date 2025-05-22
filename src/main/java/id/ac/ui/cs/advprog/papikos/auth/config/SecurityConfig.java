@@ -39,6 +39,7 @@ public class SecurityConfig {
                                 "/register.html",
                                 "/management.html",
                                 "/houseDetails.html",
+                                "/admin.html",
                                 // <-- allow SockJS handshake & WS connect
                                 "/ws/**",
                                 // <-- allow topic subscriptions over HTTP fallback if used
@@ -57,6 +58,10 @@ public class SecurityConfig {
                                 "/api/transaction/**"
                                 ).permitAll()  // Public endpoints (e.g., registration, login)
                         .requestMatchers("/api/management/**").hasRole("LANDLORD")
+
+                        // Admin-only
+                        .requestMatchers("/api/auth/users/**").hasRole("ADMIN")
+
                         // everything else needs a valid JWT
                         .anyRequest().authenticated()
                 )
