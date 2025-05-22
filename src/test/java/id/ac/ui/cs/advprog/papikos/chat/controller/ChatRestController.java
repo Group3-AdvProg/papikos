@@ -1,15 +1,19 @@
+// src/test/java/id/ac/ui/cs/advprog/papikos/chat/controller/ChatRestControllerTest.java
 package id.ac.ui.cs.advprog.papikos.chat.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.papikos.auth.filter.JwtFilter;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
 import id.ac.ui.cs.advprog.papikos.chat.service.ChatService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -18,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ChatRestController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ChatRestControllerTest {
 
     @Autowired
@@ -29,6 +34,10 @@ class ChatRestControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    // Stub out security beans
+    @MockBean private JwtFilter jwtFilter;
+    @MockBean private id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil jwtUtil;
+
     @Test
     void getMessages_returnsJsonArray() throws Exception {
         ChatMessage msg = ChatMessage.builder()
@@ -36,14 +45,13 @@ class ChatRestControllerTest {
                 .type(ChatMessage.MessageType.CHAT)
                 .content("Test")
                 .sender("User")
+                .timestamp(Instant.now())
                 .build();
-
         when(chatService.getAllMessages()).thenReturn(List.of(msg));
 
         mockMvc.perform(get("/api/chat/messages"))
                 .andExpect(status().isOk())
-                .andExpect(content()
-                        .json(objectMapper.writeValueAsString(List.of(msg))));
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(msg))));
     }
 
     @Test
@@ -53,22 +61,19 @@ class ChatRestControllerTest {
                 .content("Hi")
                 .sender("Bob")
                 .build();
-
         ChatMessage saved = ChatMessage.builder()
                 .id(5L)
                 .type(input.getType())
                 .content(input.getContent())
                 .sender(input.getSender())
-                .timestamp(java.time.Instant.now())
+                .timestamp(Instant.now())
                 .build();
-
         when(chatService.saveMessage(any(ChatMessage.class))).thenReturn(saved);
 
         mockMvc.perform(post("/api/chat/messages")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(input)))
                 .andExpect(status().isCreated())
-                .andExpect(content()
-                        .json(objectMapper.writeValueAsString(saved)));
+                .andExpect(content().json(objectMapper.writeValueAsString(saved)));
     }
 }

@@ -15,11 +15,6 @@ public class BoardingHouseController {
 
     private final BoardingHouseService service;
 
-    @PostMapping
-    public ResponseEntity<House> create(@RequestBody House house) {
-        return ResponseEntity.ok(service.create(house));
-    }
-
     @GetMapping
     public ResponseEntity<List<House>> list() {
         return ResponseEntity.ok(service.findAll());
@@ -30,16 +25,5 @@ public class BoardingHouseController {
         return service.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<House> update(@PathVariable Long id, @RequestBody House house) {
-        return ResponseEntity.ok(service.update(id, house));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
-        return ResponseEntity.noContent().build();
     }
 }

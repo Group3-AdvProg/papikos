@@ -1,24 +1,22 @@
 package id.ac.ui.cs.advprog.papikos.house.Rental.model;
 
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
-public class Tenant {
+public class Tenant extends User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
-
+    @Column(nullable = false)
     private String fullName;
+
+    @Column(nullable = false)
     private String phoneNumber;
 
     @OneToMany(
@@ -33,7 +31,6 @@ public class Tenant {
         this.phoneNumber = phoneNumber;
     }
 
-    // Optional helpers
     public void addRental(Rental rental) {
         rentals.add(rental);
         rental.setTenant(this);
