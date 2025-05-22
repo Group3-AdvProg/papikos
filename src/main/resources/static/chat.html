@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Papikos Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #messages { list-style-type: none; padding: 0; }
+        #messages li { padding: 5px 10px; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<h1>Papikos Chat</h1>
+<div>
+    <label>User ID: <input type="text" id="senderId" /></label>
+    <label>Room ID (leave blank for public): <input type="text" id="roomId" /></label>
+    <button id="connect">Connect</button>
+    <button id="disconnect" disabled>Disconnect</button>
+</div>
+<div id="chat" style="display:none; margin-top:20px;">
+    <ul id="messages"></ul>
+    <input type="text" id="message" placeholder="Type a message..." />
+    <button id="send">Send</button>
+</div>
+<script>
+    var stompClient = null;
+    function connect() {
+        var senderId = document.getElementById('senderId').value.trim();
+        if (!senderId) {
+            alert("Enter your user ID!");
+            return;
+        }
+        var socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function(frame) {
+            console.log('Connected: ' + frame);
+            document.getElementById('connect').disabled = true;
+            document.getElementById('disconnect').disabled = false;
+            document.getElementById('chat').style.display = 'block';
+            var roomId = document.getElementById('roomId').value.trim();
+            var subscribeDest, addUserDest;
+            if (roomId) {
+                subscribeDest = '/topic/room/' + roomId;
+                addUserDest = '/app/chat/' + roomId + '/addUser';
+            } else {
+                subscribeDest = '/topic/public';
+                addUserDest = '/app/chat.addUser';
+            }
+            stompClient.subscribe(subscribeDest, function(msg) {
+                showMessage(JSON.parse(msg.body));
+            });
+            stompClient.send(addUserDest, {}, JSON.stringify({ senderId: parseInt(senderId), content: 'joined!', type: 'JOIN' }));
+        });
+    }
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        console.log('Disconnected');
+        document.getElementById('connect').disabled = false;
+        document.getElementById('disconnect').disabled = true;
+        document.getElementById('chat').style.display = 'none';
+    }
+    function sendMessage() {
+        var senderId = document.getElementById('senderId').value.trim();
+        var content = document.getElementById('message').value.trim();
+        if (content && stompClient) {
+            var roomId = document.getElementById('roomId').value.trim();
+            var dest = roomId ? '/app/chat/' + roomId + '/sendMessage' : '/app/chat.sendMessage';
+            stompClient.send(dest, {}, JSON.stringify({ senderId: parseInt(senderId), content: content, type: 'CHAT' }));
+            document.getElementById('message').value = '';
+        }
+    }
+    function showMessage(message) {
+        var messages = document.getElementById('messages');
+        var el = document.createElement('li');
+        var sender = message.sender ? (message.sender.email || message.sender.id) : 'System';
+        el.textContent = '[' + new Date(message.timestamp).toLocaleTimeString() + '] ' + sender + ': ' + message.content;
+        messages.appendChild(el);
+    }
+    document.getElementById('connect').addEventListener('click', connect);
+    document.getElementById('disconnect').addEventListener('click', disconnect);
+    document.getElementById('send').addEventListener('click', sendMessage);
+</script>
+</body>
+</html>
