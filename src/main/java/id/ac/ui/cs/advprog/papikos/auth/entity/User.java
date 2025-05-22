@@ -8,7 +8,6 @@ import jakarta.persistence.*;
 @Data
 @NoArgsConstructor
 @Table(name = "users") // avoid keyword conflict
-@Inheritance(strategy = InheritanceType.JOINED) // enable JOINED inheritance
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
