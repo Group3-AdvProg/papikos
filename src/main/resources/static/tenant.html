@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenant Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bs-primary: #7065F0;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f9f9ff;
+        }
+        .navbar {
+            background-color: var(--bs-primary);
+        }
+        .navbar a, .navbar-brand {
+            color: white;
+        }
+        .navbar a:hover {
+            color: #ddd;
+        }
+        .section-title {
+            margin: 2rem 0 1rem;
+            color: var(--bs-primary);
+        }
+        .data-table th {
+            background-color: var(--bs-primary);
+            color: white;
+        }
+        .data-table td, .data-table th {
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        #searchInput {
+            max-width: 300px;
+            margin-bottom: 1rem;
+        }
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 1055;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">PapiKos</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link text-white" href="/dashboard">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="/rental">Rental</a></li>
+                <li class="nav-item"><a class="nav-link text-white active" href="/tenant">Tenant</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Toast -->
+<div class="toast-container">
+    <div id="tenantToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">Tenant berhasil ditambahkan!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<main class="container mt-4">
+    <h1 class="section-title">Add New Tenant</h1>
+    <form id="tenantForm" class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="tenantName" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Phone Number</label>
+            <input type="text" class="form-control" id="tenantPhone" required>
+        </div>
+        <div class="col-12 d-flex justify-content-between">
+            <button type="reset" class="btn btn-secondary">Reset</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn">Submit Tenant</button>
+        </div>
+    </form>
+
+    <h1 class="section-title">Tenant List</h1>
+    <input type="text" class="form-control" id="searchInput" placeholder="Search by Full Name...">
+
+    <div class="table-responsive">
+        <table class="table table-bordered data-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Full Name</th>
+                <th>Phone Number</th>
+            </tr>
+            </thead>
+            <tbody id="tenantTableBody"></tbody>
+        </table>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let tenantData = [];
+
+    function renderTenantTable(data) {
+        const table = document.getElementById('tenantTableBody');
+        table.innerHTML = '';
+        data.forEach(tenant => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+        <td>${tenant.id}</td>
+        <td>${tenant.fullName}</td>
+        <td>${tenant.phoneNumber}</td>
+      `;
+            table.appendChild(row);
+        });
+    }
+
+    fetch('/api/tenants')
+        .then(res => res.json())
+        .then(data => {
+            tenantData = data;
+            renderTenantTable(data);
+        });
+
+    document.getElementById('searchInput').addEventListener('input', e => {
+        const keyword = e.target.value.toLowerCase();
+        const filtered = tenantData.filter(t => t.fullName.toLowerCase().includes(keyword));
+        renderTenantTable(filtered);
+    });
+
+    document.getElementById('tenantForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+
+        const name = document.getElementById('tenantName').value.trim();
+        const phone = document.getElementById('tenantPhone').value.trim();
+
+        if (!name || !phone) {
+            alert('Semua field harus diisi!');
+            btn.disabled = false;
+            btn.textContent = 'Submit Tenant';
+            return;
+        }
+
+        const payload = {
+            fullName: name,
+            phoneNumber: phone
+        };
+
+        fetch('/api/tenants', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.ok ? res.json() : Promise.reject('Gagal menambahkan tenant'))
+            .then(() => {
+                const toast = new bootstrap.Toast(document.getElementById('tenantToast'));
+                toast.show();
+                btn.disabled = false;
+                btn.textContent = 'Submit Tenant';
+                setTimeout(() => window.location.reload(), 2000);
+            })
+            .catch(err => {
+                alert(err);
+                btn.disabled = false;
+                btn.textContent = 'Submit Tenant';
+            });
+    });
+</script>
+</body>
+</html>
