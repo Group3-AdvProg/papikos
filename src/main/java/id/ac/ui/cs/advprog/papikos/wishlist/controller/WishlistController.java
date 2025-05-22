@@ -14,15 +14,6 @@ public class WishlistController {
 
     private final WishlistService wishlistService;
 
-    @PostMapping("/register")
-    public ResponseEntity<Void> registerTenant(
-            @RequestParam Long tenantId,
-            @RequestParam String tenantName
-    ) {
-        wishlistService.registerTenant(tenantId, tenantName);
-        return ResponseEntity.ok().build();
-    }
-
     @PostMapping("/add")
     public ResponseEntity<Void> addToWishlist(
             @RequestParam Long tenantId,

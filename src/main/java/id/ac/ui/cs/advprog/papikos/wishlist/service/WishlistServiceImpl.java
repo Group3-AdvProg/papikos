@@ -26,11 +26,6 @@ public class WishlistServiceImpl implements WishlistService {
     private final WishlistNotifier notifier;
 
     @Override
-    public void registerTenant(Long tenantId, String tenantName) {
-        // No-op or implementation as needed
-    }
-
-    @Override
     public void addToWishlist(Long tenantId, Long houseId) {
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new EntityNotFoundException("House not found with id: " + houseId));

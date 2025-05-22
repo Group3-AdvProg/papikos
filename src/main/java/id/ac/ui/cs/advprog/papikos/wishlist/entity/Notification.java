@@ -1,6 +1,5 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.entity;
 
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import jakarta.persistence.*;
 import lombok.*;
 
