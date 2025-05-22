@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -90,7 +91,9 @@ class ChatRoomServiceTest {
         when(userRepo.findById(sender.getId())).thenReturn(Optional.of(sender));
         when(msgRepo.save(any(ChatMessage.class))).thenAnswer(i -> i.getArgument(0));
 
-        ChatMessage saved = service.saveMessage(room.getId(), sender.getId(), msg);
+        CompletableFuture<ChatMessage> future = service.saveMessage(room.getId(), sender.getId(), msg);
+        ChatMessage saved = future.join();
+
         assertEquals(room,  saved.getRoom());
         assertEquals(sender, saved.getSender());
         verify(msgRepo).save(msg);
