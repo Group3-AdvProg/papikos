@@ -7,6 +7,8 @@ import id.ac.ui.cs.advprog.papikos.chat.service.ChatRoomService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.CompletableFuture;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -35,12 +37,13 @@ class ChatRoomStompControllerTest {
                 .content(req.getContent())
                 .build();
 
-        // Stub the service call with any ChatMessage argument
+        // Stub the service call to return a completed future
         when(service.saveMessage(eq(2L), eq(2L), any(ChatMessage.class)))
-                .thenReturn(returned);
+                .thenReturn(CompletableFuture.completedFuture(returned));
 
-        // Invoke the controller
-        ChatMessage out = controller.sendMessage(2L, req);
+        // Invoke the controller and join the future
+        CompletableFuture<ChatMessage> future = controller.sendMessage(2L, req);
+        ChatMessage out = future.join();
 
         // Verify result and interaction
         assertSame(returned, out, "Controller should return exactly what the service returns");
