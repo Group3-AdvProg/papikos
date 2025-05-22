@@ -2,8 +2,8 @@ package id.ac.ui.cs.advprog.papikos.house.Rental.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.dto.RentalDTO;
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
-import id.ac.ui.cs.advprog.papikos.house.Rental.repository.TenantRepository;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
@@ -21,14 +21,18 @@ public class RentalController {
 
     private final RentalService service;
     private final HouseRepository houseRepository;
-    private final TenantRepository tenantRepository;
+    private final UserRepository userRepository;
 
     @PostMapping
     public ResponseEntity<Rental> create(@RequestBody RentalDTO dto) {
         House house = houseRepository.findById(dto.getHouseId())
                 .orElseThrow(() -> new RuntimeException("House not found"));
-        Tenant tenant = tenantRepository.findById(dto.getTenantId())
+        User tenant = userRepository.findById(dto.getTenantId())
                 .orElseThrow(() -> new RuntimeException("Tenant not found"));
+
+        if (!"ROLE_TENANT".equals(tenant.getRole())) {
+            throw new RuntimeException("User is not a tenant");
+        }
 
         Rental rental = new Rental();
         rental.setHouse(house);

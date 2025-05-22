@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.house.Rental.model;
 
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,5 +32,5 @@ public class Rental {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
+    private User tenant;
 }
