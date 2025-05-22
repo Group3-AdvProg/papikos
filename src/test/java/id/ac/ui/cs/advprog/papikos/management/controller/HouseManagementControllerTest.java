@@ -1,8 +1,10 @@
-package id.ac.ui.cs.advprog.papikos.house.management.controller;
+package id.ac.ui.cs.advprog.papikos.management.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +32,9 @@ class HouseManagementControllerTest {
 
     @MockBean
     private HouseManagementService houseManagementService;
+
+    @MockBean
+    private RentalService rentalService;
 
     @MockBean
     private UserRepository userRepository;
@@ -154,6 +159,29 @@ class HouseManagementControllerTest {
                         .param("maxRent", "2000000"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].monthlyRent").value(1500000.0));
+    }
+
+    @Test
+    void testApproveRental_ValidOwner_DecrementsRoomAndApproves() throws Exception {
+        Rental rental = new Rental();
+        rental.setId(10L);
+        rental.setApproved(false);
+
+        House testHouse = new House("Kos Z", "Jl. Kucing", "Deskripsi", 3, 2000000.0,
+                "https://example.com/kosz.jpg", owner);
+        testHouse.setId(1L);
+        rental.setHouse(testHouse);
+
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+        when(rentalService.getRentalById(10L)).thenReturn(Optional.of(rental));
+
+        mockMvc.perform(post("/api/management/rentals/10/approve")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Rental approved."));
+
+        verify(rentalService, times(1)).updateRental(eq(10L), any(Rental.class));
+        verify(houseManagementService, times(1)).updateHouse(eq(1L), any(House.class));
     }
 
 }

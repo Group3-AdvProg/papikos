@@ -6,6 +6,7 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
+import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,9 @@ public class HouseManagementController {
 
     @Autowired
     private RentalService rentalService;
+
+    @Autowired
+    private WishlistService wishlistService;
 
     @Autowired
     private UserRepository userRepository;
@@ -72,6 +76,10 @@ public class HouseManagementController {
 
         updatedHouse.setOwner(owner);
         houseManagementService.updateHouse(id, updatedHouse);
+
+        if (updatedHouse.getNumberOfRooms() > existingHouse.get().getNumberOfRooms()) {
+            wishlistService.notifyAvailability(id);
+        }
         return ResponseEntity.ok(updatedHouse);
     }
 
@@ -114,8 +122,16 @@ public class HouseManagementController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not own this house.");
         }
 
-        rental.setApproved(true);
-        rentalService.updateRental(rentalId, rental);
+        if (!rental.isApproved()) {
+            rental.setApproved(true);
+            rentalService.updateRental(rentalId, rental);
+
+            int currentRooms = house.getNumberOfRooms();
+            if (currentRooms > 0) {
+                house.setNumberOfRooms(currentRooms - 1);
+                houseManagementService.updateHouse(house.getId(), house);
+            }
+        }
 
         return ResponseEntity.ok("Rental approved.");
     }

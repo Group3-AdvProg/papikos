@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Notifications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f9f9ff;
+            font-family: 'Segoe UI', sans-serif;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-white shadow-sm w-100">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="#">Papikos</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2 class="text-primary fw-bold mb-4">📬 My Notifications</h2>
+    <div class="container mt-4" id="notifContainer">
+        <p>Loading notifications...</p>
+    </div>
+</div>
+
+<script>
+    const token = localStorage.getItem("token");
+
+    async function loadUserAndNotifications() {
+        try {
+            // 🔍 Fetch current user info
+            const res = await fetch("/api/auth/users/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
+
+            if (!res.ok) throw new Error("User info fetch failed");
+
+            const user = await res.json();
+            const userId = user.id;
+
+            // ✅ Then fetch notifications
+            const notifRes = await fetch(`/api/notifications/${userId}`, {
+                headers: { Authorization: "Bearer " + token }
+            });
+
+            if (notifRes.status === 204) {
+                document.getElementById("notifContainer").innerHTML = "<p>No notifications yet.</p>";
+                return;
+            }
+
+            const notifications = await notifRes.json();
+            const container = document.getElementById("notifContainer");
+            notifications.forEach(msg => {
+                const div = document.createElement("div");
+                div.className = "alert alert-info";
+                div.textContent = msg;
+                container.appendChild(div);
+            });
+
+        } catch (err) {
+            console.error("Failed to load notifications:", err);
+            document.getElementById("notifContainer").innerHTML = "<div class='alert alert-danger'>Failed to load notifications.</div>";
+        }
+    }
+
+    window.onload = loadUserAndNotifications;
+</script>
+</body>
+</html>
