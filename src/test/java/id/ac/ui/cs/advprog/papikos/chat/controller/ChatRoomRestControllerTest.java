@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;  // <-- added import
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
@@ -114,7 +115,10 @@ class ChatRoomRestControllerTest {
                 .sender(sender)
                 .timestamp(Instant.now())
                 .build();
-        when(service.saveMessage(eq(1L), eq(5L), any(ChatMessage.class))).thenReturn(m);
+
+        // wrap the ChatMessage in a completed future
+        when(service.saveMessage(eq(1L), eq(5L), any(ChatMessage.class)))
+                .thenReturn(CompletableFuture.completedFuture(m));
 
         mvc.perform(post("/api/chat/rooms/1/messages")
                         .contentType(MediaType.APPLICATION_JSON)
