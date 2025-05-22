@@ -40,7 +40,7 @@ public class ChatRoomRestController {
         return service.listMessages(roomId);
     }
 
-    // C: post a message to a room, authored by a real user
+    // C: post a message to a room, authored by a real user (blocks on the async future)
     @PostMapping("/{roomId}/messages")
     @ResponseStatus(HttpStatus.CREATED)
     public ChatMessage postMessage(
@@ -51,7 +51,8 @@ public class ChatRoomRestController {
                 .type(req.getType())
                 .content(req.getContent())
                 .build();
-        return service.saveMessage(roomId, req.getSenderId(), msg);
+        // block until the @Async saveMessage completes
+        return service.saveMessage(roomId, req.getSenderId(), msg).join();
     }
 
     // U: edit/update a message in a room
