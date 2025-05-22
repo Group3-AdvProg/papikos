@@ -78,9 +78,24 @@
 <div class="container py-4">
     <h1 class="fw-bold">My Boarding Houses</h1>
 
-    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createHouseModal">
+    <button class="btn btn-primary mb-3" onclick="checkApprovalBeforeAdd()">
         ➕ Add New House
     </button>
+
+    <form id="searchForm" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <input type="text" id="keyword" name="keyword" class="form-control" placeholder="Search by name or location..." />
+        </div>
+        <div class="col-md-3">
+            <input type="number" id="minRent" name="minRent" class="form-control" placeholder="Min Rent" />
+        </div>
+        <div class="col-md-3">
+            <input type="number" id="maxRent" name="maxRent" class="form-control" placeholder="Max Rent" />
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-secondary w-100" type="button" onclick="resetFilters()">Reset</button>
+        </div>
+    </form>
 
     <div class="row row-cols-1 row-cols-md-3 g-4" id="houseContainer"></div>
 </div>
@@ -261,6 +276,63 @@
     }
 
     window.onload = fetchHouses;
+
+    ["keyword", "minRent", "maxRent"].forEach(id => {
+        document.getElementById(id).addEventListener("input", debounce(async function () {
+            const keyword = document.getElementById("keyword").value;
+            const minRent = document.getElementById("minRent").value;
+            const maxRent = document.getElementById("maxRent").value;
+
+            const params = new URLSearchParams();
+            if (keyword) params.append("keyword", keyword);
+            if (minRent) params.append("minRent", minRent);
+            if (maxRent) params.append("maxRent", maxRent);
+
+            const res = await fetch(`/api/management/houses/search?${params.toString()}`, {
+                headers: { Authorization: "Bearer " + token }
+            });
+
+            if (!res.ok) return;
+
+            const filteredHouses = await res.json();
+            renderHouses(filteredHouses);
+        }, 300));
+    });
+
+    function resetFilters() {
+        document.getElementById("keyword").value = "";
+        document.getElementById("minRent").value = "";
+        document.getElementById("maxRent").value = "";
+        fetchHouses();
+    }
+
+    function debounce(func, delay) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    async function checkApprovalBeforeAdd() {
+        try {
+            const res = await fetch("/api/auth/users/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
+            if (!res.ok) throw new Error("Failed to fetch user");
+
+            const user = await res.json();
+            if (user.approved) {
+                const modal = new bootstrap.Modal(document.getElementById("createHouseModal"));
+                modal.show();
+            } else {
+                alert("Sorry, your account hasn't been approved by the admin yet. You can't add houses until you're approved.");
+            }
+        } catch (err) {
+            alert("Error checking approval status. Please try again.");
+        }
+    }
+
 </script>
 </body>
 </html>

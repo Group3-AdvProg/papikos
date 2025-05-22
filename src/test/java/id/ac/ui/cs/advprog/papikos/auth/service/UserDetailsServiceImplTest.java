@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.auth.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,11 +33,12 @@ class UserDetailsServiceImplTest {
 
     @Test
     void testLoadUserByUsername_Found() {
-        // Create and save a test user.
         User user = new User();
         user.setEmail("found@example.com");
         user.setPassword("password123");
         user.setRole("TENANT");
+        user.setFullName("Found User");
+        user.setPhoneNumber("081234567890");
         userRepository.save(user);
 
         var userDetails = userDetailsService.loadUserByUsername("found@example.com");

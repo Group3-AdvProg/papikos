@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.house.Rental.repository.RentalRepository;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalServiceImpl;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
@@ -89,7 +89,11 @@ public class RentalServiceImplTest {
     @Test
     void update_with_new_tenant() {
         Rental stored = baseRental("SomeKos", 77L);
-        Tenant t = new Tenant("Bar", "082");
+        User t = new User();
+        t.setId(55L);
+        t.setFullName("Bar");
+        t.setPhoneNumber("082");
+        t.setRole("ROLE_TENANT");
         stored.setTenant(null);
 
         Rental details = baseRental("SomeKos", 77L);

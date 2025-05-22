@@ -8,10 +8,7 @@ import jakarta.persistence.*;
 @Data
 @NoArgsConstructor
 @Table(name = "users") // avoid keyword conflict
-@Inheritance(strategy = InheritanceType.JOINED) // enable JOINED inheritance
-@DiscriminatorColumn(name = "user_type") // optional, to help identify subclass
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,6 +21,19 @@ public class User {
 
     @Column(nullable = false)
     private String role; // e.g., "TENANT", "LANDLORD", "ADMIN"
+
+    @Column(nullable = false)
+    private String fullName;
+
+    @Column(nullable = false)
+    private String phoneNumber;
+
+    @Column(nullable = false)
+    private boolean isApproved = false;
+
+    public void setApproved(boolean approved) {
+        isApproved = approved;
+    }
 
     @Column(nullable = false)
     private double balance = 0.0;

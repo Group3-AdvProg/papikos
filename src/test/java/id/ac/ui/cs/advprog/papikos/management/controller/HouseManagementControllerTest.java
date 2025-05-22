@@ -68,7 +68,9 @@ class HouseManagementControllerTest {
     }
 
     @Test
-    void testCreateHouse() throws Exception {
+    void testCreateHouse_ApprovedLandlord() throws Exception {
+        owner.setApproved(true);
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
         doNothing().when(houseManagementService).addHouse(any(House.class));
 
         mockMvc.perform(post("/api/management/houses")
@@ -77,6 +79,19 @@ class HouseManagementControllerTest {
                         .content(objectMapper.writeValueAsString(house)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Kos A"));
+    }
+
+    @Test
+    void testCreateHouse_UnapprovedLandlord() throws Exception {
+        owner.setApproved(false);
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+
+        mockMvc.perform(post("/api/management/houses")
+                        .principal(() -> "owner@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(house)))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Account not approved by admin yet"));
     }
 
     @Test
@@ -113,4 +128,32 @@ class HouseManagementControllerTest {
 
         verify(houseManagementService, times(1)).deleteHouse(1L);
     }
+
+    @Test
+    void testSearchHouses_KeywordOnly() throws Exception {
+        when(houseManagementService.searchHouses(owner, "UI", null, null))
+                .thenReturn(List.of(house));
+
+        mockMvc.perform(get("/api/management/houses/search")
+                        .principal(() -> "owner@example.com")
+                        .param("keyword", "UI"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Kos A"))
+                .andExpect(jsonPath("$[0].address").value("Jl. UI"));
+    }
+
+    @Test
+    void testSearchHouses_AllFilters() throws Exception {
+        when(houseManagementService.searchHouses(owner, "Kos", 1000000.0, 2000000.0))
+                .thenReturn(List.of(house));
+
+        mockMvc.perform(get("/api/management/houses/search")
+                        .principal(() -> "owner@example.com")
+                        .param("keyword", "Kos")
+                        .param("minRent", "1000000")
+                        .param("maxRent", "2000000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].monthlyRent").value(1500000.0));
+    }
+
 }

@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import id.ac.ui.cs.advprog.papikos.auth.service.UserDetailsServiceImpl;
 import id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,11 +16,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-
-
-import id.ac.ui.cs.advprog.papikos.auth.entity.User;
-import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootTest
@@ -37,20 +35,19 @@ class JwtFilterTest {
 
     @BeforeEach
     void setupTestUser() {
-        // Check if the test user exists; if not, create one.
         if (!userRepository.existsByEmail("found@example.com")) {
             User user = new User();
             user.setEmail("found@example.com");
-            // Make sure to encode the password if your security configuration expects so.
             user.setPassword(new BCryptPasswordEncoder().encode("password"));
             user.setRole("USER");
+            user.setFullName("Found User");
+            user.setPhoneNumber("081234567890");
             userRepository.save(user);
         }
     }
 
     @Test
     void testDoFilterValidToken() throws Exception {
-        // Now load the test user (it should be found)
         UserDetails userDetails = userDetailsService.loadUserByUsername("found@example.com");
         String token = jwtUtil.generateToken(userDetails);
 

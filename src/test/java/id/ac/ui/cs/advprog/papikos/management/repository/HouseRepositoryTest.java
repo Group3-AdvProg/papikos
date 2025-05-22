@@ -32,6 +32,8 @@ class HouseRepositoryTest {
         owner.setEmail("owner@example.com");
         owner.setPassword("securepass");
         owner.setRole("ROLE_LANDLORD");
+        owner.setFullName("Test Owner");
+        owner.setPhoneNumber("0811234567");
         owner = userRepository.save(owner);
 
         house = new House("Kos Harapan", "Depok", "Bersih dan aman", 4,

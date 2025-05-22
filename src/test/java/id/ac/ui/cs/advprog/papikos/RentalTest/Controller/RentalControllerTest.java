@@ -3,14 +3,14 @@ package id.ac.ui.cs.advprog.papikos.RentalTest.Controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.Rental.controller.RentalController;
 import id.ac.ui.cs.advprog.papikos.house.Rental.dto.RentalDTO;
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
-import id.ac.ui.cs.advprog.papikos.house.Rental.repository.TenantRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -35,7 +35,7 @@ class RentalControllerTest {
 
     @Mock private RentalService rentalService;
     @Mock private HouseRepository houseRepository;
-    @Mock private TenantRepository tenantRepository;
+    @Mock private UserRepository userRepository;
 
     @InjectMocks private RentalController controller;
 
@@ -104,7 +104,7 @@ class RentalControllerTest {
         Rental out = createRental("New", 77L);
 
         when(houseRepository.findById(77L)).thenReturn(Optional.of(in.getHouse()));
-        when(tenantRepository.findById(1L)).thenReturn(Optional.of(in.getTenant()));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(in.getTenant()));
         when(rentalService.createRental(any(Rental.class))).thenReturn(out);
 
         RentalDTO dto = toDTO(in);
@@ -198,10 +198,11 @@ class RentalControllerTest {
         r.setTotalPrice(1000000);
         r.setPaid(false);
 
-        Tenant tenant = new Tenant();
+        User tenant = new User();
         tenant.setId(1L);
         tenant.setFullName("Tenant " + suffix);
         tenant.setPhoneNumber("08123456789");
+        tenant.setRole("ROLE_TENANT");
         r.setTenant(tenant);
 
         return r;

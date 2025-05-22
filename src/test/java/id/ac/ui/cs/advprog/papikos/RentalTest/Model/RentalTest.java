@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Model;
 
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.Test;
 
@@ -19,10 +19,11 @@ class RentalTest {
         house.setId(10L);
         house.setName("Kos Elite");
 
-        Tenant tenant = new Tenant();
+        User tenant = new User();
         tenant.setId(99L);
         tenant.setFullName("Darren Tenant");
         tenant.setPhoneNumber("08123456789");
+        tenant.setRole("ROLE_TENANT");
 
         Rental r = new Rental();
         r.setId(id);
