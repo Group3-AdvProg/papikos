@@ -1,7 +1,8 @@
+// src/test/java/id/ac/ui/cs/advprog/papikos/chat/repository/ChatRoomRepositoryTest.java
 package id.ac.ui.cs.advprog.papikos.chat.repository;
 
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatRoom;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -23,13 +24,17 @@ class ChatRoomRepositoryTest {
     @Test
     void saveAndFindAll_roundTripsEntities() {
         // first room participants
-        Tenant tenant1 = new Tenant("Tenant One", "111-111-1111");
+        User tenant1 = new User();
+        tenant1.setFullName("Tenant One");
+        tenant1.setPhoneNumber("111-111-1111");
         tenant1.setEmail("tenant1@example.com");
         tenant1.setPassword("pass");
         tenant1.setRole("TENANT");
         entityManager.persistAndFlush(tenant1);
 
-        Tenant landlord1 = new Tenant("Landlord One", "222-222-2222");
+        User landlord1 = new User();
+        landlord1.setFullName("Landlord One");
+        landlord1.setPhoneNumber("222-222-2222");
         landlord1.setEmail("landlord1@example.com");
         landlord1.setPassword("pass");
         landlord1.setRole("LANDLORD");
@@ -41,13 +46,17 @@ class ChatRoomRepositoryTest {
                 .build());
 
         // second room participants
-        Tenant tenant2 = new Tenant("Tenant Two", "333-333-3333");
+        User tenant2 = new User();
+        tenant2.setFullName("Tenant Two");
+        tenant2.setPhoneNumber("333-333-3333");
         tenant2.setEmail("tenant2@example.com");
         tenant2.setPassword("pass");
         tenant2.setRole("TENANT");
         entityManager.persistAndFlush(tenant2);
 
-        Tenant landlord2 = new Tenant("Landlord Two", "444-444-4444");
+        User landlord2 = new User();
+        landlord2.setFullName("Landlord Two");
+        landlord2.setPhoneNumber("444-444-4444");
         landlord2.setEmail("landlord2@example.com");
         landlord2.setPassword("pass");
         landlord2.setRole("LANDLORD");
@@ -70,7 +79,7 @@ class ChatRoomRepositoryTest {
                 .extracting(r -> r.getLandlord().getId())
                 .containsExactlyInAnyOrder(landlord1.getId(), landlord2.getId());
 
-        // THIS LINE now compiles and checks createdAt != null
+        // now also verify createdAt was set
         assertThat(rooms)
                 .extracting(ChatRoom::getCreatedAt)
                 .doesNotContainNull();
