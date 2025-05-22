@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Wishlist</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f9f9ff;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .card-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge-available {
+      background-color: #28a745;
+    }
+
+    .badge-full {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold text-primary" href="#">Papikos</a>
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item">
+        <a class="nav-link text-primary" href="inbox.html">Inbox</a>
+      </li>
+      <li class="nav-item">
+        <a class="btn btn-outline-primary ms-2" href="/logout">Logout</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <h2 class="text-primary fw-bold mb-4">🏡 My Wishlist</h2>
+  <div id="wishlist" class="row gy-4"></div>
+  <div id="emptyState" class="text-muted text-center mt-5 d-none">
+    <p>No properties in your wishlist yet. Explore houses to add some!</p>
+  </div>
+</div>
+
+<!-- Remove Confirmation Modal -->
+<div class="modal fade" id="confirmRemoveModal" tabindex="-1" aria-labelledby="confirmRemoveModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmRemoveModalLabel">Confirm Removal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to remove this house from your wishlist?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="confirmRemoveBtn" type="button" class="btn btn-danger">Yes, Remove</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const token = localStorage.getItem("token");
+  let houseToRemove = null;
+
+  async function fetchWishlist() {
+    try {
+      const res = await fetch("/api/wishlist", {
+        headers: { Authorization: "Bearer " + token }
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch wishlist");
+
+      const houses = await res.json();
+      const wishlistEl = document.getElementById("wishlist");
+      const emptyEl = document.getElementById("emptyState");
+
+      wishlistEl.innerHTML = "";
+      if (houses.length === 0) {
+        emptyEl.classList.remove("d-none");
+        return;
+      } else {
+        emptyEl.classList.add("d-none");
+      }
+
+      houses.forEach(house => {
+        const card = document.createElement("div");
+        card.className = "col-12 col-md-6 col-lg-4";
+
+        card.innerHTML = `
+          <div class="card h-100 shadow-sm">
+            <img src="${house.imageUrl}" class="card-img-top" alt="House Image">
+            <div class="card-body">
+              <h5 class="card-title">${house.name}</h5>
+              <p class="card-text">${house.address}</p>
+              <p class="card-text mb-2 text-secondary">Rp ${house.monthlyRent.toLocaleString("id-ID")} / month</p>
+              <span class="badge ${house.available ? "badge-available" : "badge-full"}">
+                ${house.available ? "Available" : "Full"}
+              </span>
+            </div>
+            <div class="card-footer d-flex justify-content-between bg-white">
+              <a href="/houseDetail.html?id=${house.id}" class="btn btn-outline-primary btn-sm">View Detail</a>
+              <button class="btn btn-outline-danger btn-sm" onclick="promptRemove(${house.id})">Remove</button>
+            </div>
+          </div>
+        `;
+        wishlistEl.appendChild(card);
+      });
+    } catch (err) {
+      console.error("Failed to load wishlist:", err);
+      document.getElementById("wishlist").innerHTML = "<div class='alert alert-danger'>Error loading wishlist.</div>";
+    }
+  }
+
+  function promptRemove(houseId) {
+    houseToRemove = houseId;
+    const modal = new bootstrap.Modal(document.getElementById("confirmRemoveModal"));
+    modal.show();
+  }
+
+  async function removeFromWishlist() {
+    if (!houseToRemove) return;
+    try {
+      await fetch(`/api/wishlist/${houseToRemove}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      });
+      houseToRemove = null;
+      const modal = bootstrap.Modal.getInstance(document.getElementById("confirmRemoveModal"));
+      modal.hide();
+      fetchWishlist();
+    } catch (err) {
+      alert("Failed to remove from wishlist");
+    }
+  }
+
+  document.getElementById("confirmRemoveBtn").addEventListener("click", removeFromWishlist);
+  window.onload = fetchWishlist;
+</script>
+</body>
+</html>
