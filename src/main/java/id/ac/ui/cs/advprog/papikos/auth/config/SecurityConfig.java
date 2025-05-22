@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 "/management.html",
                                 "/houseDetails.html",
                                 "/rentalRequests.html",
+                                "/inbox.html",
                                 "/admin.html",
                                 // <-- allow SockJS handshake & WS connect
                                 "/ws/**",
