@@ -1,7 +1,9 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.observer;
 
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
+import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
+import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,39 +19,35 @@ import java.util.Map;
 public class WishlistNotifierImpl implements WishlistNotifier {
 
     private final NotificationRepository notificationRepo;
-    private final Map<Long, List<NotificationObserver>> observersByHouseId = new HashMap<>();
+    private final WishlistItemRepository wishlistItemRepo;
 
     @Override
     public void registerObserver(Long houseId, NotificationObserver observer) {
-        observersByHouseId
-                .computeIfAbsent(houseId, k -> new ArrayList<>())
-                .add(observer);
-    }
-
-    @Override
-    public void removeObserver(Long houseId, NotificationObserver observer) {
-        List<NotificationObserver> observers = observersByHouseId.get(houseId);
-        if (observers != null) {
-            observers.remove(observer);
-        }
+        // No-op, or you can remove this method entirely if unused
     }
 
     @Override
     public void notifyObservers(Long houseId, Long ownerId) {
-        Notification notification = Notification.builder()
-                .ownerId(ownerId)
-                .message("House with ID " + houseId + " has been updated.")
-                .createdAt(LocalDateTime.now())
-                .isRead(false)
-                .build();
-        notificationRepo.save(notification);
+        List<Long> tenantIds = wishlistItemRepo.findByHouseId(houseId)
+                .stream()
+                .map(WishlistItem::getTenantId)
+                .distinct()
+                .toList();
 
-        // Optionally notify observers if needed
-        List<NotificationObserver> observers = observersByHouseId.get(houseId);
-        if (observers != null) {
-            for (NotificationObserver observer : observers) {
-                observer.update(houseId);
-            }
+        for (Long tenantId : tenantIds) {
+            Notification notification = Notification.builder()
+                    .tenantId(tenantId)
+                    .ownerId(ownerId)
+                    .message("House " + houseId + " has new availability.")
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            notificationRepo.save(notification);
         }
+    }
+
+    @Override
+    public void removeObserver(Long houseId, NotificationObserver observer) {
+        // No-op (or remove if unused)
     }
 }

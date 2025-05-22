@@ -29,7 +29,7 @@ public class WishlistServiceImplTest {
         notificationRepo = mock(NotificationRepository.class);
         houseRepo = mock(HouseRepository.class);
         wishlistService = new WishlistServiceImpl(wishlistItemRepo, notificationRepo, houseRepo);
-        wishlistService.initNotifier(); // ensure notifier is ready
+        wishlistService.setNotifier(notifier); // you need to allow injecting the mock
 
     }
 
@@ -124,7 +124,7 @@ public class WishlistServiceImplTest {
         WishlistItem item = WishlistItem.builder().tenantId(123L).houseId(1L).build();
         when(wishlistItemRepo.findByHouseId(1L)).thenReturn(List.of(item));
         House house = mock(House.class);
-        when(houseRepo.findById(1L)).thenReturn(java.util.Optional.of(house));
+        when(houseRepo.findById(1L)).thenReturn(Optional.of(house));
         when(house.getOwner()).thenReturn(null); // No notification sent
 
         wishlistService.notifyAvailability(1L);
@@ -187,6 +187,86 @@ public class WishlistServiceImplTest {
                 notification.getTenantId().equals(123L) &&
                         notification.getMessage().contains("House ID 1")
         ));
+    }
+    @SpringBootTest
+    @AutoConfigureTestDatabase
+    class WishlistServiceImplTest {
+
+        @MockBean
+        private WishlistItemRepository wishlistItemRepo;
+
+        @MockBean
+        private NotificationRepository notificationRepo;
+
+        @MockBean
+        private HouseRepository houseRepo;
+
+        @MockBean
+        private WishlistNotifier notifier;
+
+        @Autowired
+        private WishlistServiceImpl wishlistService;
+
+        private final Long tenantId = 1L;
+        private final Long houseId = 100L;
+        private final Long ownerId = 200L;
+
+        private House sampleHouse;
+
+        @BeforeEach
+        void setUp() {
+            sampleHouse = new House();
+            sampleHouse.setId(houseId);
+            User owner = new User();
+            owner.setId(ownerId);
+            sampleHouse.setOwner(owner);
+        }
+
+        @Test
+        void testAddToWishlistSuccess() {
+            Mockito.when(houseRepo.findById(houseId)).thenReturn(Optional.of(sampleHouse));
+            Mockito.when(wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId)).thenReturn(null);
+
+            wishlistService.addToWishlist(tenantId, houseId);
+
+            Mockito.verify(wishlistItemRepo, times(1)).save(any(WishlistItem.class));
+            Mockito.verify(notifier, times(1)).registerObserver(eq(houseId), any());
+            Mockito.verify(notifier, times(1)).notifyObservers(houseId, ownerId);
+        }
+
+        @Test
+        void testAddToWishlistWhenAlreadyExists() {
+            Mockito.when(houseRepo.findById(houseId)).thenReturn(Optional.of(sampleHouse));
+            Mockito.when(wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId))
+                    .thenReturn(new WishlistItem());
+
+            wishlistService.addToWishlist(tenantId, houseId);
+
+            Mockito.verify(wishlistItemRepo, never()).save(any());
+            Mockito.verify(notifier, never()).registerObserver(any(), any());
+            Mockito.verify(notifier, never()).notifyObservers(any(), any());
+        }
+
+        @Test
+        void testRemoveFromWishlist() {
+            WishlistItem item = WishlistItem.builder().id(1L).tenantId(tenantId).houseId(houseId).build();
+            Mockito.when(wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId)).thenReturn(item);
+
+            wishlistService.removeFromWishlist(tenantId, houseId);
+
+            Mockito.verify(wishlistItemRepo, times(1)).delete(item);
+        }
+
+        @Test
+        void testGetNotificationsByTenant() {
+            Notification n1 = Notification.builder().tenantId(tenantId).message("Hello").build();
+            Notification n2 = Notification.builder().tenantId(tenantId).message("World").build();
+            Mockito.when(notificationRepo.findByTenantId(tenantId)).thenReturn(List.of(n1, n2));
+
+            List<String> messages = wishlistService.getNotificationsByTenant(tenantId);
+
+            assertEquals(List.of("Hello", "World"), messages);
+        }
     }
 
 }

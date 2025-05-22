@@ -18,8 +18,4 @@ public class WishlistItem {
 
     private Long tenantId;
     private Long houseId;
-
-    // You could use @ManyToOne for a real Tenant entity
-    // @ManyToOne
-    // private Tenant tenant;
 }

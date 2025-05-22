@@ -1,20 +1,22 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.observer;
 
-import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
-import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
-import lombok.RequiredArgsConstructor;
-
-import java.time.LocalDateTime;
+// ...existing imports...
 
 @RequiredArgsConstructor
 public class TenantNotificationObserver {
     private final Long tenantId;
     private final NotificationRepository notificationRepo;
 
+    public TenantNotificationObserver(Long tenantId, NotificationRepository repo) {
+        this.tenantId = tenantId;
+        this.notificationRepo = repo;
+    }
+
     public void update(Long houseId, Long ownerId) {
         Notification notification = Notification.builder()
                 .tenantId(tenantId)
                 .ownerId(ownerId)
+                .houseId(houseId)
                 .message("House with ID " + houseId + " is now available.")
                 .createdAt(LocalDateTime.now())
                 .isRead(false)

@@ -47,7 +47,7 @@ public class WishlistServiceImpl implements WishlistService {
         wishlistItemRepo.save(item);
 
         // Register tenant as observer for this house
-        notifier.registerObserver(houseId, new TenantNotificationObserver(tenantId, notificationRepo));
+        // notifier.registerObserver(houseId, new TenantNotificationObserver(tenantId, notificationRepo));
 
         // Notify the owner when a new wishlist entry is added
         if (house.getOwner() != null && house.getOwner().getId() != null) {
