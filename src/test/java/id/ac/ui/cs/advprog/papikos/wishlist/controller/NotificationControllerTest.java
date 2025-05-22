@@ -1,9 +1,12 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.controller;
 
+import id.ac.ui.cs.advprog.papikos.auth.filter.JwtFilter;
+import id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -14,6 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(NotificationController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class NotificationControllerTest {
 
     @Autowired
@@ -21,6 +25,12 @@ public class NotificationControllerTest {
 
     @MockBean
     private WishlistService wishlistService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private JwtFilter jwtFilter;
 
     @Test
     void testGetNotificationsByTenant() throws Exception {
