@@ -1,6 +1,8 @@
 package id.ac.ui.cs.advprog.papikos.house.management.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.model.House;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
@@ -21,6 +23,9 @@ public class HouseManagementController {
 
     @Autowired
     private HouseManagementService houseManagementService;
+
+    @Autowired
+    private RentalService rentalService;
 
     @Autowired
     private UserRepository userRepository;
@@ -97,5 +102,21 @@ public class HouseManagementController {
         User owner = userRepository.findByEmail(principal.getName()).orElseThrow();
         List<House> result = houseManagementService.searchHouses(owner, keyword, minRent, maxRent);
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/rentals/{rentalId}/approve")
+    public ResponseEntity<?> approveRental(@PathVariable Long rentalId, Principal principal) {
+        User landlord = userRepository.findByEmail(principal.getName()).orElseThrow();
+        Rental rental = rentalService.getRentalById(rentalId).orElseThrow();
+
+        House house = rental.getHouse();
+        if (!house.getOwner().getId().equals(landlord.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not own this house.");
+        }
+
+        rental.setApproved(true);
+        rentalService.updateRental(rentalId, rental);
+
+        return ResponseEntity.ok("Rental approved.");
     }
 }

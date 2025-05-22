@@ -92,6 +92,7 @@
                 <p><strong>Description:</strong> ${house.description}</p>
                 <p><strong>Rooms:</strong> ${house.numberOfRooms}</p>
                 <p><strong>Monthly Rent:</strong> Rp ${house.monthlyRent.toLocaleString("id-ID")}</p>
+                <a href="rentalRequests.html?houseId=${house.id}" class="btn btn-outline-primary mt-3">View Rental Requests</a>
             `;
         } catch (err) {
             document.getElementById("houseDetail").innerHTML = `

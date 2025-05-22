@@ -9,9 +9,7 @@ import jakarta.persistence.*;
 @NoArgsConstructor
 @Table(name = "users") // avoid keyword conflict
 @Inheritance(strategy = InheritanceType.JOINED) // enable JOINED inheritance
-@DiscriminatorColumn(name = "user_type") // optional, to help identify subclass
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
