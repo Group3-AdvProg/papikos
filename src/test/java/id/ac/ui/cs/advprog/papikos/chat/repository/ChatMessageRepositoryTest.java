@@ -1,8 +1,9 @@
+// src/test/java/id/ac/ui/cs/advprog/papikos/chat/repository/ChatMessageRepositoryTest.java
 package id.ac.ui.cs.advprog.papikos.chat.repository;
 
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatRoom;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Tenant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -23,14 +24,18 @@ class ChatMessageRepositoryTest {
 
     @Test
     void save_setsIdRoomAndTimestamp_andFindByIdWorks() {
-        // 1. Persist tenant and landlord as Tenant entities
-        Tenant tenant = new Tenant("Test Tenant", "111-222-3333");
+        // 1. Persist tenant and landlord as User entities
+        User tenant = new User();
+        tenant.setFullName("Test Tenant");
+        tenant.setPhoneNumber("111-222-3333");
         tenant.setEmail("tenant@example.com");
         tenant.setPassword("pass");
         tenant.setRole("TENANT");
         tenant = entityManager.persistAndFlush(tenant);
 
-        Tenant landlord = new Tenant("Test Landlord", "444-555-6666");
+        User landlord = new User();
+        landlord.setFullName("Test Landlord");
+        landlord.setPhoneNumber("444-555-6666");
         landlord.setEmail("landlord@example.com");
         landlord.setPassword("pass");
         landlord.setRole("LANDLORD");
@@ -43,8 +48,10 @@ class ChatMessageRepositoryTest {
                 .build();
         room = entityManager.persistAndFlush(room);
 
-        // 3. Persist a sender as Tenant
-        Tenant sender = new Tenant("Sender User", "777-888-9999");
+        // 3. Persist a sender as User
+        User sender = new User();
+        sender.setFullName("Sender User");
+        sender.setPhoneNumber("777-888-9999");
         sender.setEmail("sender@example.com");
         sender.setPassword("pass");
         sender.setRole("TENANT");
