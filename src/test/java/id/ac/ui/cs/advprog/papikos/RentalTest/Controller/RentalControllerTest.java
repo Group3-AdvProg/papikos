@@ -3,9 +3,14 @@ package id.ac.ui.cs.advprog.papikos.RentalTest.Controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.Rental.controller.RentalController;
+import id.ac.ui.cs.advprog.papikos.house.Rental.dto.RentalDTO;
 import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
+import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -29,10 +34,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RentalControllerTest {
 
     @Mock private RentalService rentalService;
+    @Mock private HouseRepository houseRepository;
+    @Mock private UserRepository userRepository;
+
     @InjectMocks private RentalController controller;
+
     private MockMvc mockMvc;
     private ObjectMapper mapper;
-    private final Long sampleId = 1L; //  pakai Long
+    private final Long sampleId = 1L;
 
     @RestControllerAdvice
     static class TestExceptionHandler {
@@ -60,19 +69,19 @@ class RentalControllerTest {
 
     @Test
     void testGetAllRentals() throws Exception {
-        Rental r1 = createRental("A");
-        Rental r2 = createRental("B");
+        Rental r1 = createRental("A", 98L);
+        Rental r2 = createRental("B", 99L);
         when(rentalService.getAllRentals()).thenReturn(Arrays.asList(r1, r2));
 
         mockMvc.perform(get("/api/rentals"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[1].houseId").value("houseB"));
+                .andExpect(jsonPath("$[1].house.id").value(99));
     }
 
     @Test
     void testGetById_Found() throws Exception {
-        Rental r = createRental("X");
+        Rental r = createRental("X", 88L);
         when(rentalService.getRentalById(sampleId)).thenReturn(Optional.of(r));
 
         mockMvc.perform(get("/api/rentals/" + sampleId))
@@ -90,34 +99,40 @@ class RentalControllerTest {
 
     @Test
     void testCreateRental() throws Exception {
-        Rental in = createRental("New");
+        Rental in = createRental("New", 77L);
         in.setId(null);
-        Rental out = createRental("New");
+        Rental out = createRental("New", 77L);
+
+        when(houseRepository.findById(77L)).thenReturn(Optional.of(in.getHouse()));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(in.getTenant()));
         when(rentalService.createRental(any(Rental.class))).thenReturn(out);
+
+        RentalDTO dto = toDTO(in);
 
         mockMvc.perform(post("/api/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(in)))
+                        .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(out.getId())) //  Gak perlu toString()
-                .andExpect(jsonPath("$.durationInMonths").value(1));
+                .andExpect(jsonPath("$.id").value(sampleId))
+                .andExpect(jsonPath("$.durationInMonths").value(1))
+                .andExpect(jsonPath("$.house.id").value(77));
     }
 
     @Test
     void testUpdateRental_Success() throws Exception {
-        Rental update = createRental("U");
+        Rental update = createRental("U", 66L);
         when(rentalService.updateRental(eq(sampleId), any(Rental.class))).thenReturn(update);
 
         mockMvc.perform(put("/api/rentals/" + sampleId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(update)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.houseId").value("houseU"));
+                .andExpect(jsonPath("$.house.id").value(66));
     }
 
     @Test
     void testUpdateRental_NotFound() throws Exception {
-        Rental update = createRental("U");
+        Rental update = createRental("U", 66L);
         when(rentalService.updateRental(eq(sampleId), any(Rental.class)))
                 .thenThrow(new RuntimeException("not found"));
 
@@ -135,15 +150,44 @@ class RentalControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    private Rental createRental(String suffix) {
+    private Rental createRental(String suffix, Long houseId) {
         Rental r = new Rental();
-        r.setId(sampleId); //  pakai Long
-        r.setHouseId("house" + suffix);
+        r.setId(sampleId);
+
+        House house = new House();
+        house.setId(houseId);
+        house.setName("Kos " + suffix);
+        r.setHouse(house);
+
         r.setFullName("Name" + suffix);
         r.setPhoneNumber("08123");
         r.setCheckInDate(LocalDate.of(2025, 6, 1));
         r.setDurationInMonths(1);
         r.setApproved(false);
+        r.setTotalPrice(1000000);
+        r.setPaid(false);
+
+        User tenant = new User();
+        tenant.setId(1L);
+        tenant.setFullName("Tenant " + suffix);
+        tenant.setPhoneNumber("08123456789");
+        tenant.setRole("ROLE_TENANT");
+        r.setTenant(tenant);
+
         return r;
+    }
+
+    private RentalDTO toDTO(Rental rental) {
+        RentalDTO dto = new RentalDTO();
+        dto.setHouseId(rental.getHouse().getId());
+        dto.setTenantId(rental.getTenant().getId());
+        dto.setFullName(rental.getFullName());
+        dto.setPhoneNumber(rental.getPhoneNumber());
+        dto.setCheckInDate(rental.getCheckInDate());
+        dto.setDurationInMonths(rental.getDurationInMonths());
+        dto.setApproved(rental.isApproved());
+        dto.setTotalPrice(rental.getTotalPrice());
+        dto.setPaid(rental.isPaid());
+        return dto;
     }
 }

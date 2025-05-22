@@ -1,4 +1,5 @@
 package id.ac.ui.cs.advprog.papikos.auth.entity;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,9 +8,9 @@ import jakarta.persistence.*;
 @Entity
 @Data
 @NoArgsConstructor
-@Table(name = "users") // Renamed table to avoid reserved keywords like "user"
+@Table(name = "users") // avoid keyword conflict
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
