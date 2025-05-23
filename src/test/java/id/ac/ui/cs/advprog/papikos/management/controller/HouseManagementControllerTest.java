@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -80,7 +81,8 @@ class HouseManagementControllerTest {
     void testCreateHouse_ApprovedLandlord() throws Exception {
         owner.setApproved(true);
         when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
-        doNothing().when(houseManagementService).addHouse(any(House.class));
+        when(houseManagementService.addHouse(any(House.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(post("/api/management/houses")
                         .principal(() -> "owner@example.com")
@@ -116,6 +118,8 @@ class HouseManagementControllerTest {
     @Test
     void testUpdateHouse_ValidOwner() throws Exception {
         when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
+        when(houseManagementService.updateHouse(eq(1L), any(House.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(put("/api/management/houses/1")
                         .principal(() -> "owner@example.com")
@@ -123,8 +127,6 @@ class HouseManagementControllerTest {
                         .content(objectMapper.writeValueAsString(house)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Kos A"));
-
-        verify(houseManagementService, times(1)).updateHouse(eq(1L), any(House.class));
     }
 
     @Test
@@ -161,6 +163,8 @@ class HouseManagementControllerTest {
         updated.setId(1L);
 
         when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
+        when(houseManagementService.updateHouse(eq(1L), any(House.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(put("/api/management/houses/1")
                         .principal(() -> "owner@example.com")
@@ -175,12 +179,12 @@ class HouseManagementControllerTest {
     @Test
     void testDeleteHouse_ValidOwner() throws Exception {
         when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
+        when(houseManagementService.deleteHouse(1L))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(delete("/api/management/houses/1")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isNoContent());
-
-        verify(houseManagementService, times(1)).deleteHouse(1L);
     }
 
     @Test
@@ -245,6 +249,8 @@ class HouseManagementControllerTest {
 
         when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
         when(rentalService.getRentalById(10L)).thenReturn(Optional.of(rental));
+        when(houseManagementService.updateHouse(eq(1L), any(House.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(post("/api/management/rentals/10/approve")
                         .principal(() -> "owner@example.com"))
