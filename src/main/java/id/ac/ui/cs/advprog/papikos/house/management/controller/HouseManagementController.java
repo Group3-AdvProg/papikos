@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-//import org.springframework.security.core.annotation.AuthenticationPrincipal;
-//import org.springframework.security.core.userdetails.UserDetails;
 
 import java.security.Principal;
 import java.util.List;
@@ -48,7 +46,7 @@ public class HouseManagementController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account not approved by admin yet");
         }
         house.setOwner(owner);
-        houseManagementService.addHouse(house);
+        houseManagementService.addHouse(house).join();
         return ResponseEntity.ok(house);
     }
 
@@ -75,7 +73,7 @@ public class HouseManagementController {
         }
 
         updatedHouse.setOwner(owner);
-        houseManagementService.updateHouse(id, updatedHouse);
+        houseManagementService.updateHouse(id, updatedHouse).join();
 
         if (updatedHouse.getNumberOfRooms() > existingHouse.get().getNumberOfRooms()) {
             wishlistService.notifyAvailability(id);
@@ -96,7 +94,7 @@ public class HouseManagementController {
             return ResponseEntity.status(403).body("Forbidden: You do not own this house.");
         }
 
-        houseManagementService.deleteHouse(id);
+        houseManagementService.deleteHouse(id).join();
         return ResponseEntity.noContent().build();
     }
 
@@ -129,7 +127,7 @@ public class HouseManagementController {
             int currentRooms = house.getNumberOfRooms();
             if (currentRooms > 0) {
                 house.setNumberOfRooms(currentRooms - 1);
-                houseManagementService.updateHouse(house.getId(), house);
+                houseManagementService.updateHouse(house.getId(), house).join();
             }
         }
 

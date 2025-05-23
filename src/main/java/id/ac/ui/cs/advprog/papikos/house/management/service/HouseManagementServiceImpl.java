@@ -5,6 +5,8 @@ import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
+import java.util.concurrent.CompletableFuture;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,8 +18,10 @@ public class HouseManagementServiceImpl implements HouseManagementService {
     private HouseRepository houseRepository;
 
     @Override
-    public void addHouse(House house) {
+    @Async
+    public CompletableFuture<Void> addHouse(House house) {
         houseRepository.save(house);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -34,18 +38,22 @@ public class HouseManagementServiceImpl implements HouseManagementService {
     }
 
     @Override
-    public void updateHouse(Long id, House updatedHouse) {
+    @Async
+    public CompletableFuture<Void> updateHouse(Long id, House updatedHouse) {
         if (houseRepository.findById(id).isPresent()) {
             updatedHouse.setId(id);
             houseRepository.save(updatedHouse);
         } else {
             throw new IllegalArgumentException("House not found with ID: " + id);
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public void deleteHouse(Long id) {
+    @Async
+    public CompletableFuture<Void> deleteHouse(Long id) {
         houseRepository.deleteById(id);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
