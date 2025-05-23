@@ -48,7 +48,6 @@ public class SecurityConfig {
                                 "/ws/**",
                                 // <-- allow topic subscriptions over HTTP fallback if used
                                 "/topic/**",
-                        // Landlord-only REST
                                 "/houseDetails.html",
                                 "/dashboard.html",
                                 "/wallet-topup.html",
@@ -59,8 +58,11 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/payment/**",
                                 "/api/wallet/**",
-                                "/api/transaction/**"
+                                "/api/transaction/**",
+                                "/css/papikos.css"
                                 ).permitAll()  // Public endpoints (e.g., registration, login)
+
+                        // Landlord-only
                         .requestMatchers("/api/management/**").hasRole("LANDLORD")
 
                         // Admin-only
