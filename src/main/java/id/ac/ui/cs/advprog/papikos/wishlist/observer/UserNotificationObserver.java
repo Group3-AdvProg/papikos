@@ -7,14 +7,15 @@ import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
-public class TenantNotificationObserver {
-    private final Long tenantId;
+public class UserNotificationObserver implements NotificationObserver {
+    private final Long userId;
     private final NotificationRepository notificationRepo;
 
-    public void update(Long houseId, Long ownerId) {
+    // Match the NotificationObserver interface exactly
+    @Override
+    public void update(Long houseId) {
         Notification notification = Notification.builder()
-                .tenantId(tenantId)
-                .ownerId(ownerId)
+                .tenantId(userId)
                 .message("House with ID " + houseId + " is now available.")
                 .createdAt(LocalDateTime.now())
                 .isRead(false)
@@ -23,7 +24,7 @@ public class TenantNotificationObserver {
         notificationRepo.save(notification);
     }
 
-    public Long getTenantId() {
-        return tenantId;
+    public Long getUserId() {
+        return userId;
     }
 }

@@ -4,12 +4,10 @@ import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
-import id.ac.ui.cs.advprog.papikos.wishlist.observer.TenantNotificationObserver;
+import id.ac.ui.cs.advprog.papikos.wishlist.observer.UserNotificationObserver;
 import id.ac.ui.cs.advprog.papikos.wishlist.observer.WishlistNotifier;
-import id.ac.ui.cs.advprog.papikos.wishlist.observer.WishlistNotifierImpl;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,49 +24,47 @@ public class WishlistServiceImpl implements WishlistService {
     private final WishlistNotifier notifier;
 
     @Override
-    public void addToWishlist(Long tenantId, Long houseId) {
+    public void addToWishlist(Long userId, Long houseId) {
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new EntityNotFoundException("House not found with id: " + houseId));
 
-        WishlistItem existing = wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId);
+        WishlistItem existing = wishlistItemRepo.findByTenantIdAndHouseId(userId, houseId);
         if (existing != null) {
             return;
         }
 
         WishlistItem item = WishlistItem.builder()
-                .tenantId(tenantId)
+                .tenantId(userId)
                 .houseId(houseId)
                 .build();
         wishlistItemRepo.save(item);
 
-        // Register tenant as observer for this house
-        // notifier.registerObserver(houseId, new TenantNotificationObserver(tenantId, notificationRepo));
+        notifier.registerObserver(houseId, new UserNotificationObserver(userId, notificationRepo));
 
-        // Notify the owner when a new wishlist entry is added
         if (house.getOwner() != null && house.getOwner().getId() != null) {
             notifier.notifyObservers(houseId, house.getOwner().getId());
         }
     }
 
     @Override
-    public void removeFromWishlist(Long tenantId, Long houseId) {
-        WishlistItem item = wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId);
+    public void removeFromWishlist(Long userId, Long houseId) {
+        WishlistItem item = wishlistItemRepo.findByTenantIdAndHouseId(userId, houseId);
         if (item != null) {
             wishlistItemRepo.delete(item);
         }
     }
 
     @Override
-    public List<Long> getWishlistByTenant(Long tenantId) {
-        return wishlistItemRepo.findByTenantId(tenantId)
+    public List<Long> getWishlistByUser(Long userId) {
+        return wishlistItemRepo.findByTenantId(userId)
                 .stream()
                 .map(WishlistItem::getHouseId)
                 .toList();
     }
 
     @Override
-    public List<String> getNotificationsByTenant(Long tenantId) {
-        return notificationRepo.findByTenantId(tenantId)
+    public List<String> getNotificationsByUser(Long userId) {
+        return notificationRepo.findByTenantId(userId)
                 .stream()
                 .map(Notification::getMessage)
                 .toList();
