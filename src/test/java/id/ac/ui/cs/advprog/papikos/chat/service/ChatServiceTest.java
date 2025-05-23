@@ -1,4 +1,3 @@
-// src/test/java/id/ac/ui/cs/advprog/papikos/chat/service/ChatServiceTest.java
 package id.ac.ui.cs.advprog.papikos.chat.service;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
@@ -26,25 +25,27 @@ class ChatServiceTest {
 
     @Test
     void saveMessage_existingUser_saves() {
-        User sender = new User(); sender.setId(50L);
+        String senderEmail = "user@example.com";
+        User sender = new User(); sender.setEmail(senderEmail);
         ChatMessage msg = ChatMessage.builder()
                 .type(ChatMessage.MessageType.CHAT)
                 .content("Hello")
                 .build();
 
-        when(userRepo.findById(sender.getId())).thenReturn(Optional.of(sender));
+        when(userRepo.findByEmail(senderEmail)).thenReturn(Optional.of(sender));
         when(repository.save(any(ChatMessage.class))).thenAnswer(i -> i.getArgument(0));
 
-        ChatMessage result = service.saveMessage(sender.getId(), msg);
+        ChatMessage result = service.saveMessage(senderEmail, msg);
         assertEquals(sender, result.getSender());
         verify(repository).save(msg);
     }
 
     @Test
     void saveMessage_unknownUser_throws() {
-        when(userRepo.findById(99L)).thenReturn(Optional.empty());
+        String unknownEmail = "missing@example.com";
+        when(userRepo.findByEmail(unknownEmail)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
-                () -> service.saveMessage(99L, new ChatMessage()));
+                () -> service.saveMessage(unknownEmail, new ChatMessage()));
     }
 
     @Test
@@ -53,10 +54,10 @@ class ChatServiceTest {
         ChatMessage m2 = ChatMessage.builder().content("Two").build();
         List<ChatMessage> list = List.of(m1, m2);
 
-        when(repository.findAll(any(Sort.class))).thenReturn(list);
+        when(repository.findAll()).thenReturn(list);
 
         List<ChatMessage> result = service.getAllMessages();
-        verify(repository).findAll(any(Sort.class));
+        verify(repository).findAll();
         assertEquals(list, result);
     }
 }
