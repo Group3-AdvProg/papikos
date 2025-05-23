@@ -31,6 +31,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                                 /* ---------- completely public ---------- */
                                 .requestMatchers(
+                                        "/actuator/**",
+                                        "/actuator/prometheus",
                                         "/api/auth/**",          // login / register / refresh
                                         "/ws/**",                // WebSocket handshake
                                         "/topic/**",             // SockJS fallback
