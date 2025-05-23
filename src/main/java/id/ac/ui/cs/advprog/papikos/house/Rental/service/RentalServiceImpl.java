@@ -4,6 +4,8 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.repository.RentalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
+import java.util.concurrent.CompletableFuture;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +19,13 @@ public class RentalServiceImpl implements RentalService {
     @Override
     public Rental createRental(Rental rental) {
         return repo.save(rental);
+    }
+
+    @Override
+    @Async("asyncExecutor")
+    public CompletableFuture<Rental> createRentalAsync(Rental rental) {
+        Rental saved = repo.save(rental);
+        return CompletableFuture.completedFuture(saved);
     }
 
     @Override

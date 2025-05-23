@@ -7,14 +7,14 @@ import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
-
 import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,30 +26,20 @@ public class RentalController {
     private final UserRepository userRepository;
     private final WishlistService wishlistService;
 
+    // ✅ SYNC POST - existing behavior
     @PostMapping
     public ResponseEntity<Rental> create(@RequestBody RentalDTO dto) {
-        House house = houseRepository.findById(dto.getHouseId())
-                .orElseThrow(() -> new RuntimeException("House not found"));
-        User tenant = userRepository.findById(dto.getTenantId())
-                .orElseThrow(() -> new RuntimeException("Tenant not found"));
-
-        if (!"ROLE_TENANT".equals(tenant.getRole())) {
-            throw new RuntimeException("User is not a tenant");
-        }
-
-        Rental rental = new Rental();
-        rental.setHouse(house);
-        rental.setTenant(tenant);
-        rental.setFullName(dto.getFullName());
-        rental.setPhoneNumber(dto.getPhoneNumber());
-        rental.setCheckInDate(dto.getCheckInDate());
-        rental.setDurationInMonths(dto.getDurationInMonths());
-        rental.setApproved(dto.isApproved());
-        rental.setTotalPrice(dto.getTotalPrice());
-        rental.setPaid(dto.isPaid());
-
+        Rental rental = mapToRental(dto);
         Rental created = service.createRental(rental);
         return ResponseEntity.ok(created);
+    }
+
+    // ✅ ASYNC POST - non-blocking backend
+    @PostMapping("/async")
+    public CompletableFuture<ResponseEntity<Rental>> createAsync(@RequestBody RentalDTO dto) {
+        Rental rental = mapToRental(dto);
+        return service.createRentalAsync(rental)
+                .thenApply(ResponseEntity::ok);
     }
 
     @GetMapping
@@ -71,9 +61,8 @@ public class RentalController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        Rental rental = service.getRentalById(id).orElseThrow(() ->
-                new RuntimeException("Rental not found")
-        );
+        Rental rental = service.getRentalById(id)
+                .orElseThrow(() -> new RuntimeException("Rental not found"));
 
         House house = rental.getHouse();
         service.deleteRental(id);
@@ -86,4 +75,28 @@ public class RentalController {
         return ResponseEntity.ok("Rental deleted and availability updated");
     }
 
+    // 🔄 Utility method untuk convert DTO → Entity
+    private Rental mapToRental(RentalDTO dto) {
+        House house = houseRepository.findById(dto.getHouseId())
+                .orElseThrow(() -> new RuntimeException("House not found"));
+        User tenant = userRepository.findById(dto.getTenantId())
+                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+
+        if (!"ROLE_TENANT".equals(tenant.getRole())) {
+            throw new RuntimeException("User is not a tenant");
+        }
+
+        Rental rental = new Rental();
+        rental.setHouse(house);
+        rental.setTenant(tenant);
+        rental.setFullName(dto.getFullName());
+        rental.setPhoneNumber(dto.getPhoneNumber());
+        rental.setCheckInDate(dto.getCheckInDate());
+        rental.setDurationInMonths(dto.getDurationInMonths());
+        rental.setApproved(dto.isApproved());
+        rental.setTotalPrice(dto.getTotalPrice());
+        rental.setPaid(dto.isPaid());
+
+        return rental;
+    }
 }
