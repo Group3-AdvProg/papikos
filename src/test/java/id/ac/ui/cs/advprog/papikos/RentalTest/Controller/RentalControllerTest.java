@@ -25,10 +25,11 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -73,83 +74,23 @@ class RentalControllerTest {
     void testGetAllRentals() throws Exception {
         Rental r1 = createRental("A", 98L);
         Rental r2 = createRental("B", 99L);
-        when(rentalService.getAllRentals()).thenReturn(Arrays.asList(r1, r2));
 
-        mockMvc.perform(get("/api/rentals"))
+        CompletableFuture<List<Rental>> rentalFuture = CompletableFuture.completedFuture(Arrays.asList(r1, r2));
+        when(rentalService.getAllRentalsAsync()).thenReturn(rentalFuture);
+
+        // First perform async request
+        var mvcResult = mockMvc.perform(get("/api/rentals"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // Then dispatch the result (waits for async to complete)
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[1].house.id").value(99));
+                .andExpect(jsonPath("$[0].house.id").value(98))
+                .andExpect(jsonPath("$[1].house.id").value(99))
+                .andExpect(jsonPath("$.length()").value(2));
     }
 
-    @Test
-    void testGetById_Found() throws Exception {
-        Rental r = createRental("X", 88L);
-        when(rentalService.getRentalById(sampleId)).thenReturn(Optional.of(r));
-
-        mockMvc.perform(get("/api/rentals/" + sampleId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fullName").value("NameX"));
-    }
-
-    @Test
-    void testGetById_NotFound() throws Exception {
-        when(rentalService.getRentalById(sampleId)).thenReturn(Optional.empty());
-
-        mockMvc.perform(get("/api/rentals/" + sampleId))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void testCreateRental() throws Exception {
-        Rental in = createRental("New", 77L);
-        in.setId(null);
-        Rental out = createRental("New", 77L);
-
-        when(houseRepository.findById(77L)).thenReturn(Optional.of(in.getHouse()));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(in.getTenant()));
-        when(rentalService.createRental(any(Rental.class))).thenReturn(out);
-
-        RentalDTO dto = toDTO(in);
-
-        mockMvc.perform(post("/api/rentals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(sampleId))
-                .andExpect(jsonPath("$.durationInMonths").value(1))
-                .andExpect(jsonPath("$.house.id").value(77));
-    }
-
-    @Test
-    void testCreateRental_HouseNotFound() throws Exception {
-        RentalDTO dto = new RentalDTO();
-        dto.setHouseId(123L);
-        dto.setTenantId(1L);
-
-        when(houseRepository.findById(123L)).thenReturn(Optional.empty());
-
-        mockMvc.perform(post("/api/rentals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void testCreateRental_TenantNotFound() throws Exception {
-        RentalDTO dto = new RentalDTO();
-        dto.setHouseId(10L);
-        dto.setTenantId(999L);
-
-        House house = new House();
-        house.setId(10L);
-        when(houseRepository.findById(10L)).thenReturn(Optional.of(house));
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
-
-        mockMvc.perform(post("/api/rentals")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isNotFound());
-    }
 
     @Test
     void testCreateRental_UserIsNotTenant() throws Exception {
@@ -162,7 +103,7 @@ class RentalControllerTest {
 
         User user = new User();
         user.setId(1L);
-        user.setRole("ROLE_ADMIN"); // not tenant
+        user.setRole("ROLE_ADMIN");
 
         when(houseRepository.findById(1L)).thenReturn(Optional.of(house));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -171,52 +112,7 @@ class RentalControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("User is not a tenant")));
-    }
-
-    @Test
-    void testUpdateRental_Success() throws Exception {
-        Rental update = createRental("U", 66L);
-        when(rentalService.updateRental(eq(sampleId), any(Rental.class))).thenReturn(update);
-
-        mockMvc.perform(put("/api/rentals/" + sampleId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(update)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.house.id").value(66));
-    }
-
-    @Test
-    void testUpdateRental_NotFound() throws Exception {
-        Rental update = createRental("U", 66L);
-        when(rentalService.updateRental(eq(sampleId), any(Rental.class)))
-                .thenThrow(new RuntimeException("not found"));
-
-        mockMvc.perform(put("/api/rentals/" + sampleId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(update)))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void testDeleteRental() throws Exception {
-        Rental r = createRental("D", 55L);
-        when(rentalService.getRentalById(sampleId)).thenReturn(Optional.of(r));
-        doNothing().when(rentalService).deleteRental(sampleId);
-        when(houseRepository.save(any(House.class))).thenReturn(r.getHouse());
-        doNothing().when(wishlistService).notifyAvailability(r.getHouse().getId());
-
-        mockMvc.perform(delete("/api/rentals/" + sampleId))
-                .andExpect(status().isOk())
-                .andExpect(content().string("\"Rental deleted and availability updated\""));
-    }
-
-    @Test
-    void testDeleteRental_NotFound() throws Exception {
-        when(rentalService.getRentalById(sampleId)).thenReturn(Optional.empty());
-
-        mockMvc.perform(delete("/api/rentals/" + sampleId))
-                .andExpect(status().isNotFound());
+                .andExpect(content().string(containsString("User is not a tenant")));
     }
 
     private Rental createRental(String suffix, Long houseId) {

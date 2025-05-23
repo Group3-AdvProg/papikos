@@ -7,6 +7,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
+/**
+ * Defines the Executor for @Async methods.
+ * - Core pool of 4 threads, can grow to 10 under load.
+ * - Queue up to 500 tasks before rejecting.
+ * - Threads named "AsyncExecutor-#".
+ */
+
 @Configuration
 @EnableAsync
 public class AsyncConfig {
