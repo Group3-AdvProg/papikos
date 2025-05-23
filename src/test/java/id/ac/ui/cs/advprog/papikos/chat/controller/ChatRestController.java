@@ -1,4 +1,3 @@
-// src/test/java/id/ac/ui/cs/advprog/papikos/chat/controller/ChatRestControllerTest.java
 package id.ac.ui.cs.advprog.papikos.chat.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,6 +48,7 @@ class ChatRestControllerTest {
                 .sender(sender)
                 .timestamp(Instant.now())
                 .build();
+
         when(chatService.getAllMessages()).thenReturn(List.of(msg));
 
         mockMvc.perform(get("/api/chat/messages"))
@@ -59,7 +59,7 @@ class ChatRestControllerTest {
     @Test
     void postMessage_createsAndReturnsMessage() throws Exception {
         CreateMessageRequest req = new CreateMessageRequest();
-        req.setSenderId(10L);
+        req.setSenderEmail("user@example.com"); // ✅ updated
         req.setType(ChatMessage.MessageType.CHAT);
         req.setContent("Hi");
 
@@ -77,7 +77,7 @@ class ChatRestControllerTest {
                 .timestamp(Instant.now())
                 .build();
 
-        when(chatService.saveMessage(eq(10L), any(ChatMessage.class))).thenReturn(saved);
+        when(chatService.saveMessage(eq("user@example.com"), any(ChatMessage.class))).thenReturn(saved); // ✅ updated
 
         mockMvc.perform(post("/api/chat/messages")
                         .contentType(MediaType.APPLICATION_JSON)
