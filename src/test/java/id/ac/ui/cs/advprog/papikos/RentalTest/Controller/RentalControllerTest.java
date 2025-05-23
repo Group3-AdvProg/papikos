@@ -102,7 +102,7 @@ class RentalControllerTest {
     @Test
     void testCreateRental() throws Exception {
         Rental in = createRental("New", 77L);
-        in.setId(null); // simulate new rental
+        in.setId(null);
         Rental out = createRental("New", 77L);
 
         when(houseRepository.findById(77L)).thenReturn(Optional.of(in.getHouse()));
@@ -123,7 +123,7 @@ class RentalControllerTest {
     @Test
     void testCreateRental_HouseNotFound() throws Exception {
         RentalDTO dto = new RentalDTO();
-        dto.setHouseId(123L); // invalid house ID
+        dto.setHouseId(123L);
         dto.setTenantId(1L);
 
         when(houseRepository.findById(123L)).thenReturn(Optional.empty());
@@ -138,17 +138,40 @@ class RentalControllerTest {
     void testCreateRental_TenantNotFound() throws Exception {
         RentalDTO dto = new RentalDTO();
         dto.setHouseId(10L);
-        dto.setTenantId(999L); // invalid tenant ID
+        dto.setTenantId(999L);
 
         House house = new House();
         house.setId(10L);
         when(houseRepository.findById(10L)).thenReturn(Optional.of(house));
-        when(tenantRepository.findById(999L)).thenReturn(Optional.empty());
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/rentals")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testCreateRental_UserIsNotTenant() throws Exception {
+        RentalDTO dto = new RentalDTO();
+        dto.setHouseId(1L);
+        dto.setTenantId(1L);
+
+        House house = new House();
+        house.setId(1L);
+
+        User user = new User();
+        user.setId(1L);
+        user.setRole("ROLE_ADMIN"); // not tenant
+
+        when(houseRepository.findById(1L)).thenReturn(Optional.of(house));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        mockMvc.perform(post("/api/rentals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(dto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("User is not a tenant")));
     }
 
     @Test
@@ -186,7 +209,14 @@ class RentalControllerTest {
         mockMvc.perform(delete("/api/rentals/" + sampleId))
                 .andExpect(status().isOk())
                 .andExpect(content().string("\"Rental deleted and availability updated\""));
-        ;
+    }
+
+    @Test
+    void testDeleteRental_NotFound() throws Exception {
+        when(rentalService.getRentalById(sampleId)).thenReturn(Optional.empty());
+
+        mockMvc.perform(delete("/api/rentals/" + sampleId))
+                .andExpect(status().isNotFound());
     }
 
     private Rental createRental(String suffix, Long houseId) {
