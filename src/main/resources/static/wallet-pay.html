@@ -51,16 +51,27 @@
       }
 
       try {
-        const response = await fetch("/api/payment/pay-rent", {
+        const response = await fetch("/api/wallet/pay-rent", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Authorization": "Bearer " + token
           },
-          body: JSON.stringify({ tenantId, landlordId, amount }),
+          body: JSON.stringify({
+            userId: tenantId,
+            targetId: landlordId,
+            amount: amount
+          }),
         });
 
-        const data = await response.json();
+        const text = await response.text();
+        let data = { message: "No response body", status: "FAIL" };
+        try {
+          data = text ? JSON.parse(text) : data;
+        } catch (e) {
+          console.warn("Response is not valid JSON:", text);
+        }
+
 
         msgEl.textContent = data.message;
         msgEl.className = data.status === "SUCCESS"

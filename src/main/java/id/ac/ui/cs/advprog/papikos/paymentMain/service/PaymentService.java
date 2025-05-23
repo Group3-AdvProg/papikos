@@ -10,6 +10,8 @@ import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @Service
 public class PaymentService {
@@ -27,11 +29,11 @@ public class PaymentService {
 
     public boolean handlePayment(PaymentRequest request) {
         try {
-            User tenant = userRepository.findById(Long.parseLong(request.getUserId()))
-                    .orElseThrow(() -> new IllegalArgumentException("Tenant not found"));
+            User tenant = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
 
-            User landlord = userRepository.findById(Long.parseLong(request.getTargetId()))
-                    .orElseThrow(() -> new IllegalArgumentException("Landlord not found"));
+            User landlord = userRepository.findById(request.getTargetId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Landlord not found"));
 
             if (tenant.getBalance() < request.getAmount()) {
                 return false;
