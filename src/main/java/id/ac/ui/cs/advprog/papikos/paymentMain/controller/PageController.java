@@ -8,16 +8,16 @@ public class PageController {
 
     @GetMapping("/wallet/topup")
     public String topUpPage() {
-        return "wallet-topup"; // resolves to templates/wallet-topup.html
+        return "redirect:/wallet-topup.html";
     }
 
     @GetMapping("/wallet/pay")
     public String payPage() {
-        return "wallet-pay";
+        return "redirect:/wallet-pay.html";
     }
 
     @GetMapping("/wallet/history")
     public String historyPage() {
-        return "wallet-history";
+        return "redirect:/wallet-history.html";
     }
 }

@@ -5,12 +5,16 @@ document.getElementById("topup-form").addEventListener("submit", async function 
   const amount = parseFloat(document.getElementById("amount").value);
   const method = document.getElementById("method").value;
   const msgEl = document.getElementById("response-msg");
+  const token = localStorage.getItem("jwtToken");
 
-  const response = await fetch("/api/wallet/topup", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, amount, method }),
-  });
+const response = await fetch("/api/wallet/topup", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  },
+  body: JSON.stringify({ userId, amount, method }),
+});
 
   const data = await response.json();
 

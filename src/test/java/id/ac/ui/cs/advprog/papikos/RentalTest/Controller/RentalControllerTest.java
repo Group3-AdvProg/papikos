@@ -11,6 +11,7 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
+import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -36,6 +37,7 @@ class RentalControllerTest {
     @Mock private RentalService rentalService;
     @Mock private HouseRepository houseRepository;
     @Mock private UserRepository userRepository;
+    @Mock private WishlistService wishlistService;
 
     @InjectMocks private RentalController controller;
 
@@ -175,10 +177,16 @@ class RentalControllerTest {
 
     @Test
     void testDeleteRental() throws Exception {
+        Rental r = createRental("D", 55L);
+        when(rentalService.getRentalById(sampleId)).thenReturn(Optional.of(r));
         doNothing().when(rentalService).deleteRental(sampleId);
+        when(houseRepository.save(any(House.class))).thenReturn(r.getHouse());
+        doNothing().when(wishlistService).notifyAvailability(r.getHouse().getId());
 
         mockMvc.perform(delete("/api/rentals/" + sampleId))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(content().string("\"Rental deleted and availability updated\""));
+        ;
     }
 
     private Rental createRental(String suffix, Long houseId) {

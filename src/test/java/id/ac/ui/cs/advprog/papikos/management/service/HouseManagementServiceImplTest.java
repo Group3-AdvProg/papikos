@@ -119,6 +119,21 @@ class HouseManagementServiceImplTest {
     }
 
     @Test
+    void testSearchHouses_KeywordDoesNotMatch() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseService.searchHouses(owner, "Nonexistent", null, null);
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    void testSearchHouses_KeywordNull() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseService.searchHouses(owner, null, 1000000.0, 1300000.0);
+        assertEquals(1, results.size());
+        assertEquals(house, results.get(0));
+    }
+
+    @Test
     void testSearchHouses_MinRentOnly() {
         when(houseRepository.findAll()).thenReturn(List.of(house));
         List<House> results = houseService.searchHouses(owner, null, 1000000.0, null);
@@ -126,10 +141,24 @@ class HouseManagementServiceImplTest {
     }
 
     @Test
+    void testSearchHouses_MinRentTooHigh() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseService.searchHouses(owner, null, 2000000.0, null);
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
     void testSearchHouses_MaxRentOnly() {
         when(houseRepository.findAll()).thenReturn(List.of(house));
         List<House> results = houseService.searchHouses(owner, null, null, 1300000.0);
         assertEquals(1, results.size());
+    }
+
+    @Test
+    void testSearchHouses_MaxRentTooLow() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseService.searchHouses(owner, null, null, 1000000.0);
+        assertTrue(results.isEmpty());
     }
 
     @Test

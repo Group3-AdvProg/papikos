@@ -8,7 +8,9 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 
+import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +24,7 @@ public class RentalController {
     private final RentalService service;
     private final HouseRepository houseRepository;
     private final UserRepository userRepository;
+    private final WishlistService wishlistService;
 
     @PostMapping
     public ResponseEntity<Rental> create(@RequestBody RentalDTO dto) {
@@ -67,8 +70,20 @@ public class RentalController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        Rental rental = service.getRentalById(id).orElseThrow(() ->
+                new RuntimeException("Rental not found")
+        );
+
+        House house = rental.getHouse();
         service.deleteRental(id);
-        return ResponseEntity.noContent().build();
+
+        house.setNumberOfRooms(house.getNumberOfRooms() + 1);
+        houseRepository.save(house);
+
+        wishlistService.notifyAvailability(house.getId());
+
+        return ResponseEntity.ok("Rental deleted and availability updated");
     }
+
 }

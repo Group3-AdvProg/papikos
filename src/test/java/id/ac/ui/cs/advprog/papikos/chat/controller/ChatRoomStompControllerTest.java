@@ -1,13 +1,16 @@
+// src/test/java/id/ac/ui/cs/advprog/papikos/chat/controller/ChatRoomStompControllerTest.java
 package id.ac.ui.cs.advprog.papikos.chat.controller;
 
+import id.ac.ui.cs.advprog.papikos.chat.dto.CreateMessageRequest;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
 import id.ac.ui.cs.advprog.papikos.chat.service.ChatRoomService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class ChatRoomStompControllerTest {
@@ -22,28 +25,40 @@ class ChatRoomStompControllerTest {
 
     @Test
     void sendMessage_delegatesAndReturns() {
-        ChatMessage msg = ChatMessage.builder()
-                .type(ChatMessage.MessageType.CHAT)
-                .content("hello")
-                .sender("x")
-                .timestamp(Instant.now())
-                .build();
-        when(service.saveMessage(2L, msg)).thenReturn(msg);
+        // Prepare the request DTO
+        CreateMessageRequest req = new CreateMessageRequest();
+        req.setSenderId(2L);
+        req.setType(ChatMessage.MessageType.CHAT);
+        req.setContent("hello");
 
-        ChatMessage out = controller.sendMessage(2L, msg);
-        assertSame(msg, out);
-        verify(service).saveMessage(2L, msg);
+        // Prepare a ChatMessage that the mock service will return
+        ChatMessage returned = ChatMessage.builder()
+                .type(req.getType())
+                .content(req.getContent())
+                .build();
+
+        // Stub the service call to return a completed future
+        when(service.saveMessage(eq(2L), eq(2L), any(ChatMessage.class)))
+                .thenReturn(CompletableFuture.completedFuture(returned));
+
+        // Invoke the controller and join the future
+        CompletableFuture<ChatMessage> future = controller.sendMessage(2L, req);
+        ChatMessage out = future.join();
+
+        // Verify result and interaction
+        assertSame(returned, out, "Controller should return exactly what the service returns");
+        verify(service).saveMessage(eq(2L), eq(2L), any(ChatMessage.class));
     }
 
     @Test
     void addUser_marksJoinType() {
-        ChatMessage msg = ChatMessage.builder()
-                .content("joined")
-                .sender("y")
-                .build();
+        CreateMessageRequest req = new CreateMessageRequest();
+        req.setSenderId(2L);
+        req.setContent("joined");
 
-        ChatMessage out = controller.addUser(2L, msg);
-        assertEquals(ChatMessage.MessageType.JOIN, out.getType());
-        assertSame(msg, out);
+        ChatMessage out = controller.addUser(2L, req);
+
+        assertEquals(ChatMessage.MessageType.JOIN, out.getType(), "Type should be JOIN");
+        assertEquals("joined", out.getContent(), "Content should be preserved");
     }
 }

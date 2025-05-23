@@ -1,5 +1,7 @@
+// src/main/java/id/ac/ui/cs/advprog/papikos/chat/controller/ChatRestController.java
 package id.ac.ui.cs.advprog.papikos.chat.controller;
 
+import id.ac.ui.cs.advprog.papikos.chat.dto.CreateMessageRequest;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
 import id.ac.ui.cs.advprog.papikos.chat.service.ChatService;
 import org.springframework.http.HttpStatus;
@@ -10,7 +12,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/chat")
 public class ChatRestController {
-
     private final ChatService chatService;
 
     public ChatRestController(ChatService chatService) {
@@ -24,7 +25,11 @@ public class ChatRestController {
 
     @PostMapping("/messages")
     @ResponseStatus(HttpStatus.CREATED)
-    public ChatMessage postMessage(@RequestBody ChatMessage message) {
-        return chatService.saveMessage(message);
+    public ChatMessage postMessage(@RequestBody CreateMessageRequest req) {
+        ChatMessage msg = ChatMessage.builder()
+                .type(req.getType())
+                .content(req.getContent())
+                .build();
+        return chatService.saveMessage(req.getSenderId(), msg);
     }
 }

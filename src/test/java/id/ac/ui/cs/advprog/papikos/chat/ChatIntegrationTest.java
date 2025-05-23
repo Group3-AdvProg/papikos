@@ -1,17 +1,26 @@
+// src/test/java/id/ac/ui/cs/advprog/papikos/chat/ChatIntegrationTest.java
 package id.ac.ui.cs.advprog.papikos.chat;
 
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.chat.dto.CreateMessageRequest;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.stomp.*;
-import org.springframework.web.socket.client.WebSocketClient;
+import org.springframework.messaging.simp.stomp.StompFrameHandler;
+import org.springframework.messaging.simp.stomp.StompHeaders;
+import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import org.springframework.web.socket.sockjs.client.*;
+import org.springframework.web.socket.sockjs.client.SockJsClient;
+import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -21,11 +30,27 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+                // point all JPA and Datasource properties at an in-memory H2:
+                "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
+                "spring.datasource.driver-class-name=org.h2.Driver",
+                "spring.datasource.username=sa",
+                "spring.datasource.password=",
+                "spring.jpa.hibernate.ddl-auto=create-drop",
+                "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+        }
+)
+// after each test we want a fresh ApplicationContext (so H2 schema/data is dropped & re-created)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class ChatIntegrationTest {
 
     @LocalServerPort
     private int port;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private WebSocketStompClient stompClient;
     private String wsUrl;
@@ -33,89 +58,84 @@ class ChatIntegrationTest {
     @BeforeEach
     void setup() {
         wsUrl = "ws://localhost:" + port + "/ws";
-        List<Transport> transports = List.of(new WebSocketTransport(new StandardWebSocketClient()));
-        WebSocketClient sockJsClient = new SockJsClient(transports);
-
-        stompClient = new WebSocketStompClient(sockJsClient);
+        this.stompClient = new WebSocketStompClient(
+                new SockJsClient(List.of(new WebSocketTransport(new StandardWebSocketClient())))
+        );
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-    }
-
-    @AfterEach
-    void teardown() {
-        if (stompClient != null) {
-            stompClient.stop();
-        }
     }
 
     @Test
     void testChatMessageBroadcast() throws Exception {
-        BlockingQueue<ChatMessage> blockingQueue = new LinkedBlockingQueue<>();
+        // persist a User locally in H2
+        User sender = new User();
+        sender.setFullName("Test Sender");
+        sender.setPhoneNumber("123-456-7890");
+        sender.setEmail("tester@example.com");
+        sender.setPassword("pass");
+        sender.setRole("TENANT");
+        sender = userRepository.save(sender);
 
-        // Minimal session handler
-        StompSessionHandler sessionHandler = new StompSessionHandlerAdapter() {};
-
-        StompSession session = stompClient.connect(wsUrl, sessionHandler).get(3, TimeUnit.SECONDS);
-
-        // Subscribe to /topic/public to capture broadcast messages
+        // subscribe to /topic/public
+        BlockingQueue<ChatMessage> queue = new LinkedBlockingQueue<>();
+        StompSession session = stompClient
+                .connect(wsUrl, new StompSessionHandlerAdapter() {})
+                .get(3, TimeUnit.SECONDS);
         session.subscribe("/topic/public", new StompFrameHandler() {
-            @Override
-            public Type getPayloadType(StompHeaders headers) {
+            @Override public Type getPayloadType(StompHeaders headers) {
                 return ChatMessage.class;
             }
-
-            @Override
-            public void handleFrame(StompHeaders headers, Object payload) {
-                blockingQueue.offer((ChatMessage) payload);
+            @Override public void handleFrame(StompHeaders headers, Object payload) {
+                queue.offer((ChatMessage) payload);
             }
         });
 
-        ChatMessage message = new ChatMessage();
-        message.setType(ChatMessage.MessageType.CHAT);
-        message.setContent("Test Message");
-        message.setSender("tester");
+        // send
+        ChatMessage outgoing = new ChatMessage();
+        outgoing.setType(ChatMessage.MessageType.CHAT);
+        outgoing.setContent("Test Message");
+        outgoing.setSender(sender);
+        session.send("/app/chat.sendMessage", outgoing);
 
-        session.send("/app/chat.sendMessage", message);
-
-        ChatMessage response = blockingQueue.poll(5, TimeUnit.SECONDS);
-        assertNotNull(response, "Should receive a chat message broadcast");
-        assertEquals("Test Message", response.getContent(), "Message content should match");
+        // assert
+        ChatMessage received = queue.poll(5, TimeUnit.SECONDS);
+        assertNotNull(received);
+        assertEquals("Test Message", received.getContent());
+        assertEquals(sender.getId(), received.getSender().getId());
     }
 
     @Test
     void testAddUserBroadcast() throws Exception {
-        BlockingQueue<ChatMessage> blockingQueue = new LinkedBlockingQueue<>();
+        User newUser = new User();
+        newUser.setFullName("New User");
+        newUser.setPhoneNumber("098-765-4321");
+        newUser.setEmail("new@example.com");
+        newUser.setPassword("pass");
+        newUser.setRole("TENANT");
+        newUser = userRepository.save(newUser);
 
-        // Use a minimal session handler.
-        StompSessionHandler sessionHandler = new StompSessionHandlerAdapter() {};
-
-        StompSession session = stompClient.connect(wsUrl, sessionHandler).get(3, TimeUnit.SECONDS);
-
-        // Subscribe to /topic/public to capture broadcast messages.
+        BlockingQueue<ChatMessage> queue = new LinkedBlockingQueue<>();
+        StompSession session = stompClient
+                .connect(wsUrl, new StompSessionHandlerAdapter() {})
+                .get(3, TimeUnit.SECONDS);
         session.subscribe("/topic/public", new StompFrameHandler() {
-            @Override
-            public Type getPayloadType(StompHeaders headers) {
+            @Override public Type getPayloadType(StompHeaders headers) {
                 return ChatMessage.class;
             }
-
-            @Override
-            public void handleFrame(StompHeaders headers, Object payload) {
-                blockingQueue.offer((ChatMessage) payload);
+            @Override public void handleFrame(StompHeaders headers, Object payload) {
+                queue.offer((ChatMessage) payload);
             }
         });
 
-        // Create a sample chat message for a user joining.
-        ChatMessage joinMessage = new ChatMessage();
-        joinMessage.setType(ChatMessage.MessageType.JOIN);
-        joinMessage.setContent("User joined");
-        joinMessage.setSender("newUser");
+        // trigger JOIN
+        CreateMessageRequest req = new CreateMessageRequest();
+        req.setSenderId(newUser.getId());
+        req.setContent("User joined");
+        session.send("/app/chat.addUser", req);
 
-        // Send the join message via the /chat.addUser endpoint.
-        session.send("/app/chat.addUser", joinMessage);
-
-        ChatMessage response = blockingQueue.poll(5, TimeUnit.SECONDS);
-        assertNotNull(response, "Should receive a chat message broadcast for added user");
-        assertEquals("newUser", response.getSender(), "Sender should be 'newUser'");
-        assertEquals("User joined", response.getContent(), "Content should indicate join message");
-        assertEquals(ChatMessage.MessageType.JOIN, response.getType(), "Message type should be JOIN");
+        ChatMessage resp = queue.poll(5, TimeUnit.SECONDS);
+        assertNotNull(resp);
+        assertEquals(ChatMessage.MessageType.JOIN, resp.getType());
+        assertEquals("User joined", resp.getContent());
+        assertNull(resp.getSender());
     }
 }

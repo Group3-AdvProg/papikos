@@ -29,9 +29,8 @@ public class SecurityConfig {
                 // Disable CSRF for stateless session (JWT based)
                 .csrf(csrf -> csrf.disable())
 
-                // Authorization rules
+                // Setup authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        // Your public HTTP endpoints
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/",
@@ -41,15 +40,27 @@ public class SecurityConfig {
                                 "/management.html",
                                 "/houseDetails.html",
                                 "/rentalRequests.html",
+                                "/inbox.html",
                                 "/admin.html",
                                 "/rental.html",
                                 "/RentalHouseDetails.html",
                                 // <-- allow SockJS handshake & WS connect
                                 "/ws/**",
                                 // <-- allow topic subscriptions over HTTP fallback if used
-                                "/topic/**"
-                        ).permitAll()
+                                "/topic/**",
                         // Landlord-only REST
+                                "/houseDetails.html",
+                                "/dashboard.html",
+                                "/wallet-topup.html",
+                                "/wallet-pay.html",
+                                "/transaction-history.html",
+                                "/wallet-history.html",
+                                "/js/**",
+                                "/api/auth/**",
+                                "/api/payment/**",
+                                "/api/wallet/**",
+                                "/api/transaction/**"
+                                ).permitAll()  // Public endpoints (e.g., registration, login)
                         .requestMatchers("/api/management/**").hasRole("LANDLORD")
 
                         // Admin-only
