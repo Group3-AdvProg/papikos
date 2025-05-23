@@ -10,9 +10,11 @@ import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -39,11 +41,18 @@ public class WishlistServiceImpl implements WishlistService {
                 .build();
         wishlistItemRepo.save(item);
 
-        notifier.registerObserver(houseId, new UserNotificationObserver(tenantId, notificationRepo));
+        // Async notification registration
+        createObserverAsync(houseId, tenantId);
 
         if (house.getOwner() != null && house.getOwner().getId() != null) {
             notifier.notifyObservers(houseId, house.getOwner().getId());
         }
+    }
+
+    @Async
+    public CompletableFuture<Void> createObserverAsync(Long houseId, Long tenantId) {
+        notifier.registerObserver(houseId, new UserNotificationObserver(tenantId, notificationRepo));
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
