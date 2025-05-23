@@ -51,8 +51,9 @@ public class RentalController {
         return ResponseEntity.ok(created);
     }
 
+    // ✅ Truly async version using CompletableFuture
     @PostMapping("/async")
-    public ResponseEntity<Rental> createAsync(@RequestBody RentalDTO dto) {
+    public CompletableFuture<ResponseEntity<Rental>> createAsync(@RequestBody RentalDTO dto) {
         House house = houseRepository.findById(dto.getHouseId())
                 .orElseThrow(() -> new RuntimeException("House not found"));
         User tenant = userRepository.findById(dto.getTenantId())
@@ -73,8 +74,8 @@ public class RentalController {
         rental.setTotalPrice(dto.getTotalPrice());
         rental.setPaid(dto.isPaid());
 
-        Rental created = service.createRentalAsync(rental).join();
-        return ResponseEntity.ok(created);
+        return service.createRentalAsync(rental)
+                .thenApply(ResponseEntity::ok);
     }
 
     @GetMapping
