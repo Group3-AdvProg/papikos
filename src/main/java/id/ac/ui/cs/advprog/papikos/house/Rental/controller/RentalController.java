@@ -8,7 +8,6 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,57 +25,8 @@ public class RentalController {
     private final UserRepository userRepository;
     private final WishlistService wishlistService;
 
-    // ✅ SYNC POST - existing behavior
     @PostMapping
     public ResponseEntity<Rental> create(@RequestBody RentalDTO dto) {
-        Rental rental = mapToRental(dto);
-        Rental created = service.createRental(rental);
-        return ResponseEntity.ok(created);
-    }
-
-    // ✅ ASYNC POST - non-blocking backend
-    @PostMapping("/async")
-    public CompletableFuture<ResponseEntity<Rental>> createAsync(@RequestBody RentalDTO dto) {
-        Rental rental = mapToRental(dto);
-        return service.createRentalAsync(rental)
-                .thenApply(ResponseEntity::ok);
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Rental>> findAll() {
-        return ResponseEntity.ok(service.getAllRentals());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Rental> findById(@PathVariable Long id) {
-        return service.getRentalById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Rental> update(@PathVariable Long id, @RequestBody Rental rental) {
-        return ResponseEntity.ok(service.updateRental(id, rental));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        Rental rental = service.getRentalById(id)
-                .orElseThrow(() -> new RuntimeException("Rental not found"));
-
-        House house = rental.getHouse();
-        service.deleteRental(id);
-
-        house.setNumberOfRooms(house.getNumberOfRooms() + 1);
-        houseRepository.save(house);
-
-        wishlistService.notifyAvailability(house.getId());
-
-        return ResponseEntity.ok("Rental deleted and availability updated");
-    }
-
-    // 🔄 Utility method untuk convert DTO → Entity
-    private Rental mapToRental(RentalDTO dto) {
         House house = houseRepository.findById(dto.getHouseId())
                 .orElseThrow(() -> new RuntimeException("House not found"));
         User tenant = userRepository.findById(dto.getTenantId())
@@ -97,6 +47,100 @@ public class RentalController {
         rental.setTotalPrice(dto.getTotalPrice());
         rental.setPaid(dto.isPaid());
 
-        return rental;
+        Rental created = service.createRental(rental);
+        return ResponseEntity.ok(created);
+    }
+
+    @PostMapping("/async")
+    public ResponseEntity<Rental> createAsync(@RequestBody RentalDTO dto) {
+        House house = houseRepository.findById(dto.getHouseId())
+                .orElseThrow(() -> new RuntimeException("House not found"));
+        User tenant = userRepository.findById(dto.getTenantId())
+                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+
+        if (!"ROLE_TENANT".equals(tenant.getRole())) {
+            throw new RuntimeException("User is not a tenant");
+        }
+
+        Rental rental = new Rental();
+        rental.setHouse(house);
+        rental.setTenant(tenant);
+        rental.setFullName(dto.getFullName());
+        rental.setPhoneNumber(dto.getPhoneNumber());
+        rental.setCheckInDate(dto.getCheckInDate());
+        rental.setDurationInMonths(dto.getDurationInMonths());
+        rental.setApproved(dto.isApproved());
+        rental.setTotalPrice(dto.getTotalPrice());
+        rental.setPaid(dto.isPaid());
+
+        Rental created = service.createRentalAsync(rental).join();
+        return ResponseEntity.ok(created);
+    }
+
+    @GetMapping
+    public CompletableFuture<ResponseEntity<List<Rental>>> findAllAsync() {
+        return service.getAllRentalsAsync()
+                .thenApply(ResponseEntity::ok);
+    }
+
+    @GetMapping("/async/{id}")
+    public CompletableFuture<ResponseEntity<Rental>> findByIdAsync(@PathVariable Long id) {
+        return service.getRentalByIdAsync(id)
+                .thenApply(rentalOpt ->
+                        rentalOpt.map(ResponseEntity::ok)
+                                .orElseGet(() -> ResponseEntity.notFound().build()));
+    }
+
+    @PutMapping("/async/{id}")
+    public CompletableFuture<ResponseEntity<Rental>> updateAsync(@PathVariable Long id, @RequestBody Rental rental) {
+        return service.updateRentalAsync(id, rental)
+                .thenApply(ResponseEntity::ok);
+    }
+
+    @DeleteMapping("/async/{id}")
+    public CompletableFuture<ResponseEntity<String>> deleteAsync(@PathVariable Long id) {
+        return service.getRentalByIdAsync(id).thenCompose(rentalOpt -> {
+            if (rentalOpt.isEmpty()) {
+                return CompletableFuture.completedFuture(ResponseEntity.notFound().build());
+            }
+
+            Rental rental = rentalOpt.get();
+            House house = rental.getHouse();
+            house.setNumberOfRooms(house.getNumberOfRooms() + 1);
+            houseRepository.save(house);
+            wishlistService.notifyAvailability(house.getId());
+
+            return service.deleteRentalAsync(id)
+                    .thenApply(v -> ResponseEntity.ok("Rental deleted and availability updated"));
+        });
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Rental> findById(@PathVariable Long id) {
+        return service.getRentalById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Rental> update(@PathVariable Long id, @RequestBody Rental rental) {
+        return ResponseEntity.ok(service.updateRental(id, rental));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        Rental rental = service.getRentalById(id).orElseThrow(() ->
+                new RuntimeException("Rental not found")
+        );
+
+        House house = rental.getHouse();
+        service.deleteRental(id);
+
+        house.setNumberOfRooms(house.getNumberOfRooms() + 1);
+        houseRepository.save(house);
+
+        wishlistService.notifyAvailability(house.getId());
+
+        return ResponseEntity.ok("Rental deleted and availability updated");
     }
 }

@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.house.Rental.config;
+package id.ac.ui.cs.advprog.papikos.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,11 +14,11 @@ public class AsyncConfig {
     @Bean(name = "asyncExecutor")
     public Executor asyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);             // Jumlah thread minimum
-        executor.setMaxPoolSize(10);             // Jumlah thread maksimum
-        executor.setQueueCapacity(500);          // Queue sebelum buat thread baru
-        executor.setThreadNamePrefix("RentalAsync-"); // Nama prefix thread (buat debugging gampang)
-        executor.initialize();
+        executor.setCorePoolSize(4); // jumlah minimum thread
+        executor.setMaxPoolSize(10); // jumlah maksimum thread
+        executor.setQueueCapacity(500); // kapasitas antrian task
+        executor.setThreadNamePrefix("RentalAsync-"); // prefix nama thread
+        executor.initialize(); // inisialisasi executor
         return executor;
     }
 }
