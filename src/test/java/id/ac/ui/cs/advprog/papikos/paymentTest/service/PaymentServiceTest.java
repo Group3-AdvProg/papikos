@@ -32,8 +32,8 @@ public class PaymentServiceTest {
         request.setAmount(100_000.0);
         request.setBalance(200_000.0);
         request.setMethod("bank");
-        request.setUserId(1L);      // Add this
-        request.setTargetId(2L);    // Add this
+        request.setUserId(1L);
+        request.setTargetId(2L);
 
         User tenant = new User();
         tenant.setId(1L);
