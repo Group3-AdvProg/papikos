@@ -24,22 +24,22 @@ public class WishlistServiceImpl implements WishlistService {
     private final WishlistNotifier notifier;
 
     @Override
-    public void addToWishlist(Long userId, Long houseId) {
+    public void addToWishlist(Long tenantId, Long houseId) {
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new EntityNotFoundException("House not found with id: " + houseId));
 
-        WishlistItem existing = wishlistItemRepo.findByTenantIdAndHouseId(userId, houseId);
+        WishlistItem existing = wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId);
         if (existing != null) {
             return;
         }
 
         WishlistItem item = WishlistItem.builder()
-                .tenantId(userId)
+                .tenantId(tenantId)
                 .houseId(houseId)
                 .build();
         wishlistItemRepo.save(item);
 
-        notifier.registerObserver(houseId, new UserNotificationObserver(userId, notificationRepo));
+        notifier.registerObserver(houseId, new UserNotificationObserver(tenantId, notificationRepo));
 
         if (house.getOwner() != null && house.getOwner().getId() != null) {
             notifier.notifyObservers(houseId, house.getOwner().getId());
@@ -47,24 +47,24 @@ public class WishlistServiceImpl implements WishlistService {
     }
 
     @Override
-    public void removeFromWishlist(Long userId, Long houseId) {
-        WishlistItem item = wishlistItemRepo.findByTenantIdAndHouseId(userId, houseId);
+    public void removeFromWishlist(Long tenantId, Long houseId) {
+        WishlistItem item = wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId);
         if (item != null) {
             wishlistItemRepo.delete(item);
         }
     }
 
     @Override
-    public List<Long> getWishlistByUser(Long userId) {
-        return wishlistItemRepo.findByTenantId(userId)
+    public List<Long> getWishlistByTenant(Long tenantId) {
+        return wishlistItemRepo.findByTenantId(tenantId)
                 .stream()
                 .map(WishlistItem::getHouseId)
                 .toList();
     }
 
     @Override
-    public List<String> getNotificationsByUser(Long userId) {
-        return notificationRepo.findByTenantId(userId)
+    public List<String> getNotificationsByTenant(Long tenantId) {
+        return notificationRepo.findByTenantId(tenantId)
                 .stream()
                 .map(Notification::getMessage)
                 .toList();

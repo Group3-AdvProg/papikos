@@ -8,14 +8,14 @@ import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 public class UserNotificationObserver implements NotificationObserver {
-    private final Long userId;
+    private final Long tenantId;
     private final NotificationRepository notificationRepo;
 
     // Match the NotificationObserver interface exactly
     @Override
     public void update(Long houseId) {
         Notification notification = Notification.builder()
-                .tenantId(userId)
+                .tenantId(tenantId)
                 .message("House with ID " + houseId + " is now available.")
                 .createdAt(LocalDateTime.now())
                 .isRead(false)
@@ -24,7 +24,7 @@ public class UserNotificationObserver implements NotificationObserver {
         notificationRepo.save(notification);
     }
 
-    public Long getUserId() {
-        return userId;
+    public Long getTenantId() {
+        return tenantId;
     }
 }

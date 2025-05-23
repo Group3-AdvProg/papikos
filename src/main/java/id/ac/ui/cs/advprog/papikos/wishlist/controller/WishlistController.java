@@ -17,34 +17,34 @@ public class WishlistController {
 
     @PostMapping("/add")
     public ResponseEntity<Void> addToWishlist(
-            @RequestParam Long userId,
+            @RequestParam Long tenantId,
             @RequestParam Long houseId
     ) {
-        wishlistService.addToWishlist(userId, houseId);
+        wishlistService.addToWishlist(tenantId, houseId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/remove")
     public ResponseEntity<Void> removeFromWishlist(
-            @RequestParam Long userId,
+            @RequestParam Long tenantId,
             @RequestParam Long houseId
     ) {
-        wishlistService.removeFromWishlist(userId, houseId);
+        wishlistService.removeFromWishlist(tenantId, houseId);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Long>> getWishlistByUser(
-            @PathVariable Long userId
+    @GetMapping("/tenant/{tenantId}")
+    public ResponseEntity<List<Long>> getWishlistByTenant(
+            @PathVariable Long tenantId
     ) {
-        return ResponseEntity.ok(wishlistService.getWishlistByUser(userId));
+        return ResponseEntity.ok(wishlistService.getWishlistByTenant(tenantId));
     }
 
-    @GetMapping("/notifications/user/{userId}")
-    public ResponseEntity<List<String>> getNotificationsByUser(
-            @PathVariable Long userId
+    @GetMapping("/notifications/tenant/{tenantId}")
+    public ResponseEntity<List<String>> getNotificationsByTenant(
+            @PathVariable Long tenantId
     ) {
-        return ResponseEntity.ok(wishlistService.getNotificationsByUser(userId));
+        return ResponseEntity.ok(wishlistService.getNotificationsByTenant(tenantId));
     }
 
     @GetMapping("/notifications/owner/{ownerId}")
