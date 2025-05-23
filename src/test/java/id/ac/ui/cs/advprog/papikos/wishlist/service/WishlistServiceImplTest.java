@@ -98,7 +98,7 @@ class WishlistServiceImplTest {
     }
 
     @Test
-    void testGetWishlistByTenant() {
+    void testGetWishlistByUser() {
         WishlistItem item1 = WishlistItem.builder().tenantId(tenantId).houseId(1L).build();
         WishlistItem item2 = WishlistItem.builder().tenantId(tenantId).houseId(2L).build();
         when(wishlistItemRepo.findByTenantId(tenantId)).thenReturn(List.of(item1, item2));
@@ -108,7 +108,7 @@ class WishlistServiceImplTest {
     }
 
     @Test
-    void testGetNotificationsByTenant() {
+    void testGetNotificationsByUser() {
         Notification n1 = Notification.builder().tenantId(tenantId).message("Hello").build();
         Notification n2 = Notification.builder().tenantId(tenantId).message("World").build();
         when(notificationRepo.findByTenantId(tenantId)).thenReturn(List.of(n1, n2));

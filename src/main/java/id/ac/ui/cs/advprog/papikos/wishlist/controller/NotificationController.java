@@ -15,9 +15,9 @@ public class NotificationController {
 
     private final WishlistService wishlistService;
 
-    @GetMapping("/notifications/tenant/{tenantId}")
-    public ResponseEntity<List<String>> getNotificationsByTenant(@PathVariable Long tenantId) {
-        List<String> notifications = wishlistService.getNotificationsByTenant(tenantId);
+    @GetMapping("/notifications/user/{userId}")
+    public ResponseEntity<List<String>> getNotificationsByUser(@PathVariable Long userId) {
+        List<String> notifications = wishlistService.getNotificationsByTenant(userId);
         if (notifications == null || notifications.isEmpty()) {
             return ResponseEntity.noContent().build();
         }

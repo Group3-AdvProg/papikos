@@ -41,7 +41,7 @@ public class WishlistControllerTest {
     @Test
     void testAddToWishlist() throws Exception {
         mockMvc.perform(post("/api/wishlist/add")
-                        .param("tenantId", "123")
+                        .param("userId", "123")
                         .param("houseId", "101"))
                 .andExpect(status().isOk());
 
@@ -51,7 +51,7 @@ public class WishlistControllerTest {
     @Test
     void testRemoveFromWishlist() throws Exception {
         mockMvc.perform(delete("/api/wishlist/remove")
-                        .param("tenantId", "123")
+                        .param("userId", "123")
                         .param("houseId", "101"))
                 .andExpect(status().isOk());
 
@@ -59,10 +59,10 @@ public class WishlistControllerTest {
     }
 
     @Test
-    void testGetWishlistByTenant() throws Exception {
+    void testGetWishlistByUser() throws Exception {
         when(wishlistService.getWishlistByTenant(123L)).thenReturn(List.of(101L, 102L));
 
-        mockMvc.perform(get("/api/wishlist/tenant/123"))
+        mockMvc.perform(get("/api/wishlist/user/123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0]").value(101))
@@ -70,14 +70,24 @@ public class WishlistControllerTest {
     }
 
     @Test
-    void testGetNotificationsByTenant() throws Exception {
+    void testGetNotificationsByUser() throws Exception {
         when(wishlistService.getNotificationsByTenant(123L))
                 .thenReturn(List.of("Room with ID 101 is now available!"));
 
-        mockMvc.perform(get("/api/wishlist/notifications/tenant/123"))
+        mockMvc.perform(get("/api/wishlist/notifications/user/123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0]").value("Room with ID 101 is now available!"));
+    }
+
+    @Test
+    void testGetNotificationsByUserEmpty() throws Exception {
+        when(wishlistService.getNotificationsByTenant(123L))
+                .thenReturn(List.of());
+
+        mockMvc.perform(get("/api/wishlist/notifications/user/123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test

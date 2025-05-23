@@ -33,22 +33,22 @@ public class NotificationControllerTest {
     private JwtFilter jwtFilter;
 
     @Test
-    void testGetNotificationsByTenant() throws Exception {
+    void testGetNotificationsByUser() throws Exception {
         when(wishlistService.getNotificationsByTenant(123L))
                 .thenReturn(List.of("Room type Kamar AC is now available!"));
 
-        mockMvc.perform(get("/api/notifications/notifications/tenant/123"))
+        mockMvc.perform(get("/api/notifications/notifications/user/123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(1))
                 .andExpect(jsonPath("$[0]").value("Room type Kamar AC is now available!"));
     }
 
     @Test
-    void testGetNotificationsByTenantEmpty() throws Exception {
+    void testGetNotificationsByUserEmpty() throws Exception {
         when(wishlistService.getNotificationsByTenant(123L))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/notifications/notifications/tenant/123"))
+        mockMvc.perform(get("/api/notifications/notifications/user/123"))
                 .andExpect(status().isNoContent());
     }
 }
