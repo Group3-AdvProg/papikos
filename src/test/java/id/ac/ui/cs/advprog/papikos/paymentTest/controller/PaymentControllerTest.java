@@ -40,8 +40,8 @@ public class PaymentControllerTest {
     @Test
     void shouldReturnSuccessWhenPaymentIsValid() throws Exception {
         PaymentRequest request = new PaymentRequest();
-        request.setAmount(100000);
-        request.setBalance(200000);
+        request.setAmount(100000.0);   // Use Double
+        request.setBalance(200000.0);  // Use Double
         request.setMethod("bank");
 
         Mockito.when(paymentService.handlePayment(Mockito.any())).thenReturn(true);
@@ -56,8 +56,8 @@ public class PaymentControllerTest {
     @Test
     void shouldReturnFailureWhenPaymentFails() throws Exception {
         PaymentRequest request = new PaymentRequest();
-        request.setAmount(100000);
-        request.setBalance(50000);
+        request.setAmount(100000.0);   // Use Double
+        request.setBalance(50000.0);   // Use Double
         request.setMethod("bank");
 
         Mockito.when(paymentService.handlePayment(Mockito.any())).thenReturn(false);
