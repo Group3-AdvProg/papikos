@@ -14,6 +14,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class ChatRoomStompControllerTest {
+
     private ChatRoomService service;
     private ChatRoomStompController controller;
 
@@ -25,40 +26,40 @@ class ChatRoomStompControllerTest {
 
     @Test
     void sendMessage_delegatesAndReturns() {
-        // Prepare the request DTO
+        // Arrange
         CreateMessageRequest req = new CreateMessageRequest();
-        req.setSenderId(2L);
+        req.setSenderEmail("user@example.com");
         req.setType(ChatMessage.MessageType.CHAT);
         req.setContent("hello");
 
-        // Prepare a ChatMessage that the mock service will return
         ChatMessage returned = ChatMessage.builder()
                 .type(req.getType())
                 .content(req.getContent())
                 .build();
 
-        // Stub the service call to return a completed future
-        when(service.saveMessage(eq(2L), eq(2L), any(ChatMessage.class)))
-                .thenReturn(CompletableFuture.completedFuture(returned));
+        // Stub the service to return a completed future
+        doReturn(CompletableFuture.completedFuture(returned))
+                .when(service).saveMessage(eq(2L), eq("user@example.com"), any(ChatMessage.class));
 
-        // Invoke the controller and join the future
-        CompletableFuture<ChatMessage> future = controller.sendMessage(2L, req);
-        ChatMessage out = future.join();
+        // Act
+        ChatMessage out = controller.sendMessage(2L, req);
 
-        // Verify result and interaction
+        // Assert
         assertSame(returned, out, "Controller should return exactly what the service returns");
-        verify(service).saveMessage(eq(2L), eq(2L), any(ChatMessage.class));
+        verify(service).saveMessage(eq(2L), eq("user@example.com"), any(ChatMessage.class));
     }
 
     @Test
     void addUser_marksJoinType() {
+        // Arrange
         CreateMessageRequest req = new CreateMessageRequest();
-        req.setSenderId(2L);
         req.setContent("joined");
 
+        // Act
         ChatMessage out = controller.addUser(2L, req);
 
-        assertEquals(ChatMessage.MessageType.JOIN, out.getType(), "Type should be JOIN");
-        assertEquals("joined", out.getContent(), "Content should be preserved");
+        // Assert
+        assertEquals(ChatMessage.MessageType.JOIN, out.getType());
+        assertEquals("joined", out.getContent());
     }
 }

@@ -1,4 +1,3 @@
-// src/main/java/id/ac/ui/cs/advprog/papikos/chat/controller/ChatRestController.java
 package id.ac.ui.cs.advprog.papikos.chat.controller;
 
 import id.ac.ui.cs.advprog.papikos.chat.dto.CreateMessageRequest;
@@ -30,6 +29,6 @@ public class ChatRestController {
                 .type(req.getType())
                 .content(req.getContent())
                 .build();
-        return chatService.saveMessage(req.getSenderId(), msg);
+        return chatService.saveMessage(req.getSenderEmail(), msg);
     }
 }

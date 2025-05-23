@@ -1,4 +1,3 @@
-// src/main/java/id/ac/ui/cs/advprog/papikos/chat/controller/ChatRoomStompController.java
 package id.ac.ui.cs.advprog.papikos.chat.controller;
 
 import id.ac.ui.cs.advprog.papikos.chat.dto.CreateMessageRequest;
@@ -8,8 +7,6 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
-
-import java.util.concurrent.CompletableFuture;
 
 @Controller
 public class ChatRoomStompController {
@@ -21,7 +18,7 @@ public class ChatRoomStompController {
 
     @MessageMapping("/chat/{roomId}/sendMessage")
     @SendTo("/topic/room/{roomId}")
-    public CompletableFuture<ChatMessage> sendMessage(
+    public ChatMessage sendMessage(
             @DestinationVariable Long roomId,
             CreateMessageRequest req) {
 
@@ -29,7 +26,11 @@ public class ChatRoomStompController {
                 .type(req.getType())
                 .content(req.getContent())
                 .build();
-        return service.saveMessage(roomId, req.getSenderId(), msg);
+
+        // block here so STOMP has a concrete ChatMessage to send immediately
+        return service
+                .saveMessage(roomId, req.getSenderEmail(), msg)
+                .join();
     }
 
     @MessageMapping("/chat/{roomId}/addUser")

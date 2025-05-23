@@ -41,8 +41,9 @@ class ChatMessageRepositoryTest {
         landlord.setRole("LANDLORD");
         landlord = entityManager.persistAndFlush(landlord);
 
-        // 2. Create and persist a ChatRoom
+        // 2. Create and persist a ChatRoom (must set non-null name now)
         ChatRoom room = ChatRoom.builder()
+                .name("Tenant " + tenant.getId() + " ↔ Landlord " + landlord.getId())
                 .tenant(tenant)
                 .landlord(landlord)
                 .build();

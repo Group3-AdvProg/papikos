@@ -1,14 +1,18 @@
 // src/main/java/id/ac/ui/cs/advprog/papikos/chat/model/ChatMessage.java
 package id.ac.ui.cs.advprog.papikos.chat.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.Instant;
 
 @Entity
 @Table(name = "chat_messages")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 public class ChatMessage {
     public enum MessageType { CHAT, JOIN, LEAVE }
 
@@ -22,7 +26,6 @@ public class ChatMessage {
     @Column(nullable = false)
     private String content;
 
-    // ← replaced String sender with real User
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
@@ -30,12 +33,16 @@ public class ChatMessage {
     @Column(nullable = false, updatable = false)
     private Instant timestamp;
 
-    @PrePersist
-    protected void onCreate() {
-        if (timestamp == null) timestamp = Instant.now();
-    }
-
+    // <— don’t try to serialize the room back-pointer
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "room_id", nullable = false)
     private ChatRoom room;
+
+    @PrePersist
+    protected void onCreate() {
+        if (timestamp == null) {
+            timestamp = Instant.now();
+        }
+    }
 }
