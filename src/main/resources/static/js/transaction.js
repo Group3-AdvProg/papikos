@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    const res = await fetch("/api/auth/me", {
+    const res = await fetch("/api/auth/users/me", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -71,13 +71,24 @@ async function fetchAndRenderTransactions(url, token) {
       },
     });
 
+    // Log status and response text for debugging
+    const text = await res.text();
+    console.log("Status:", res.status, "Response:", text);
+
+    // Send error to backend for terminal logging
+    fetch("/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: `Status: ${res.status}, Response: ${text}`
+    });
+
     if (res.status === 401) {
       alert("Session expired. Please log in again.");
       window.location.href = "/login.html";
       return;
     }
 
-    const transactions = await res.json();
+    const transactions = JSON.parse(text);
 
     if (transactions.length === 0) {
       resultsDiv.innerHTML = `<p class="text-gray-500">No transactions found.</p>`;
