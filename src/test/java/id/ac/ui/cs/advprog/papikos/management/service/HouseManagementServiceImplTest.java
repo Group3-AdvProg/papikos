@@ -24,7 +24,7 @@ class HouseManagementServiceImplTest {
     private HouseRepository houseRepository;
 
     @InjectMocks
-    private HouseManagementServiceImpl houseService;
+    private HouseManagementServiceImpl houseManagementService;
 
     private User owner;
     private House house;
@@ -44,14 +44,14 @@ class HouseManagementServiceImplTest {
 
     @Test
     void testAddHouse() {
-        houseService.addHouse(house);
+        houseManagementService.addHouse(house).join();
         verify(houseRepository, times(1)).save(house);
     }
 
     @Test
     void testFindById() {
         when(houseRepository.findById(1L)).thenReturn(Optional.of(house));
-        Optional<House> result = houseService.findById(1L);
+        Optional<House> result = houseManagementService.findById(1L);
         assertTrue(result.isPresent());
         assertEquals(house, result.get());
     }
@@ -59,7 +59,7 @@ class HouseManagementServiceImplTest {
     @Test
     void testFindAllByOwner() {
         when(houseRepository.findByOwner(owner)).thenReturn(List.of(house));
-        List<House> result = houseService.findAllByOwner(owner);
+        List<House> result = houseManagementService.findAllByOwner(owner);
         assertEquals(1, result.size());
         assertEquals(house.getId(), result.get(0).getId());
     }
@@ -67,7 +67,7 @@ class HouseManagementServiceImplTest {
     @Test
     void testFindByIdAndOwner() {
         when(houseRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(house));
-        Optional<House> result = houseService.findByIdAndOwner(1L, owner);
+        Optional<House> result = houseManagementService.findByIdAndOwner(1L, owner);
         assertTrue(result.isPresent());
         assertEquals(house, result.get());
     }
@@ -77,7 +77,7 @@ class HouseManagementServiceImplTest {
         when(houseRepository.findById(1L)).thenReturn(Optional.of(house));
         house.setName("Updated Name");
 
-        houseService.updateHouse(1L, house);
+        houseManagementService.updateHouse(1L, house).join();
         verify(houseRepository).save(house);
     }
 
@@ -86,7 +86,7 @@ class HouseManagementServiceImplTest {
         when(houseRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> {
-            houseService.updateHouse(1L, house);
+            houseManagementService.updateHouse(1L, house).join();
         });
 
         verify(houseRepository, never()).save(any());
@@ -94,7 +94,7 @@ class HouseManagementServiceImplTest {
 
     @Test
     void testDeleteHouse() {
-        houseService.deleteHouse(1L);
+        houseManagementService.deleteHouse(1L).join();
         verify(houseRepository).deleteById(1L);
     }
 
@@ -105,7 +105,7 @@ class HouseManagementServiceImplTest {
         otherHouse.setId(2L);
 
         when(houseRepository.findAll()).thenReturn(List.of(house, otherHouse));
-        List<House> results = houseService.searchHouses(owner, "Jakarta", 1000000.0, 1300000.0);
+        List<House> results = houseManagementService.searchHouses(owner, "Jakarta", 1000000.0, 1300000.0);
         assertEquals(1, results.size());
         assertEquals(house, results.get(0));
     }
@@ -113,7 +113,22 @@ class HouseManagementServiceImplTest {
     @Test
     void testSearchHouses_KeywordOnly() {
         when(houseRepository.findAll()).thenReturn(List.of(house));
-        List<House> results = houseService.searchHouses(owner, "Jakarta", null, null);
+        List<House> results = houseManagementService.searchHouses(owner, "Jakarta", null, null);
+        assertEquals(1, results.size());
+        assertEquals(house, results.get(0));
+    }
+
+    @Test
+    void testSearchHouses_KeywordDoesNotMatch() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseManagementService.searchHouses(owner, "Nonexistent", null, null);
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    void testSearchHouses_KeywordNull() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseManagementService.searchHouses(owner, null, 1000000.0, 1300000.0);
         assertEquals(1, results.size());
         assertEquals(house, results.get(0));
     }
@@ -121,21 +136,35 @@ class HouseManagementServiceImplTest {
     @Test
     void testSearchHouses_MinRentOnly() {
         when(houseRepository.findAll()).thenReturn(List.of(house));
-        List<House> results = houseService.searchHouses(owner, null, 1000000.0, null);
+        List<House> results = houseManagementService.searchHouses(owner, null, 1000000.0, null);
         assertEquals(1, results.size());
+    }
+
+    @Test
+    void testSearchHouses_MinRentTooHigh() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseManagementService.searchHouses(owner, null, 2000000.0, null);
+        assertTrue(results.isEmpty());
     }
 
     @Test
     void testSearchHouses_MaxRentOnly() {
         when(houseRepository.findAll()).thenReturn(List.of(house));
-        List<House> results = houseService.searchHouses(owner, null, null, 1300000.0);
+        List<House> results = houseManagementService.searchHouses(owner, null, null, 1300000.0);
         assertEquals(1, results.size());
+    }
+
+    @Test
+    void testSearchHouses_MaxRentTooLow() {
+        when(houseRepository.findAll()).thenReturn(List.of(house));
+        List<House> results = houseManagementService.searchHouses(owner, null, null, 1000000.0);
+        assertTrue(results.isEmpty());
     }
 
     @Test
     void testSearchHouses_NoFilters() {
         when(houseRepository.findAll()).thenReturn(List.of(house));
-        List<House> results = houseService.searchHouses(owner, null, null, null);
+        List<House> results = houseManagementService.searchHouses(owner, null, null, null);
         assertEquals(1, results.size());
     }
 

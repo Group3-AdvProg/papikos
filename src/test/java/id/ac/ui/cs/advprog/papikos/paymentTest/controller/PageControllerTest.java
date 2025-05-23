@@ -15,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 
 @WebMvcTest(controllers = PageController.class)
 @AutoConfigureMockMvc(addFilters = false) // disables filters like JwtFilter
@@ -33,21 +34,21 @@ public class PageControllerTest {
     @Test
     void topUpPage_shouldReturnTemplate() throws Exception {
         mockMvc.perform(get("/wallet/topup"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("wallet-topup"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/wallet-topup.html"));
     }
 
     @Test
     void payPage_shouldReturnTemplate() throws Exception {
         mockMvc.perform(get("/wallet/pay"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("wallet-pay"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/wallet-pay.html"));
     }
 
     @Test
     void historyPage_shouldReturnTemplate() throws Exception {
         mockMvc.perform(get("/wallet/history"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("wallet-history"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/wallet-history.html"));
     }
 }

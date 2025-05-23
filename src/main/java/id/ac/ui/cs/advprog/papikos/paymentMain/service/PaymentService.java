@@ -10,6 +10,8 @@ import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @Service
 public class PaymentService {
@@ -27,14 +29,41 @@ public class PaymentService {
 
     public boolean handlePayment(PaymentRequest request) {
         try {
+            User tenant = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
+
+            User landlord = userRepository.findById(request.getTargetId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Landlord not found"));
+
+            if (tenant.getBalance() < request.getAmount()) {
+                return false;
+            }
+
             PaymentStrategy strategy = getPaymentStrategy(request.getMethod());
             context.setStrategy(strategy);
-            return context.executePayment(request.getAmount(), request.getBalance());
-        } catch (IllegalArgumentException e) {
-            logger.warn("Invalid payment method received: {}", request.getMethod());
+            boolean success = context.executePayment(request.getAmount(), tenant.getBalance());
+
+            if (!success) return false;
+
+            tenant.setBalance(tenant.getBalance() - request.getAmount());
+            landlord.setBalance(landlord.getBalance() + request.getAmount());
+
+            userRepository.save(tenant);
+            userRepository.save(landlord);
+
+            // Save the transaction
+            transactionService.createTransaction(
+                    tenant.getId(), request.getAmount(), request.getMethod(), "RENT_PAYMENT"
+            );
+
+            return true;
+        } catch (Exception e) {
+            logger.error("Payment failed", e);
             return false;
         }
     }
+
+
 
     public String handleRentPayment(String tenantId, String landlordId, double rentAmount) {
         User tenant = userRepository.findById(Long.parseLong(tenantId))

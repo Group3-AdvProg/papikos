@@ -1,10 +1,13 @@
-package id.ac.ui.cs.advprog.papikos.house.management.controller;
+package id.ac.ui.cs.advprog.papikos.management.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
+import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -30,6 +34,12 @@ class HouseManagementControllerTest {
 
     @MockBean
     private HouseManagementService houseManagementService;
+
+    @MockBean
+    private RentalService rentalService;
+
+    @MockBean
+    private WishlistService wishlistService;
 
     @MockBean
     private UserRepository userRepository;
@@ -71,7 +81,8 @@ class HouseManagementControllerTest {
     void testCreateHouse_ApprovedLandlord() throws Exception {
         owner.setApproved(true);
         when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
-        doNothing().when(houseManagementService).addHouse(any(House.class));
+        when(houseManagementService.addHouse(any(House.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(post("/api/management/houses")
                         .principal(() -> "owner@example.com")
@@ -107,6 +118,8 @@ class HouseManagementControllerTest {
     @Test
     void testUpdateHouse_ValidOwner() throws Exception {
         when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
+        when(houseManagementService.updateHouse(eq(1L), any(House.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(put("/api/management/houses/1")
                         .principal(() -> "owner@example.com")
@@ -114,19 +127,86 @@ class HouseManagementControllerTest {
                         .content(objectMapper.writeValueAsString(house)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Kos A"));
+    }
 
-        verify(houseManagementService, times(1)).updateHouse(eq(1L), any(House.class));
+    @Test
+    void testUpdateHouse_NotFound() throws Exception {
+        when(houseManagementService.findById(1L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(put("/api/management/houses/1")
+                        .principal(() -> "owner@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(house)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testUpdateHouse_Forbidden() throws Exception {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        house.setOwner(otherUser);
+        when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
+
+        mockMvc.perform(put("/api/management/houses/1")
+                        .principal(() -> "owner@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(house)))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Forbidden: You do not own this house."));
+    }
+
+    @Test
+    void testUpdateHouse_TriggersWishlistNotification() throws Exception {
+        house.setNumberOfRooms(2);
+        House updated = new House("Kos A", "Jl. UI", "Updated", 5, 1500000.0,
+                "https://example.com/img.jpg", owner);
+        updated.setId(1L);
+
+        when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
+        when(houseManagementService.updateHouse(eq(1L), any(House.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        mockMvc.perform(put("/api/management/houses/1")
+                        .principal(() -> "owner@example.com")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updated)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Kos A"));
+
+        verify(wishlistService, times(1)).notifyAvailability(1L);
     }
 
     @Test
     void testDeleteHouse_ValidOwner() throws Exception {
         when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
+        when(houseManagementService.deleteHouse(1L))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         mockMvc.perform(delete("/api/management/houses/1")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isNoContent());
+    }
 
-        verify(houseManagementService, times(1)).deleteHouse(1L);
+    @Test
+    void testDeleteHouse_NotFound() throws Exception {
+        when(houseManagementService.findById(1L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(delete("/api/management/houses/1")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testDeleteHouse_Forbidden() throws Exception {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        house.setOwner(otherUser);
+        when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
+
+        mockMvc.perform(delete("/api/management/houses/1")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Forbidden: You do not own this house."));
     }
 
     @Test
@@ -154,6 +234,120 @@ class HouseManagementControllerTest {
                         .param("maxRent", "2000000"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].monthlyRent").value(1500000.0));
+    }
+
+    @Test
+    void testApproveRental_ValidOwner_DecrementsRoomAndApproves() throws Exception {
+        Rental rental = new Rental();
+        rental.setId(10L);
+        rental.setApproved(false);
+
+        House testHouse = new House("Kos Z", "Jl. Kucing", "Deskripsi", 3, 2000000.0,
+                "https://example.com/kosz.jpg", owner);
+        testHouse.setId(1L);
+        rental.setHouse(testHouse);
+
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+        when(rentalService.getRentalById(10L)).thenReturn(Optional.of(rental));
+        when(houseManagementService.updateHouse(eq(1L), any(House.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        mockMvc.perform(post("/api/management/rentals/10/approve")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Rental approved."));
+
+        verify(rentalService, times(1)).updateRental(eq(10L), any(Rental.class));
+        verify(houseManagementService, times(1)).updateHouse(eq(1L), any(House.class));
+    }
+
+    @Test
+    void testApproveRental_Forbidden() throws Exception {
+        Rental rental = new Rental();
+        rental.setId(10L);
+
+        House otherHouse = new House("Kos X", "Jl. Gajah", "Not yours", 2, 1900000.0,
+                "https://example.com/kosx.jpg", new User());
+        otherHouse.setId(5L);
+        otherHouse.getOwner().setId(2L);
+        rental.setHouse(otherHouse);
+
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+        when(rentalService.getRentalById(10L)).thenReturn(Optional.of(rental));
+
+        mockMvc.perform(post("/api/management/rentals/10/approve")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("You do not own this house."));
+    }
+
+    @Test
+    void testApproveRental_InvalidOwner() throws Exception {
+        Rental rental = new Rental();
+        rental.setId(10L);
+        rental.setApproved(false);
+
+        User differentOwner = new User();
+        differentOwner.setId(999L);
+
+        House house = new House();
+        house.setId(1L);
+        house.setOwner(differentOwner);
+        rental.setHouse(house);
+
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+        when(rentalService.getRentalById(10L)).thenReturn(Optional.of(rental));
+
+        mockMvc.perform(post("/api/management/rentals/10/approve")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("You do not own this house."));
+    }
+
+    @Test
+    void testApproveRental_AlreadyApproved() throws Exception {
+        Rental rental = new Rental();
+        rental.setId(11L);
+        rental.setApproved(true);
+
+        House testHouse = new House("Kos Already", "Jl. Approved", "desc", 3, 2000000.0,
+                "https://example.com/kosz.jpg", owner);
+        testHouse.setId(1L);
+        rental.setHouse(testHouse);
+
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+        when(rentalService.getRentalById(11L)).thenReturn(Optional.of(rental));
+
+        mockMvc.perform(post("/api/management/rentals/11/approve")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Rental approved."));
+
+        verify(rentalService, never()).updateRental(anyLong(), any());
+        verify(houseManagementService, never()).updateHouse(anyLong(), any());
+    }
+
+    @Test
+    void testApproveRental_NoRoomsLeft() throws Exception {
+        Rental rental = new Rental();
+        rental.setId(12L);
+        rental.setApproved(false);
+
+        House house = new House("Kos Full", "Jl. Penuh", "desc", 0, 2000000.0,
+                "https://example.com/kosz.jpg", owner);
+        house.setId(1L);
+        rental.setHouse(house);
+
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+        when(rentalService.getRentalById(12L)).thenReturn(Optional.of(rental));
+
+        mockMvc.perform(post("/api/management/rentals/12/approve")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Rental approved."));
+
+        verify(rentalService, times(1)).updateRental(eq(12L), any());
+        verify(houseManagementService, never()).updateHouse(anyLong(), any());
     }
 
 }

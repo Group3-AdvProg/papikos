@@ -19,9 +19,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Optional;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 
 @WebMvcTest(controllers = WalletController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -62,9 +62,13 @@ public class WalletControllerTest {
         user.setBalance(0.0);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        mockMvc.perform(post("/api/wallet/topup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        var mvcResult = mockMvc.perform(post("/api/wallet/topup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("Top-up successful."))
@@ -80,9 +84,13 @@ public class WalletControllerTest {
         user.setBalance(0.0);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        mockMvc.perform(post("/api/wallet/topup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        var mvcResult = mockMvc.perform(post("/api/wallet/topup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("Top-up successful."))
@@ -93,9 +101,13 @@ public class WalletControllerTest {
     void topUpInvalidMethod_shouldFail() throws Exception {
         TopUpRequest request = buildRequest("crypto"); // Invalid method
 
-        mockMvc.perform(post("/api/wallet/topup")
+        var mvcResult = mockMvc.perform(post("/api/wallet/topup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Invalid top-up method."))
@@ -112,9 +124,13 @@ public class WalletControllerTest {
         user.setBalance(0.0);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        mockMvc.perform(post("/api/wallet/topup")
+        var mvcResult = mockMvc.perform(post("/api/wallet/topup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Top-up failed."))

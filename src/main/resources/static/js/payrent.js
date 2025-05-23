@@ -1,27 +1,48 @@
-document.getElementById("payrent-form").addEventListener("submit", async function (e) {
-  e.preventDefault();
+document.addEventListener("DOMContentLoaded", function () {
+  const token = localStorage.getItem("token");
 
-  const tenantId = document.getElementById("tenantId").value;
-  const landlordId = document.getElementById("landlordId").value;
-  const amount = parseFloat(document.getElementById("amount").value);
-  const msgEl = document.getElementById("response-msg");
+ try {
+   const response = await fetch("/api/payment/pay-rent", {
+     method: "POST",
+     headers: {
+       "Content-Type": "application/json",
+       "Authorization": `Bearer ${token}`
+     },
+     body: JSON.stringify({ tenantId, landlordId, amount }),
+   });
 
-  const response = await fetch("/api/payment/pay-rent", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ tenantId, landlordId, amount }),
-  });
+   if (response.status === 401) {
+     msgEl.textContent = "Unauthorized: Please log in again.";
+     msgEl.className = "text-red-600 mt-4 font-semibold";
+     return;
+   }
 
-  const data = await response.json();
+   const text = await response.text();
+   let data = { message: "No response body", status: "FAIL" };
 
-  msgEl.textContent = data.message;
-  msgEl.className = data.status === "SUCCESS"
-    ? "text-green-600 mt-4 font-semibold"
-    : "text-red-600 mt-4 font-semibold";
+   try {
+     data = text ? JSON.parse(text) : data;
+   } catch (e) {
+     console.warn("Non-JSON response:", text);
+   }
 
-  if (data.redirectTo) {
-    setTimeout(() => {
-      window.location.href = data.redirectTo;
-    }, 2000);
-  }
+   msgEl.textContent = data.message;
+   msgEl.className = data.status === "SUCCESS"
+     ? "text-green-600 mt-4 font-semibold"
+     : "text-red-600 mt-4 font-semibold";
+
+   if (data.redirectTo) {
+     setTimeout(() => {
+       window.location.href = data.redirectTo;
+     }, 2000);
+   }
+
+ } catch (err) {
+   msgEl.textContent = "Something went wrong. Please try again.";
+   msgEl.className = "text-red-600 mt-4 font-semibold";
+   console.error("Fetch error:", err);
+ }
+
+
+  // Also keep your payrent form submission logic here
 });

@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PaymentController.class)
@@ -40,15 +41,19 @@ public class PaymentControllerTest {
     @Test
     void shouldReturnSuccessWhenPaymentIsValid() throws Exception {
         PaymentRequest request = new PaymentRequest();
-        request.setAmount(100000);
-        request.setBalance(200000);
+        request.setAmount(100000.0);
+        request.setBalance(200000.0);
         request.setMethod("bank");
 
         Mockito.when(paymentService.handlePayment(Mockito.any())).thenReturn(true);
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/payment/pay")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        var mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/payment/pay")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(content().string("payment successful"));
     }
@@ -56,15 +61,19 @@ public class PaymentControllerTest {
     @Test
     void shouldReturnFailureWhenPaymentFails() throws Exception {
         PaymentRequest request = new PaymentRequest();
-        request.setAmount(100000);
-        request.setBalance(50000);
+        request.setAmount(100000.0);
+        request.setBalance(50000.0);
         request.setMethod("bank");
 
         Mockito.when(paymentService.handlePayment(Mockito.any())).thenReturn(false);
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/payment/pay")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        var mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/payment/pay")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(content().string("payment failed or insufficient balance"));
     }
