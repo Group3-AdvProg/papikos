@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:63342")
 @RestController
 @RequestMapping("/api/wishlist")
 @RequiredArgsConstructor
@@ -16,34 +17,34 @@ public class WishlistController {
 
     @PostMapping("/add")
     public ResponseEntity<Void> addToWishlist(
-            @RequestParam Long tenantId,
+            @RequestParam Long userId,
             @RequestParam Long houseId
     ) {
-        wishlistService.addToWishlist(tenantId, houseId);
+        wishlistService.addToWishlist(userId, houseId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/remove")
     public ResponseEntity<Void> removeFromWishlist(
-            @RequestParam Long tenantId,
+            @RequestParam Long userId,
             @RequestParam Long houseId
     ) {
-        wishlistService.removeFromWishlist(tenantId, houseId);
+        wishlistService.removeFromWishlist(userId, houseId);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/tenant/{tenantId}")
-    public ResponseEntity<List<Long>> getWishlistByTenant(
-            @PathVariable Long tenantId
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Long>> getWishlistByUser(
+            @PathVariable Long userId
     ) {
-        return ResponseEntity.ok(wishlistService.getWishlistByTenant(tenantId));
+        return ResponseEntity.ok(wishlistService.getWishlistByUser(userId));
     }
 
-    @GetMapping("/notifications/tenant/{tenantId}")
-    public ResponseEntity<List<String>> getNotificationsByTenant(
-            @PathVariable Long tenantId
+    @GetMapping("/notifications/user/{userId}")
+    public ResponseEntity<List<String>> getNotificationsByUser(
+            @PathVariable Long userId
     ) {
-        return ResponseEntity.ok(wishlistService.getNotificationsByTenant(tenantId));
+        return ResponseEntity.ok(wishlistService.getNotificationsByUser(userId));
     }
 
     @GetMapping("/notifications/owner/{ownerId}")

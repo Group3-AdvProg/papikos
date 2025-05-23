@@ -1,0 +1,69 @@
+<!-- inbox.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Notifications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f9f9ff;
+            font-family: 'Segoe UI', sans-serif;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-white shadow-sm w-100">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="wishlist.html">Papikos</a>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2 class="text-primary fw-bold mb-4">📬 My Notifications</h2>
+    <div id="notifContainer" class="list-group"></div>
+</div>
+
+<script>
+    const token = localStorage.getItem("token");
+
+    async function fetchUserId() {
+        const res = await fetch("/api/auth/users/me", {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const user = await res.json();
+        return user.id;
+    }
+
+    async function loadNotifications() {
+        const userId = await fetchUserId();
+        const res = await fetch(`/api/notifications/user/${userId}`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+
+        const notifications = await res.json();
+        const container = document.getElementById("notifContainer");
+        container.innerHTML = "";
+
+        if (notifications.length === 0) {
+            container.innerHTML = `<div class="text-muted text-center">No notifications yet.</div>`;
+        }
+
+        for (const notif of notifications) {
+            const notifItem = document.createElement("div");
+            notifItem.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-start";
+            notifItem.innerHTML = `
+                <div>
+                    <div class="fw-bold">${notif.title || "New Update"}</div>
+                    ${notif.message}
+                </div>
+                <span class="text-muted small">${new Date(notif.timestamp).toLocaleString("id-ID")}</span>
+            `;
+            container.appendChild(notifItem);
+        }
+    }
+
+    window.onload = loadNotifications;
+</script>
+</body>
+</html>
