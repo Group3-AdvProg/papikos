@@ -1,0 +1,62 @@
+:root {
+    --bs-primary: #7065F0;
+}
+
+.text-primary {
+    color: var(--bs-primary) !important;
+}
+
+.bg-primary {
+    background-color: var(--bs-primary) !important;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f9f9ff;
+}
+
+.btn-primary {
+    background-color: #7065F0 !important;
+    border-color: #7065F0 !important;
+    color: white !important;
+}
+
+.btn-primary:hover {
+    background-color: #5e54d8 !important;
+    border-color: #5e54d8 !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+.hero {
+    background: linear-gradient(to right, #f1f3ff, #e3eaff);
+    padding: 4rem 0;
+}
+
+.stats .stat {
+    text-align: center;
+}
+
+.card-clickable {
+    text-decoration: none;
+    color: inherit;
+}
+
+.card-clickable:hover {
+    opacity: 0.9;
+}
+
+.card-body * {
+    pointer-events: none;
+}
+
+.action-buttons {
+    pointer-events: auto;
+}
+
+.navbar-brand {
+    color: #7065F0 !important;
+}
