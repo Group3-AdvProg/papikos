@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tenant House Detail</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        :root { --bs-primary: #7065F0; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f9f9ff; }
+        .navbar { background-color: var(--bs-primary); }
+        .navbar a, .navbar-brand { color: white; }
+        .navbar a:hover { color: #ddd; }
+        .section-title { margin: 2rem 0 1rem; color: var(--bs-primary); }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-white shadow-sm w-100">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="/rental.html">Papikos</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/management.html">My Houses</a></li>
+                <li class="nav-item"><a class="btn btn-outline-primary me-2" href="/login.html">Login</a></li>
+                <li class="nav-item"><a class="btn btn-primary" href="/register.html">Sign up</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2 class="section-title">House Details</h2>
+    <div id="houseDetail"></div>
+</div>
+
+<script>
+    window.onload = () => {
+        const token = localStorage.getItem("token");
+        if (!token) return window.location.href = "/login.html";
+
+        fetch("/api/auth/users/me", {
+            headers: { Authorization: "Bearer " + token }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Unauthorized");
+                return res.json();
+            })
+            .then(user => {
+                if (user.role !== "TENANT") {
+                    window.location.href = "/login.html";
+                } else {
+                    loadHouseDetail(token);
+                }
+            })
+            .catch(() => window.location.href = "/login.html");
+    };
+
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    function loadHouseDetail(token) {
+        const houseId = getQueryParam("houseId");
+        fetch(`/api/boarding-houses/${houseId}`, {
+            headers: { Authorization: "Bearer " + token }
+        })
+            .then(response => response.json())
+            .then(house => {
+                document.getElementById("houseDetail").innerHTML = `
+        <div class="card p-4">
+          <h4 class="text-primary">${house.name}</h4>
+          <p><strong>Location:</strong> ${house.location}</p>
+          <p><strong>Price:</strong> Rp ${house.price.toLocaleString()}</p>
+          <p><strong>Description:</strong> ${house.description}</p>
+          <label for="duration" class="form-label">Duration (months):</label>
+          <input type="number" id="duration" class="form-control mb-2" value="6" min="1">
+          <button class="btn btn-primary mt-2" onclick="bookNow(${house.id})">Book Now</button>
+        </div>
+      `;
+            });
+    }
+
+    function bookNow(houseId) {
+        const duration = document.getElementById("duration").value;
+        const token = localStorage.getItem("token");
+
+        const payload = {
+            houseId: houseId,
+            tenantId: 1,
+            durationInMonths: parseInt(duration),
+            isPaid: false
+        };
+
+        fetch('/api/rentals', {
+            method: 'POST',
+            headers: {
+                Authorization: "Bearer " + token,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        }).then(res => {
+            if (res.ok) {
+                alert("Booking berhasil!");
+            } else {
+                alert("Gagal booking.");
+            }
+        });
+    }
+</script>
+</body>
+</html>

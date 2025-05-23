@@ -71,6 +71,8 @@
                 window.location.href = "/admin.html";
             } else if (authorities.some(role => role.authority === "ROLE_LANDLORD")) {
                 window.location.href = "/management.html";
+            } else if (authorities.some(role => role.authority === "ROLE_TENANT")) {
+                window.location.href = "/rental.html";
             } else {
                 window.location.href = "/";
             }
