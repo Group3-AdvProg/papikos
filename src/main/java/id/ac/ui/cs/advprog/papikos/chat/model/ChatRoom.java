@@ -14,7 +14,9 @@ public class ChatRoom {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Now each room links exactly one tenant and one landlord
+    @Column(nullable = false)                  // 🆕
+    private String name;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tenant_id", nullable = false)
     private User tenant;
