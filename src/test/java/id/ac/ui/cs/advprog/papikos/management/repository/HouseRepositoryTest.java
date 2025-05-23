@@ -14,7 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@DataJpaTest(properties = "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect")
 class HouseRepositoryTest {
 
     @Autowired

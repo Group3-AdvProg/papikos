@@ -9,9 +9,11 @@ import id.ac.ui.cs.advprog.papikos.chat.repository.ChatRoomRepository;
 import id.ac.ui.cs.advprog.papikos.chat.repository.ChatMessageRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class ChatRoomService {
@@ -27,7 +29,21 @@ public class ChatRoomService {
         this.userRepo = userRepo;
     }
 
-    /** Create a room between a tenant and a landlord */
+    /** Async save: off-loads the DB write to a task-executor thread */
+    @Async
+    public CompletableFuture<ChatMessage> saveMessage(Long roomId, Long senderId, ChatMessage msg) {
+        ChatRoom room = roomRepo.findById(roomId)
+                .orElseThrow(() -> new EntityNotFoundException("Room not found: " + roomId));
+        User sender = userRepo.findById(senderId)
+                .orElseThrow(() -> new EntityNotFoundException("Sender not found: " + senderId));
+
+        msg.setRoom(room);
+        msg.setSender(sender);
+        ChatMessage saved = msgRepo.save(msg);
+        return CompletableFuture.completedFuture(saved);
+    }
+
+    /** Create a new room */
     public ChatRoom createRoom(Long tenantId, Long landlordId) {
         User tenant   = userRepo.findById(tenantId)
                 .orElseThrow(() -> new EntityNotFoundException("Tenant not found: " + tenantId));
@@ -41,31 +57,19 @@ public class ChatRoomService {
         return roomRepo.save(room);
     }
 
-    /** List all chat rooms */
+    /** List all rooms */
     public List<ChatRoom> listRooms() {
         return roomRepo.findAll(Sort.by("createdAt"));
     }
 
-    /** Send a message in a room, authored by a real user */
-    public ChatMessage saveMessage(Long roomId, Long senderId, ChatMessage msg) {
-        ChatRoom room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("Room not found: " + roomId));
-        User sender = userRepo.findById(senderId)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found: " + senderId));
-
-        msg.setRoom(room);
-        msg.setSender(sender);
-        return msgRepo.save(msg);
-    }
-
-    /** List all messages in a room */
+    /** List messages in a room */
     public List<ChatMessage> listMessages(Long roomId) {
         roomRepo.findById(roomId)
                 .orElseThrow(() -> new EntityNotFoundException("Room not found: " + roomId));
         return msgRepo.findByRoomIdOrderByTimestampAsc(roomId);
     }
 
-    /** Update message content (only if it belongs to that room) */
+    /** Update a message */
     public ChatMessage updateMessage(Long roomId, Long messageId, ChatMessage updatedMsg) {
         ChatMessage existing = msgRepo.findById(messageId)
                 .orElseThrow(() -> new EntityNotFoundException("Message not found: " + messageId));

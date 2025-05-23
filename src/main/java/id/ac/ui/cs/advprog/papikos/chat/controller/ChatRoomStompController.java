@@ -4,8 +4,12 @@ package id.ac.ui.cs.advprog.papikos.chat.controller;
 import id.ac.ui.cs.advprog.papikos.chat.dto.CreateMessageRequest;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
 import id.ac.ui.cs.advprog.papikos.chat.service.ChatRoomService;
-import org.springframework.messaging.handler.annotation.*;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
+
+import java.util.concurrent.CompletableFuture;
 
 @Controller
 public class ChatRoomStompController {
@@ -15,10 +19,9 @@ public class ChatRoomStompController {
         this.service = service;
     }
 
-    // Send a chat message within room {roomId}
     @MessageMapping("/chat/{roomId}/sendMessage")
     @SendTo("/topic/room/{roomId}")
-    public ChatMessage sendMessage(
+    public CompletableFuture<ChatMessage> sendMessage(
             @DestinationVariable Long roomId,
             CreateMessageRequest req) {
 
@@ -29,14 +32,12 @@ public class ChatRoomStompController {
         return service.saveMessage(roomId, req.getSenderId(), msg);
     }
 
-    // Notify that a user joined room {roomId}
     @MessageMapping("/chat/{roomId}/addUser")
     @SendTo("/topic/room/{roomId}")
     public ChatMessage addUser(
             @DestinationVariable Long roomId,
             CreateMessageRequest req) {
 
-        // only set JOIN type; service not required
         return ChatMessage.builder()
                 .type(ChatMessage.MessageType.JOIN)
                 .content(req.getContent())
