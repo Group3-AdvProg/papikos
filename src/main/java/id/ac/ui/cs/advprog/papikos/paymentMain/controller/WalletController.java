@@ -16,8 +16,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-@RequestMapping({"/api/wallet", "/api/wallet"})
+import java.util.concurrent.CompletableFuture;
+import org.springframework.scheduling.annotation.Async;
+
 @RestController
+@RequestMapping({"/api/wallet", "/api/wallet"})
 public class WalletController {
 
     @Autowired
@@ -28,50 +31,53 @@ public class WalletController {
 
     private final PaymentContext context = new PaymentContext();
 
+    @Async
     @PostMapping("/topup")
-    public ResponseEntity<ApiResponse> topUp(@RequestBody TopUpRequest request) {
-        PaymentStrategy strategy = switch (request.getMethod().toLowerCase()) {
-            case "bank" -> new BankTransferPayment();
-            case "virtual" -> new VirtualAccountPayment();
-            default -> null;
-        };
+    public CompletableFuture<ResponseEntity<ApiResponse>> topUp(@RequestBody TopUpRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            PaymentStrategy strategy = switch (request.getMethod().toLowerCase()) {
+                case "bank" -> new BankTransferPayment();
+                case "virtual" -> new VirtualAccountPayment();
+                default -> null;
+            };
 
-        if (strategy == null) {
+            if (strategy == null) {
+                return ResponseEntity.ok(
+                        new ApiResponse("FAILED", "Invalid top-up method.", "/wallet/topup")
+                );
+            }
+
+            context.setStrategy(strategy);
+            boolean success = context.executePayment(request.getAmount(), Double.MAX_VALUE);
+
+            if (request.getAmount() == 9999) { // ONLY FOR TEST JACOCO
+                success = false;
+            }
+
+            if (success) {
+                User user = userRepository.findById(request.getUserId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+                user.increaseBalance(request.getAmount());
+                userRepository.save(user);
+
+                transactionService.recordTransaction(
+                        user,
+                        null,
+                        request.getAmount(),
+                        "TOP_UP",
+                        request.getMethod()
+                );
+
+                return ResponseEntity.ok(
+                        new ApiResponse("SUCCESS", "Top-up successful.", null)
+                );
+            }
+
             return ResponseEntity.ok(
-                    new ApiResponse("FAILED", "Invalid top-up method.", "/wallet/topup")
+                    new ApiResponse("FAILED", "Top-up failed.", "/wallet/topup")
             );
-        }
-
-        context.setStrategy(strategy);
-        boolean success = context.executePayment(request.getAmount(), Double.MAX_VALUE);
-
-        if (request.getAmount() == 9999) { // ONLY FOR TEST JACOCO
-            success = false;
-        }
-
-        if (success) {
-            User user = userRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-            user.increaseBalance(request.getAmount());
-            userRepository.save(user);
-
-            transactionService.recordTransaction(
-                    user,
-                    null,
-                    request.getAmount(),
-                    "TOP_UP",
-                    request.getMethod()
-            );
-
-            return ResponseEntity.ok(
-                    new ApiResponse("SUCCESS", "Top-up successful.", null)
-            );
-        }
-
-        return ResponseEntity.ok(
-                new ApiResponse("FAILED", "Top-up failed.", "/wallet/topup")
-        );
+        });
     }
 
     @GetMapping("/balance")
@@ -81,31 +87,34 @@ public class WalletController {
 
         return ResponseEntity.ok(user.getBalance());
     }
+    @Async
     @PostMapping("/pay-rent")
-    public ResponseEntity<ApiResponse> payRent(@RequestBody PaymentRequest request) {
-        User tenant = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
-        User landlord = userRepository.findById(request.getTargetId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Landlord not found"));
+    public CompletableFuture<ResponseEntity<ApiResponse>> payRent(@RequestBody PaymentRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            User tenant = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
+            User landlord = userRepository.findById(request.getTargetId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Landlord not found"));
 
-        if (tenant.getBalance() < request.getAmount()) {
-            return ResponseEntity.ok(new ApiResponse("FAILED", "Insufficient balance.", null));
-        }
+            if (tenant.getBalance() < request.getAmount()) {
+                return ResponseEntity.ok(new ApiResponse("FAILED", "Insufficient balance.", null));
+            }
 
-        tenant.setBalance(tenant.getBalance() - request.getAmount());
-        landlord.setBalance(landlord.getBalance() + request.getAmount());
+            tenant.setBalance(tenant.getBalance() - request.getAmount());
+            landlord.setBalance(landlord.getBalance() + request.getAmount());
 
-        userRepository.save(tenant);
-        userRepository.save(landlord);
+            userRepository.save(tenant);
+            userRepository.save(landlord);
 
-        transactionService.recordTransaction(
-                tenant, landlord,
-                request.getAmount(),
-                "RENT_PAYMENT",
-                "wallet"
-        );
+            transactionService.recordTransaction(
+                    tenant, landlord,
+                    request.getAmount(),
+                    "RENT_PAYMENT",
+                    "wallet"
+            );
 
-        return ResponseEntity.ok(new ApiResponse("SUCCESS", "Rent payment successful.", "/management.html"));
+            return ResponseEntity.ok(new ApiResponse("SUCCESS", "Rent payment successful.", "/management.html"));
+        });
     }
 
 
