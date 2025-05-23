@@ -32,6 +32,19 @@ public class PaymentServiceTest {
         request.setAmount(100_000.0);
         request.setBalance(200_000.0);
         request.setMethod("bank");
+        request.setUserId(1L);      // Add this
+        request.setTargetId(2L);    // Add this
+
+        User tenant = new User();
+        tenant.setId(1L);
+        tenant.setBalance(200_000.0);
+
+        User landlord = new User();
+        landlord.setId(2L);
+        landlord.setBalance(0.0);
+
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
         assertTrue(service.handlePayment(request));
     }
@@ -42,6 +55,19 @@ public class PaymentServiceTest {
         request.setAmount(75_000.0);
         request.setBalance(100_000.0);
         request.setMethod("virtual");
+        request.setUserId(1L);      // Add this
+        request.setTargetId(2L);    // Add this
+
+        User tenant = new User();
+        tenant.setId(1L);
+        tenant.setBalance(100_000.0);
+
+        User landlord = new User();
+        landlord.setId(2L);
+        landlord.setBalance(0.0);
+
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
         assertTrue(service.handlePayment(request));
     }
@@ -49,8 +75,8 @@ public class PaymentServiceTest {
     @Test
     void shouldFailWithInvalidPaymentMethod() {
         PaymentRequest request = new PaymentRequest();
-        request.setAmount(50_000.0);
-        request.setBalance(100_000.0);
+        request.setAmount(50_000.0);    // Use Double
+        request.setBalance(100_000.0);  // Use Double
         request.setMethod("invalid");
 
         assertFalse(service.handlePayment(request));
@@ -59,8 +85,8 @@ public class PaymentServiceTest {
     @Test
     void shouldFailWhenBalanceIsInsufficient() {
         PaymentRequest request = new PaymentRequest();
-        request.setAmount(100_000.0);
-        request.setBalance(20_000.0);
+        request.setAmount(100_000.0);   // Use Double
+        request.setBalance(20_000.0);   // Use Double
         request.setMethod("bank");
 
         assertFalse(service.handlePayment(request));
