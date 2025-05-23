@@ -56,7 +56,8 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/payment/**",
                                 "/api/wallet/**",
-                                "/api/transaction/**"
+                                "/api/transaction/**",
+                                "/css/papikos.css"
                                 ).permitAll()  // Public endpoints (e.g., registration, login)
 
                         // Landlord-only
