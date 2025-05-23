@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:63342")
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
@@ -14,12 +15,9 @@ public class NotificationController {
 
     private final WishlistService wishlistService;
 
-    @GetMapping("/{tenantId}")
-    public ResponseEntity<List<String>> getNotifications(@PathVariable Long tenantId) {
-        List<String> notifications = wishlistService.getNotificationsByTenant(tenantId);
-        if (notifications.isEmpty()) {
-            return ResponseEntity.noContent().build(); // Returns 204 No Content if empty
-        }
-        return ResponseEntity.ok(notifications); // Returns 200 OK with the list
+    @GetMapping("/notifications/user/{userId}")
+    public ResponseEntity<List<String>> getNotificationsByUser(@PathVariable Long userId) {
+        List<String> notifications = wishlistService.getNotificationsByUser(userId);
+        return ResponseEntity.ok(notifications);
     }
 }
