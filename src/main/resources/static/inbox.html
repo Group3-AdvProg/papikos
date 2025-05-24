@@ -37,33 +37,38 @@
 
     async function loadNotifications() {
         const userId = await fetchUserId();
-        const res = await fetch(`/api/notifications/user/${userId}`, {
+        const res = await fetch(`/api/notifications/receiver/${userId}`, {
             headers: { Authorization: "Bearer " + token }
         });
 
-        const notifications = await res.json();
         const container = document.getElementById("notifContainer");
         container.innerHTML = "";
 
-        if (notifications.length === 0) {
+        if (res.status === 204) {
             container.innerHTML = `<div class="text-muted text-center">No notifications yet.</div>`;
+            return;
         }
+
+        const notifications = (await res.json()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         for (const notif of notifications) {
             const notifItem = document.createElement("div");
             notifItem.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-start";
             notifItem.innerHTML = `
-                <div>
-                    <div class="fw-bold">${notif.title || "New Update"}</div>
-                    ${notif.message}
-                </div>
-                <span class="text-muted small">${new Date(notif.timestamp).toLocaleString("id-ID")}</span>
-            `;
+            <div>
+                <div class="fw-bold">📢 Notification</div>
+                ${notif.message}
+            </div>
+            <span class="text-muted small">${new Date(notif.createdAt).toLocaleString("id-ID")}</span>
+        `;
             container.appendChild(notifItem);
         }
     }
 
-    window.onload = loadNotifications;
+    window.onload = () => {
+        loadNotifications();
+        setInterval(loadNotifications, 60000);
+    };
 </script>
 </body>
 </html>
