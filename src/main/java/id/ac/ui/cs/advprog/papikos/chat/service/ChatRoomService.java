@@ -8,12 +8,13 @@ import id.ac.ui.cs.advprog.papikos.chat.repository.ChatMessageRepository;
 import id.ac.ui.cs.advprog.papikos.chat.repository.ChatRoomRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Service
 public class ChatRoomService {
@@ -21,6 +22,10 @@ public class ChatRoomService {
     private final ChatRoomRepository roomRepo;
     private final ChatMessageRepository msgRepo;
     private final UserRepository userRepo;
+
+    // --- simple in‐memory caches for room & user lookups ---
+    private final ConcurrentMap<Long, ChatRoom> roomCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String,    User>     userCache = new ConcurrentHashMap<>();
 
     public ChatRoomService(ChatRoomRepository roomRepo,
                            ChatMessageRepository msgRepo,
@@ -32,19 +37,29 @@ public class ChatRoomService {
 
     /* ───────────────── messages ─────────────────────────────────────── */
 
-    @Async
+    /**
+     * Save a message into the given room by the given sender.
+     * Returns a completed future (no @Async thread‐hop).
+     */
     public CompletableFuture<ChatMessage> saveMessage(Long roomId,
                                                       String senderEmail,
                                                       ChatMessage msg) {
-        ChatRoom room = roomRepo.findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("Room not found"));
+        // fetch (or cache) the ChatRoom
+        ChatRoom room = roomCache.computeIfAbsent(roomId, id ->
+                roomRepo.findById(id)
+                        .orElseThrow(() -> new EntityNotFoundException("Room not found"))
+        );
 
-        User sender = userRepo.findByEmail(senderEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+        // fetch (or cache) the User
+        User sender = userCache.computeIfAbsent(senderEmail, email ->
+                userRepo.findByEmail(email)
+                        .orElseThrow(() -> new EntityNotFoundException("Sender not found"))
+        );
 
         msg.setRoom(room);
         msg.setSender(sender);
-        return CompletableFuture.completedFuture(msgRepo.save(msg));
+        ChatMessage saved = msgRepo.save(msg);
+        return CompletableFuture.completedFuture(saved);
     }
 
     /* ───────────────── rooms (create / find / list) ─────────────────── */
@@ -57,7 +72,6 @@ public class ChatRoomService {
                 .orElseThrow(() -> new EntityNotFoundException("Landlord not found"));
 
         String label = "Tenant " + tenant.getId() + " ↔ Landlord " + landlord.getId();
-
         ChatRoom room = ChatRoom.builder()
                 .name(label)
                 .tenant(tenant)
