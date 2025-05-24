@@ -87,6 +87,10 @@ dependencies {
 
 }
 
+tasks.test {
+	systemProperty("spring.profiles.active", "test")
+}
+
 // Optional: custom test tasks
 tasks.register<Test>("unitTest") {
 	description = "Runs unit tests."
