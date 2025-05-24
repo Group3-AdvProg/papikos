@@ -1,60 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>My Wallet</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans text-gray-800">
 
 <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
-    <!-- Back Button -->
-    <a href="/management.html" class="inline-block text-sm text-blue-600 hover:underline">
+    <a href="management.html" class="inline-block text-sm text-blue-600 hover:underline">
         ← Back to My Houses
     </a>
 
-    <!-- Wallet Overview -->
     <section class="bg-white p-6 rounded-xl shadow">
         <h2 class="text-2xl font-bold mb-4">My Wallet</h2>
-
-        <div class="px-4 flex justify-between items-center">
+        <div class="px-4 flex justify-between items-center mb-6">
             <div>
-                👋 Welcome, <span id="welcome-email" class="font-semibold"></span>
-                <br>
+                👋 Welcome, <span id="welcome-email" class="font-semibold"></span><br />
                 💰 Balance: <span id="wallet-balance" class="text-green-700 font-bold">...</span>
             </div>
         </div>
 
         <!-- Top Up Section -->
-        <div class="mt-6 mb-8">
+        <div class="mb-8">
             <h3 class="text-lg font-semibold mb-2">Top Up</h3>
-            <form id="topup-form" class="flex flex-col gap-3">
-                <input type="number" id="topup-amount" placeholder="Amount" min="1" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
-                <select id="topup-method" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48">
+            <div id="topup-section" class="flex flex-col gap-3">
+                <label for="topup-amount"></label><input type="number" id="topup-amount" placeholder="Amount" min="1"
+                                                         class="border px-3 py-2 rounded w-full md:w-48" />
+                <label for="topup-method"></label><select id="topup-method" class="border px-3 py-2 rounded w-full md:w-48">
                     <option value="bank">Bank Transfer</option>
                     <option value="virtual">Virtual Account</option>
                 </select>
-                <button id="topup-confirm-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Top Up</button>
-                <p id="topup-msg" class="mt-2 text-sm"></p>
-            </form>
+                <button type="button" id="topup-btn"
+                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Top Up
+                </button>
+                <p id="topup-msg" class="mt-2 text-sm text-red-600"></p>
+            </div>
         </div>
 
         <!-- Pay Rent Section -->
         <div class="mb-8">
             <h3 class="text-lg font-semibold mb-2">Pay Rent</h3>
-            <form id="payrent-form" class="flex flex-col gap-3">
-                <input type="text" id="pay-landlord" placeholder="Landlord ID" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
-                <input type="number" id="pay-amount" placeholder="Amount" min="1" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
-                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Pay Rent</button>
-                <p id="payrent-msg" class="mt-2 text-sm"></p>
-            </form>
+            <div id="payrent-section" class="flex flex-col gap-3">
+                <label for="pay-landlord"></label><input type="text" id="pay-landlord" placeholder="Landlord ID"
+                                                         class="border px-3 py-2 rounded w-full md:w-48" />
+                <label for="pay-amount"></label><input type="number" id="pay-amount" placeholder="Amount" min="1"
+                                                       class="border px-3 py-2 rounded w-full md:w-48" />
+                <button type="button" id="pay-btn"
+                        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Pay Rent
+                </button>
+                <p id="pay-msg" class="mt-2 text-sm text-red-600"></p>
+            </div>
         </div>
     </section>
 
-    <!-- Transaction History -->
     <section class="bg-white p-6 rounded-xl shadow">
         <h3 class="text-lg font-semibold mb-4">Transaction History</h3>
-        <a href="/wallet-history.html" class="inline-block text-blue-600 hover:underline text-sm">
+        <a href="wallet-history.html" class="inline-block text-blue-600 hover:underline text-sm">
             → View Full Transaction History
         </a>
     </section>
@@ -63,165 +67,154 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/navbarLoader.js"></script>
 <script>
-    let currentUserId = null;
-    let token = sessionStorage.getItem("token");
+    window.addEventListener("DOMContentLoaded", () => {
+      const token = sessionStorage.getItem("token");
+      if (!token) return redirectToLogin();
 
-    async function loadUserInfoAndBalance() {
-        if (!token) {
-            alert("Please login to use wallet features.");
-            window.location.href = "/login.html";
-            return;
-        }
+      // Load user profile and balance
+      async function loadProfile() {
         try {
-            const res = await fetch("/api/auth/users/me", {
-                headers: { Authorization: "Bearer " + token }
-            });
-            if (!res.ok) throw new Error("Invalid session");
-            const user = await res.json();
-            currentUserId = user.id;
-            document.getElementById("welcome-email").textContent = `${user.email || user.username} (ID: ${user.id})`;
-            updateBalance(user.balance);
+          const res = await fetch("/api/auth/users/me", {
+            headers: { "Authorization": "Bearer " + token }
+          });
+          if (!res.ok) throw new Error();
+          const user = await res.json();
+          document.getElementById("welcome-email").textContent = `${user.email} (ID: ${user.id})`;
+          document.getElementById("wallet-balance").textContent =
+            "Rp " + Number(user.balance).toLocaleString("id-ID");
         } catch {
-            alert("Session expired. Please log in again.");
-            sessionStorage.removeItem("token");
-            window.location.href = "/login.html";
+          redirectToLogin();
         }
-    }
+      }
 
-    function updateBalance(balance) {
-        const formatted = typeof balance === "number" && !isNaN(balance)
-            ? "Rp " + balance.toLocaleString("id-ID")
-            : "...";
-        document.getElementById("wallet-balance").textContent = formatted;
-    }
+      // Redirect to login on auth failure
+      function redirectToLogin() {
+        alert("Session expired. Please log in again.");
+        sessionStorage.removeItem("token");
+        window.location.href = "/login.html";
+      }
 
-    function refreshBalance() {
-        if (!currentUserId || !token) return;
-        fetch(`/api/wallet/balance?userId=${currentUserId}`, {
-            headers: { Authorization: "Bearer " + token }
-        })
-        .then(res => res.text())
-        .then(balance => updateBalance(Number(balance)))
-        .catch(() => {
-            alert("Session expired. Please log in again.");
-            sessionStorage.removeItem("token");
-            window.location.href = "/login.html";
-        });
-    }
+      // Top-Up logic
+      function bindTopUp() {
+        const btn = document.getElementById("topup-btn");
+        const msg = document.getElementById("topup-msg");
+        let inProgress = false;
 
-    // --- Top Up Logic ---
-    const topupForm = document.getElementById("topup-form");
-    const topupConfirmBtn = document.getElementById("topup-confirm-btn");
-    const topupMsg = document.getElementById("topup-msg");
+        btn.addEventListener("click", async () => {
+          if (inProgress) return;
+          inProgress = true;
+          msg.textContent = "";
 
-    topupForm.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const amount = parseFloat(document.getElementById("topup-amount").value);
-        const method = document.getElementById("topup-method").value;
-        topupMsg.textContent = "";
-
-        if (!currentUserId || isNaN(amount) || amount <= 0) {
-            topupMsg.textContent = "Please complete all fields.";
-            topupMsg.className = "text-red-600 mt-2 font-semibold";
+          const amount = parseFloat(document.getElementById("topup-amount").value);
+          const method = document.getElementById("topup-method").value;
+          if (isNaN(amount) || amount <= 0) {
+            msg.textContent = "Enter a valid amount.";
+            inProgress = false;
             return;
-        }
-
-        // Confirmation dialog for top up
-        if (!confirm(`Are you sure you want to top up Rp ${amount.toLocaleString("id-ID")} using ${method}?`)) {
+          }
+          if (!confirm(`Top up Rp ${amount.toLocaleString("id-ID")} via ${method}?`)) {
+            inProgress = false;
             return;
-        }
+          }
 
-        try {
+          btn.disabled = true;
+          btn.innerText = "Processing...";
+
+          try {
             const res = await fetch("/api/wallet/topup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token
-                },
-                body: JSON.stringify({
-                    userId: currentUserId,
-                    amount: amount,
-                    method: method
-                })
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify({ amount, method })
             });
+            if (res.status === 401) return redirectToLogin();
 
-            const data = await res.json();
-            if (data.status === "SUCCESS") {
-                alert("Top up successful!");
-                refreshBalance();
-                topupForm.reset();
-                topupMsg.textContent = "";
+            const { status, message } = await res.json();
+            if (status === "SUCCESS") {
+              alert("Top-up successful!");
+              await loadProfile();
+              document.getElementById("topup-amount").value = "";
             } else {
-                topupMsg.textContent = data.message || "Top up failed. Please try again.";
-                topupMsg.className = "text-red-600 mt-2 font-semibold";
+              msg.textContent = message || "Top-up failed.";
             }
-        } catch (err) {
-            topupMsg.textContent = "Top up failed. Please try again.";
-            topupMsg.className = "text-red-600 mt-2 font-semibold";
-        }
-    });
+          } catch {
+            msg.textContent = "Network error.";
+          } finally {
+            btn.disabled = false;
+            btn.innerText = "Top Up";
+            inProgress = false;
+          }
+        });
+      }
 
-    // --- Pay Rent Logic ---
-    const payrentForm = document.getElementById("payrent-form");
-    const payrentMsg = document.getElementById("payrent-msg");
+      // Pay-Rent logic
+      function bindPayRent() {
+        const btn = document.getElementById("pay-btn");
+        const msg = document.getElementById("pay-msg");
+        let inProgress = false;
 
-    payrentForm.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const landlordId = document.getElementById("pay-landlord").value;
-        const amount = parseFloat(document.getElementById("pay-amount").value);
-        payrentMsg.textContent = "";
+        btn.addEventListener("click", async () => {
+          if (inProgress) return;
+          inProgress = true;
+          msg.textContent = "";
 
-        if (!currentUserId || !landlordId || isNaN(amount) || amount <= 0) {
-            payrentMsg.textContent = "Please complete all fields.";
-            payrentMsg.className = "text-red-600 mt-2 font-semibold";
+          const landlordId = document.getElementById("pay-landlord").value.trim();
+          const amount = parseFloat(document.getElementById("pay-amount").value);
+          if (!landlordId || isNaN(amount) || amount <= 0) {
+            msg.textContent = "Complete all fields.";
+            inProgress = false;
             return;
-        }
-
-        // Confirmation dialog for pay rent
-        if (!confirm(`Are you sure you want to pay Rp ${amount.toLocaleString("id-ID")} to landlord ID ${landlordId}?`)) {
+          }
+          if (!confirm(`Pay Rp ${amount.toLocaleString("id-ID")} to landlord ${landlordId}?`)) {
+            inProgress = false;
             return;
-        }
+          }
 
-        try {
+          btn.disabled = true;
+          btn.innerText = "Processing...";
+
+          try {
             const res = await fetch("/api/wallet/pay-rent", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token
-                },
-                body: JSON.stringify({
-                    userId: currentUserId,
-                    targetId: landlordId,
-                    amount: amount
-                })
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify({ targetId: landlordId, amount })
             });
+            if (res.status === 401) return redirectToLogin();
 
-            if (res.status === 401) {
-                alert("Session expired. Please log in again.");
-                sessionStorage.removeItem("token");
-                window.location.href = "/login.html";
-                return;
-            }
-
-            const data = await res.json();
-            if (data.status === "SUCCESS") {
-                alert("Payment successful!");
-                refreshBalance();
-                payrentForm.reset();
-                payrentMsg.textContent = "";
+            const { status, message } = await res.json();
+            if (status === "SUCCESS") {
+              alert("Payment successful!");
+              await loadProfile();
+              document.getElementById("pay-landlord").value = "";
+              document.getElementById("pay-amount").value = "";
             } else {
-                payrentMsg.textContent = data.message || "Payment failed. Please try again.";
-                payrentMsg.className = "text-red-600 mt-2 font-semibold";
+              msg.textContent = message || "Payment failed.";
             }
-        } catch (err) {
-            payrentMsg.textContent = "Payment failed. Please try again.";
-            payrentMsg.className = "text-red-600 mt-2 font-semibold";
-        }
-    });
+          } catch {
+            msg.textContent = "Network error.";
+          } finally {
+            btn.disabled = false;
+            btn.innerText = "Pay Rent";
+            inProgress = false;
+          }
+        });
+      }
 
+<<<<<<< Updated upstream
     window.addEventListener("DOMContentLoaded", loadUserInfoAndBalance);
     window.addEventListener("DOMContentLoaded", () => {
         loadNavbar();
+=======
+      // Initialize everything
+      loadProfile();
+      bindTopUp();
+      bindPayRent();
+>>>>>>> Stashed changes
     });
 </script>
 </body>

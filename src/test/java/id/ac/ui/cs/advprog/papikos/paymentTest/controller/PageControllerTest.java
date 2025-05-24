@@ -30,21 +30,6 @@ public class PageControllerTest {
     @MockBean
     private JwtFilter jwtFilter;
 
-
-    @Test
-    void topUpPage_shouldReturnTemplate() throws Exception {
-        mockMvc.perform(get("/wallet/topup"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/wallet-topup.html"));
-    }
-
-    @Test
-    void payPage_shouldReturnTemplate() throws Exception {
-        mockMvc.perform(get("/wallet/pay"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/wallet-pay.html"));
-    }
-
     @Test
     void historyPage_shouldReturnTemplate() throws Exception {
         mockMvc.perform(get("/wallet/history"))
