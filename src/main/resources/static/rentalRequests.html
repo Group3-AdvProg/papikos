@@ -64,7 +64,7 @@
 </div>
 
 <script>
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const houseId = new URLSearchParams(window.location.search).get("houseId");
 
     async function fetchRentals() {

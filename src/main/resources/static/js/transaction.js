@@ -1,7 +1,7 @@
 let currentUserId = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   if (!token) {
     alert("Please login to view transaction history.");
@@ -42,7 +42,7 @@ document.getElementById("filter-form").addEventListener("submit", async function
   const to = document.getElementById("to").value;
   const resultsDiv = document.getElementById("results");
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   if (!token || !currentUserId) {
     alert("Missing authentication.");
     return;
