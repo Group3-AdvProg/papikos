@@ -6,6 +6,8 @@ import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
@@ -25,7 +27,7 @@ public class TransactionController {
     @GetMapping("/user/{id}")
     public List<Transaction> getTransactionsByUser(@PathVariable Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         return transactionService.getTransactionsByUserOrTarget(user);
     }
 
@@ -35,7 +37,7 @@ public class TransactionController {
             @RequestParam String type
     ) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         return transactionService.getTransactionsByUserAndType(user, type);
     }
 
@@ -46,7 +48,7 @@ public class TransactionController {
             @RequestParam String to
     ) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         LocalDateTime fromDate = LocalDateTime.parse(from, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         LocalDateTime toDate = LocalDateTime.parse(to, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         // You can adjust the page size as needed
@@ -61,7 +63,7 @@ public class TransactionController {
             @RequestParam String to
     ) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         LocalDateTime fromDate = LocalDateTime.parse(from, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         LocalDateTime toDate = LocalDateTime.parse(to, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         // You can adjust the page size as needed
@@ -71,7 +73,7 @@ public class TransactionController {
     @GetMapping("/user-or-target/{id}")
     public List<Transaction> getTransactionsByUserOrTarget(@PathVariable Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         return transactionService.getTransactionsByUserOrTarget(user);
     }
 }

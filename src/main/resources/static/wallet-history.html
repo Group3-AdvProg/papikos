@@ -20,7 +20,7 @@
 <!-- Main Content -->
 <main class="max-w-4xl mx-auto px-4 py-8">
     <!-- Filter Form -->
-    <form id="filter-form" class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-6">
+    <form id="filter-form" class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-6">
         <select id="type" class="border border-gray-300 px-3 py-2 rounded">
             <option value="">All Types</option>
             <option value="TOP_UP">Top-Up</option>
@@ -34,22 +34,16 @@
             <option value="amount-most">Amount (Most)</option>
             <option value="amount-least">Amount (Least)</option>
         </select>
+        <select id="direction-filter" class="border border-gray-300 px-3 py-2 rounded">
+            <option value="all">All Directions</option>
+            <option value="incoming">Incoming</option>
+            <option value="outgoing">Outgoing</option>
+        </select>
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Filter</button>
     </form>
 
     <!-- Results -->
     <div id="results" class="space-y-3 text-sm"></div>
-
-    <!-- Mini Transaction History Section -->
-    <div class="flex items-center gap-2 mb-2">
-        <label for="direction-filter" class="text-sm">Show:</label>
-        <select id="direction-filter" class="border border-gray-300 px-2 py-1 rounded text-sm">
-            <option value="all">All</option>
-            <option value="incoming">Incoming</option>
-            <option value="outgoing">Outgoing</option>
-        </select>
-    </div>
-    <div id="mini-transactions" class="space-y-2"></div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -135,7 +129,20 @@
     function renderTransactions() {
       const resultsDiv = document.getElementById("results");
       const sortBy = document.getElementById("sort")?.value || "latest";
-      const transactions = sortTransactions(lastTransactions, sortBy);
+      const directionFilter = document.getElementById("direction-filter")?.value || "all";
+      let transactions = sortTransactions(lastTransactions, sortBy);
+
+      if (directionFilter !== "all") {
+        transactions = transactions.filter(tx => {
+          let direction = "-";
+          if (tx.type === "TOP_UP") {
+            direction = "incoming";
+          } else if (tx.targetUser && currentUserId) {
+            direction = String(tx.targetUser.id) === String(currentUserId) ? "incoming" : "outgoing";
+          }
+          return direction === directionFilter;
+        });
+      }
 
       if (!transactions.length) {
         resultsDiv.innerHTML = `<p class="text-gray-500">No transactions found.</p>`;
@@ -151,6 +158,14 @@
           direction = String(tx.targetUser.id) === String(currentUserId) ? "Incoming" : "Outgoing";
         }
 
+        // Determine from/to display
+        let fromTo = "";
+        if (tx.type === "TOP_UP") {
+          fromTo = `From <span class="font-semibold">System</span> to <span class="font-semibold">${tx.user?.fullName || tx.user?.username || "You"}</span>`;
+        } else if (tx.user && tx.targetUser) {
+          fromTo = `From <span class="font-semibold">${tx.user.fullName || tx.user.username || "User"}</span> to <span class="font-semibold">${tx.targetUser.fullName || tx.targetUser.username || "User"}</span>`;
+        }
+
         return `
         <div class="border p-3 rounded bg-gray-50">
           <div class="flex justify-between items-center">
@@ -159,7 +174,8 @@
           </div>
           <div>
             Rp ${Number(tx.amount || 0).toLocaleString('id-ID')} via ${tx.method || "-"}
-            ${tx.targetUser && tx.targetUser.fullName ? `<br>To: <span class="font-semibold">${tx.targetUser.fullName}</span>` : ""}
+            <br>
+            <span class="text-xs">${fromTo}</span>
             <br>
             <span class="text-xs text-gray-500">${tx.timestamp ? new Date(tx.timestamp).toLocaleString("id-ID") : ""}</span>
             <br>

@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.paymentTest.service;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.paymentMain.model.Transaction;
 import id.ac.ui.cs.advprog.papikos.paymentMain.repository.TransactionRepository;
 import id.ac.ui.cs.advprog.papikos.paymentMain.service.TransactionService;
@@ -24,6 +25,9 @@ public class TransactionServiceTest {
 
     @Mock
     private TransactionRepository transactionRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private TransactionService transactionService;
@@ -114,5 +118,70 @@ public class TransactionServiceTest {
         assertEquals(t1, result.getContent().get(0));
         assertEquals(t2, result.getContent().get(1));
         verify(transactionRepository, times(1)).findByUserAndTimestampBetween(mockUser, from, to, pageable);
+    }
+
+    @Test
+    void createTransaction_shouldCallRecordTransactionAndSave() {
+        User user = mockUser;
+        when(transactionRepository.save(any(Transaction.class))).thenAnswer(i -> i.getArgument(0));
+        when(transactionRepository.findByUser(user)).thenReturn(List.of());
+        when(userRepository.findById(user.getId())).thenReturn(java.util.Optional.of(user));
+
+        transactionService.createTransaction(user.getId(), 50000.0, "bank", "TOP_UP");
+
+        verify(userRepository, times(1)).findById(user.getId());
+        verify(transactionRepository, times(1)).save(any(Transaction.class));
+    }
+
+    @Test
+    void createTransaction_shouldThrowExceptionWhenUserNotFound() {
+        Long userId = 999L;
+        when(userRepository.findById(userId)).thenReturn(java.util.Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            transactionService.createTransaction(userId, 50000.0, "bank", "TOP_UP");
+        });
+
+        assertEquals("User not found", ex.getMessage());
+    }
+
+    @Test
+    void getTransactionsByUserTypeAndDate_shouldReturnPage() {
+        LocalDateTime from = LocalDateTime.of(2024, 1, 1, 0, 0);
+        LocalDateTime to = LocalDateTime.of(2024, 1, 31, 23, 59);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+
+        Transaction t1 = Transaction.builder().user(mockUser).type("TOP_UP").timestamp(LocalDateTime.of(2024, 1, 5, 10, 0)).build();
+        Transaction t2 = Transaction.builder().user(mockUser).type("TOP_UP").timestamp(LocalDateTime.of(2024, 1, 20, 15, 0)).build();
+
+        Page<Transaction> mockPage = new PageImpl<>(List.of(t1, t2));
+
+        when(transactionRepository.findByUserAndTypeAndTimestampBetween(mockUser, "TOP_UP", from, to, pageRequest))
+                .thenReturn(mockPage);
+
+        Page<Transaction> result = transactionService.getTransactionsByUserTypeAndDate(mockUser, "TOP_UP", from, to, pageRequest);
+
+        assertEquals(2, result.getTotalElements());
+        assertEquals(t1, result.getContent().get(0));
+        assertEquals(t2, result.getContent().get(1));
+        verify(transactionRepository, times(1)).findByUserAndTypeAndTimestampBetween(mockUser, "TOP_UP", from, to, pageRequest);
+    }
+
+    @Test
+    void getTransactionsByUserOrTarget_shouldReturnCombinedAndSortedList() {
+        Transaction asPayer = Transaction.builder().user(mockUser).type("TOP_UP").timestamp(LocalDateTime.of(2024, 1, 10, 10, 0)).build();
+        Transaction asRecipient = Transaction.builder().targetUser(mockUser).type("RENT_PAYMENT").timestamp(LocalDateTime.of(2024, 1, 15, 12, 0)).build();
+
+        when(transactionRepository.findByUser(mockUser)).thenReturn(List.of(asPayer));
+        when(transactionRepository.findByTargetUser(mockUser)).thenReturn(List.of(asRecipient));
+
+        List<Transaction> result = transactionService.getTransactionsByUserOrTarget(mockUser);
+
+        assertEquals(2, result.size());
+        // Should be sorted by timestamp descending
+        assertEquals(asRecipient, result.get(0));
+        assertEquals(asPayer, result.get(1));
+        verify(transactionRepository, times(1)).findByUser(mockUser);
+        verify(transactionRepository, times(1)).findByTargetUser(mockUser);
     }
 }
