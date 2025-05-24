@@ -205,16 +205,15 @@
         });
       }
 
-<<<<<<< Updated upstream
-    window.addEventListener("DOMContentLoaded", loadUserInfoAndBalance);
-    window.addEventListener("DOMContentLoaded", () => {
+      // Navbar loader (if you have this function)
+      if (typeof loadNavbar === "function") {
         loadNavbar();
-=======
+      }
+
       // Initialize everything
       loadProfile();
       bindTopUp();
       bindPayRent();
->>>>>>> Stashed changes
     });
 </script>
 </body>

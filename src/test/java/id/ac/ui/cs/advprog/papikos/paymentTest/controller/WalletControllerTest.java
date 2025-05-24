@@ -16,14 +16,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.security.Principal;
 import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import id.ac.ui.cs.advprog.papikos.paymentMain.payload.request.PaymentRequest;
-import org.springframework.web.server.ResponseStatusException;
 
 @WebMvcTest(controllers = WalletController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -49,10 +48,13 @@ public class WalletControllerTest {
 
     private TopUpRequest buildRequest(String method) {
         TopUpRequest request = new TopUpRequest();
-        request.setUserId(1L); // Use Long for compatibility with controller
         request.setAmount(100_000);
         request.setMethod(method);
         return request;
+    }
+
+    private Principal mockPrincipal(String email) {
+        return () -> email;
     }
 
     @Test
@@ -62,15 +64,13 @@ public class WalletControllerTest {
         User user = new User();
         user.setId(1L);
         user.setBalance(0.0);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        user.setEmail("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
 
-        var mvcResult = mockMvc.perform(post("/api/wallet/topup")
+        mockMvc.perform(post("/api/wallet/topup")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(mvcResult))
+                .content(objectMapper.writeValueAsString(request))
+                .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("Top-up successful."))
@@ -84,15 +84,13 @@ public class WalletControllerTest {
         User user = new User();
         user.setId(1L);
         user.setBalance(0.0);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        user.setEmail("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
 
-        var mvcResult = mockMvc.perform(post("/api/wallet/topup")
+        mockMvc.perform(post("/api/wallet/topup")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(mvcResult))
+                .content(objectMapper.writeValueAsString(request))
+                .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("Top-up successful."))
@@ -106,15 +104,13 @@ public class WalletControllerTest {
         User user = new User();
         user.setId(1L);
         user.setBalance(0.0);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user)); // <-- add this
+        user.setEmail("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
 
-        var mvcResult = mockMvc.perform(post("/api/wallet/topup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(mvcResult))
+        mockMvc.perform(post("/api/wallet/topup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Invalid top-up method."))
@@ -129,15 +125,13 @@ public class WalletControllerTest {
         User user = new User();
         user.setId(1L);
         user.setBalance(0.0);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        user.setEmail("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
 
-        var mvcResult = mockMvc.perform(post("/api/wallet/topup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(mvcResult))
+        mockMvc.perform(post("/api/wallet/topup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Top-up failed."))
@@ -147,15 +141,12 @@ public class WalletControllerTest {
     @Test
     void topUp_shouldFailWhenUserNotFound() throws Exception {
         TopUpRequest request = buildRequest("bank");
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
 
-        var mvcResult = mockMvc.perform(post("/api/wallet/topup")
+        mockMvc.perform(post("/api/wallet/topup")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(mvcResult))
+                .content(objectMapper.writeValueAsString(request))
+                .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isNotFound())
                 .andExpect(status().reason("User not found"));
     }
@@ -165,21 +156,21 @@ public class WalletControllerTest {
         User user = new User();
         user.setId(1L);
         user.setBalance(200.0);
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        user.setEmail("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
 
         mockMvc.perform(get("/api/wallet/balance")
-                        .param("userId", "1"))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(content().string("200.0"));
     }
 
     @Test
     void getBalance_shouldFailWhenUserNotFound() throws Exception {
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/wallet/balance")
-                        .param("userId", "99"))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isNotFound())
                 .andExpect(status().reason("User not found"));
     }
@@ -194,21 +185,19 @@ public class WalletControllerTest {
         User tenant = new User();
         tenant.setId(1L);
         tenant.setBalance(200.0);
+        tenant.setEmail("test@example.com");
 
         User landlord = new User();
         landlord.setId(2L);
         landlord.setBalance(50.0);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(tenant));
         when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
-        var mvcResult = mockMvc.perform(post("/api/wallet/pay-rent")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(mvcResult))
+        mockMvc.perform(post("/api/wallet/pay-rent")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("Rent payment successful."))
@@ -222,17 +211,14 @@ public class WalletControllerTest {
         request.setTargetId(2L);
         request.setAmount(100.0);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
 
-        var mvcResult = mockMvc.perform(post("/api/wallet/pay-rent")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isNotFound())
-                .andExpect(status().reason("Tenant not found"));
+        mockMvc.perform(post("/api/wallet/pay-rent")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .principal(mockPrincipal("test@example.com")))
+            .andExpect(status().isNotFound())
+            .andExpect(status().reason("Tenant not found"));
     }
 
     @Test
@@ -245,17 +231,15 @@ public class WalletControllerTest {
         User tenant = new User();
         tenant.setId(1L);
         tenant.setBalance(200.0);
+        tenant.setEmail("test@example.com");
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(tenant));
         when(userRepository.findById(2L)).thenReturn(Optional.empty());
 
-        var mvcResult = mockMvc.perform(post("/api/wallet/pay-rent")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(mvcResult))
+        mockMvc.perform(post("/api/wallet/pay-rent")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isNotFound())
                 .andExpect(status().reason("Landlord not found"));
     }
@@ -270,21 +254,19 @@ public class WalletControllerTest {
         User tenant = new User();
         tenant.setId(1L);
         tenant.setBalance(100.0);
+        tenant.setEmail("test@example.com");
 
         User landlord = new User();
         landlord.setId(2L);
         landlord.setBalance(50.0);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(tenant));
         when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
-        var mvcResult = mockMvc.perform(post("/api/wallet/pay-rent")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mockMvc.perform(asyncDispatch(mvcResult))
+        mockMvc.perform(post("/api/wallet/pay-rent")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Insufficient balance."))
