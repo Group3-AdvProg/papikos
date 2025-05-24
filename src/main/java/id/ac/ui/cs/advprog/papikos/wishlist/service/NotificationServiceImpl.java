@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.service;
 
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
@@ -20,16 +22,17 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepo;
     private final HouseRepository houseRepo;
     private final WishlistItemRepository wishlistRepo;
+    private final UserRepository userRepo;
 
     @Override
-    public List<String> getNotificationsByTenant(Long tenantId) {
-        return notificationRepo.findByTenantId(tenantId)
+    public List<String> getNotificationsByReceiver(Long receiverId) {
+        return notificationRepo.findByReceiverId(receiverId)
                 .stream().map(Notification::getMessage).toList();
     }
 
     @Override
-    public List<String> getNotificationsByOwner(Long ownerId) {
-        return notificationRepo.findByOwnerId(ownerId)
+    public List<String> getNotificationsBySender(Long senderId) {
+        return notificationRepo.findBySenderId(senderId)
                 .stream().map(Notification::getMessage).toList();
     }
 
@@ -47,8 +50,8 @@ public class NotificationServiceImpl implements NotificationService {
 
             for (Long tenantId : tenantIds) {
                 var notif = Notification.builder()
-                        .tenantId(tenantId)
-                        .ownerId(ownerId)
+                        .receiverId(tenantId)
+                        .senderId(ownerId)
                         .message("House " + houseId + " is now available!")
                         .createdAt(LocalDateTime.now())
                         .isRead(false)
@@ -57,6 +60,20 @@ public class NotificationServiceImpl implements NotificationService {
             }
         });
         return CompletableFuture.completedFuture(null);
+    }
+
+    public void sendToAllUsers(Long senderId, String message) {
+        List<User> users = userRepo.findAll();
+        for (User user : users) {
+            Notification notif = Notification.builder()
+                    .receiverId(user.getId())
+                    .senderId(senderId)
+                    .message(message)
+                    .createdAt(LocalDateTime.now())
+                    .isRead(false)
+                    .build();
+            notificationRepo.save(notif);
+        }
     }
 }
 
