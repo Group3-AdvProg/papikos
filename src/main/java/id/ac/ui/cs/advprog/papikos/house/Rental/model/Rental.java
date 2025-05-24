@@ -4,6 +4,8 @@ import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 
@@ -20,6 +22,7 @@ public class Rental {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "house_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private House house;
 
     private String fullName;

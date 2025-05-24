@@ -242,6 +242,10 @@ class HouseManagementControllerTest {
         rental.setId(10L);
         rental.setApproved(false);
 
+        User tenant = new User();
+        tenant.setId(99L);
+        rental.setTenant(tenant);
+
         House testHouse = new House("Kos Z", "Jl. Kucing", "Deskripsi", 3, 2000000.0,
                 "https://example.com/kosz.jpg", owner);
         testHouse.setId(1L);
@@ -333,6 +337,10 @@ class HouseManagementControllerTest {
         rental.setId(12L);
         rental.setApproved(false);
 
+        User tenant = new User();
+        tenant.setId(99L);
+        rental.setTenant(tenant);
+
         House house = new House("Kos Full", "Jl. Penuh", "desc", 0, 2000000.0,
                 "https://example.com/kosz.jpg", owner);
         house.setId(1L);
@@ -350,4 +358,56 @@ class HouseManagementControllerTest {
         verify(houseManagementService, never()).updateHouse(anyLong(), any());
     }
 
+    @Test
+    void testRejectRental_ValidOwner_Success() throws Exception {
+        Rental rental = new Rental();
+        rental.setId(20L);
+        rental.setApproved(false);
+
+        rental.setTenant(new User() {{ setId(3L); }});
+
+        House house = new House("Kos Y", "Jl. Rejeki", "desc", 2, 1800000.0,
+                "https://example.com/kosy.jpg", owner);
+        house.setId(2L);
+        rental.setHouse(house);
+
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+        when(rentalService.getRentalById(20L)).thenReturn(Optional.of(rental));
+
+        mockMvc.perform(post("/api/management/rentals/20/reject")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Rental rejected."));
+
+        verify(rentalService, times(1)).deleteRental(20L);
+        verify(notificationService, times(1)).notifyTenantRentalRejected(1L, 3L, 2L);
+    }
+
+    @Test
+    void testRejectRental_Forbidden() throws Exception {
+        Rental rental = new Rental();
+        rental.setId(30L);
+        rental.setApproved(false);
+
+        User otherLandlord = new User();
+        otherLandlord.setId(99L);
+
+        House house = new House("Kos X", "Jl. Gajah", "desc", 5, 1900000.0,
+                "https://example.com/kosx.jpg", otherLandlord);
+        house.setId(5L);
+        rental.setHouse(house);
+
+        rental.setTenant(new User() {{ setId(100L); }});
+
+        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
+        when(rentalService.getRentalById(30L)).thenReturn(Optional.of(rental));
+
+        mockMvc.perform(post("/api/management/rentals/30/reject")
+                        .principal(() -> "owner@example.com"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("You do not own this house."));
+
+        verify(rentalService, never()).deleteRental(anyLong());
+        verify(notificationService, never()).notifyTenantRentalRejected(any(), any(), any());
+    }
 }

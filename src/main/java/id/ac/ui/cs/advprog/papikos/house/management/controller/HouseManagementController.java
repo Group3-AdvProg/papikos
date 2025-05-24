@@ -160,4 +160,28 @@ public class HouseManagementController {
 
         return ResponseEntity.ok("Rental approved.");
     }
+
+    @PostMapping("/rentals/{rentalId}/reject")
+    public ResponseEntity<?> rejectRental(@PathVariable Long rentalId, Principal principal) {
+        User landlord = userRepository.findByEmail(principal.getName()).orElseThrow();
+        Rental rental = rentalService.getRentalById(rentalId).orElseThrow();
+        House house = rental.getHouse();
+
+        if (!house.getOwner().getId().equals(landlord.getId())) {
+            logger.warn("User [{}] attempted to reject rental [{}] for house [{}] they do not own", landlord.getEmail(), rentalId, house.getId());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not own this house.");
+        }
+
+        rentalService.deleteRental(rentalId);
+        logger.info("User [{}] rejected and deleted rental [{}] for house [{}]", landlord.getEmail(), rentalId, house.getId());
+
+        notificationService.notifyTenantRentalRejected(
+                landlord.getId(),
+                rental.getTenant().getId(),
+                house.getId()
+        );
+
+        return ResponseEntity.ok("Rental rejected.");
+    }
+
 }
