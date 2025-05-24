@@ -3,22 +3,33 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tenant House Detail</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <title>House Detail</title>
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+    />
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+            rel="stylesheet"
+    />
     <style>
         :root { --bs-primary: #7065F0; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f9f9ff; }
-        .navbar { background-color: var(--bs-primary); }
-        .navbar a, .navbar-brand { color: white; }
+        body  { font-family: 'Segoe UI', sans-serif; background: #f9f9ff; }
+        .navbar { background: var(--bs-primary); }
+        .navbar a, .navbar-brand { color: #fff; }
         .navbar a:hover { color: #ddd; }
-        .section-title { margin: 2rem 0 1rem; color: var(--bs-primary); }
     </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-white shadow-sm w-100">
     <div class="container">
         <a class="navbar-brand fw-bold text-primary" href="/rental.html">Papikos</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+        >
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -31,84 +42,141 @@
     </div>
 </nav>
 
-<div class="container mt-4">
-    <h2 class="section-title">House Details</h2>
-    <div id="houseDetail"></div>
+<div class="container py-4">
+    <div id="detailArea" class="row justify-content-center"></div>
+    <a class="btn btn-outline-secondary mt-4" href="/rental.html">⬅ Back to list</a>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    window.onload = () => {
-        const token = localStorage.getItem("token");
-        if (!token) return window.location.href = "/login.html";
+    const token      = localStorage.getItem("token");
+    const houseId    = new URLSearchParams(location.search).get("houseId");
+    let currentUser  = null;
+    let currentHouse = null;
+    let houseOwner   = null;
 
-        fetch("/api/auth/users/me", {
-            headers: { Authorization: "Bearer " + token }
-        })
-            .then(res => {
-                if (!res.ok) throw new Error("Unauthorized");
-                return res.json();
-            })
-            .then(user => {
-                if (user.role !== "TENANT") {
-                    window.location.href = "/login.html";
-                } else {
-                    loadHouseDetail(token);
-                }
-            })
-            .catch(() => window.location.href = "/login.html");
-    };
+    document.addEventListener("DOMContentLoaded", async () => {
+        if (!token) return location.href = "/login.html";
 
-    function getQueryParam(param) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(param);
+        // check tenant role
+        const meResp = await fetch("/api/auth/users/me", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const me = await meResp.json();
+        if (!me.role?.includes("TENANT")) return location.href = "/login.html";
+        currentUser = me;
+
+        await loadHouse();
+    });
+
+    async function loadHouse() {
+        try {
+            // fetch the house (which now includes nested .owner)
+            const res = await fetch(`/api/houses/${houseId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error("House fetch failed");
+            currentHouse = await res.json();
+            // read the embedded owner object
+            houseOwner = currentHouse.owner || null;
+            render();
+        } catch (e) {
+            document.getElementById("detailArea").innerHTML =
+                `<div class="alert alert-danger">Failed to load house.</div>`;
+        }
     }
 
-    function loadHouseDetail(token) {
-        const houseId = getQueryParam("houseId");
-        fetch(`/api/boarding-houses/${houseId}`, {
-            headers: { Authorization: "Bearer " + token }
-        })
-            .then(response => response.json())
-            .then(house => {
-                document.getElementById("houseDetail").innerHTML = `
-        <div class="card p-4">
-          <h4 class="text-primary">${house.name}</h4>
-          <p><strong>Location:</strong> ${house.location}</p>
-          <p><strong>Price:</strong> Rp ${house.price.toLocaleString()}</p>
-          <p><strong>Description:</strong> ${house.description}</p>
-          <label for="duration" class="form-label">Duration (months):</label>
-          <input type="number" id="duration" class="form-control mb-2" value="6" min="1">
-          <button class="btn btn-primary mt-2" onclick="bookNow(${house.id})">Book Now</button>
+    function render() {
+        const h     = currentHouse;
+        const addr  = h.location ?? h.address ?? "-";
+        const price = (h.monthlyRent ?? h.price ?? 0).toLocaleString("id-ID");
+        const rooms = h.numberOfRooms ?? "-";
+        const img   = h.imageUrl || "https://via.placeholder.com/600x350.png?text=No+Image";
+
+        // Owner details (if available)
+        const ownerBlock = houseOwner
+            ? `
+          <div class="card mb-4">
+            <div class="card-header bg-light fw-semibold">Owner Details</div>
+            <div class="card-body">
+              <p class="mb-1"><strong>Name:</strong> ${houseOwner.fullName}</p>
+              <p class="mb-1"><strong>Phone:</strong> ${houseOwner.phoneNumber}</p>
+              <p class="mb-0"><strong>Email:</strong> ${houseOwner.email}</p>
+            </div>
+          </div>
+        `
+            : `<div class="alert alert-warning">Owner info not available.</div>`;
+
+        document.getElementById("detailArea").innerHTML = `
+        <div class="col-md-8">
+          ${ownerBlock}
+          <div class="card shadow-sm border-0">
+            <img src="${img}" class="card-img-top" alt="house" />
+            <div class="card-body">
+              <p class="text-uppercase fw-bold text-muted small mb-1">${addr}</p>
+              <h3 class="text-primary fw-bold">${h.name}</h3>
+              <h4 class="fw-bold mt-3">Rp ${price}</h4>
+              <div class="text-muted small mb-3">${rooms} rooms</div>
+              <p>${h.description ?? "-"}</p>
+
+              <!-- Check-in Date -->
+              <label for="checkInDate" class="form-label fw-semibold">Check-in Date</label>
+              <input type="date" id="checkInDate" class="form-control w-25 mb-3" required />
+
+              <!-- Duration -->
+              <label for="duration" class="form-label fw-semibold">Duration (months)</label>
+              <input type="number" id="duration" class="form-control w-25 mb-3" value="1" min="1" step="1" required />
+
+              <button class="btn btn-primary w-100" onclick="bookNow()">Book Now</button>
+            </div>
+          </div>
         </div>
       `;
-            });
     }
 
-    function bookNow(houseId) {
-        const duration = document.getElementById("duration").value;
-        const token = localStorage.getItem("token");
+    async function bookNow() {
+        const checkIn  = document.getElementById("checkInDate").value;
+        const duration = parseInt(document.getElementById("duration").value, 10);
+
+        if (!checkIn) {
+            return alert("Please choose a check-in date!");
+        }
+        if (!duration || duration < 1) {
+            return alert("Duration must be at least 1 month!");
+        }
+
+        const baseRent  = currentHouse.monthlyRent ?? currentHouse.price ?? 0;
+        const totalCost = baseRent * duration;
 
         const payload = {
-            houseId: houseId,
-            tenantId: 1,
-            durationInMonths: parseInt(duration),
-            isPaid: false
+            houseId:          currentHouse.id,
+            tenantId:         currentUser.id,
+            checkInDate:      checkIn,
+            durationInMonths: duration,
+            totalPrice:       totalCost,
+            isPaid:           false
         };
 
-        fetch('/api/rentals', {
-            method: 'POST',
-            headers: {
-                Authorization: "Bearer " + token,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        }).then(res => {
+        try {
+            const res = await fetch("/api/rentals", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
             if (res.ok) {
                 alert("Booking berhasil!");
+                location.href = `/rentalRequests.html?houseId=${currentHouse.id}`;
             } else {
-                alert("Gagal booking.");
+                const err = await res.text();
+                alert("Gagal booking: " + err);
             }
-        });
+        } catch (e) {
+            alert("Booking error: " + e.message);
+        }
     }
 </script>
 </body>
