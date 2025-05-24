@@ -38,3 +38,4 @@ out/
 
 papikos.log
 *.log
+papikos.log.*

@@ -49,7 +49,6 @@
         if (res.ok) {
             const data = await res.json();
 
-            // ← STORE IN sessionStorage instead of sessionStorage
             sessionStorage.setItem("token", data.token);
 
             const payload     = JSON.parse(atob(data.token.split('.')[1]));

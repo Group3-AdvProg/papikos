@@ -37,18 +37,21 @@ public class SecurityConfig {
                                 "/ws/**",         // sockjs handshake
                                 "/topic/**",      // stomp fallback
                                 "/css/**", "/js/**", "/images/**",
-                                "/*.html", "/",
-                                "/login.html", "/register.html",
-                                "/management.html", "/houseDetails.html", "/rental.html",
-                                "/rentalRequests.html", "/inbox.html", "/admin.html",
-                                "/dashboard.html", "/wallet-*.html", "/transaction-history.html"
+                                "/*.html", "/"
+//                                "/login.html", "/register.html",
+//                                "/management.html", "/houseDetails.html", "/rental.html",
+//                                "/rentalRequests.html", "/inbox.html", "/admin.html",
+//                                "/dashboard.html", "/wallet-*.html", "/transaction-history.html"
                         ).permitAll()
 
+                        .requestMatchers("/api/auth/users/me").authenticated()
                         /* ---------- management & boarding-houses ---------- */
                         .requestMatchers("/api/management/**").hasRole("LANDLORD")
                         .requestMatchers("/api/auth/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/boarding-houses/**").hasRole("TENANT")
                         .requestMatchers("/api/notifications/broadcast").hasRole("ADMIN")
+
+                        .requestMatchers("/api/auth/**").permitAll()
 
                         /* ---------- chat: only TENANT can create rooms ---------- */
                         .requestMatchers(HttpMethod.POST, "/api/chat/rooms")

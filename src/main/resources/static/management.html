@@ -10,37 +10,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg bg-white shadow-sm w-100">
-    <div class="container">
-        <a class="navbar-brand fw-bold text-primary" href="#">Papikos</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="/management.html">My Houses</a></li>
-                <li class="nav-item"><a class="nav-link" href="/wallet.html">Wallet</a></li>
-                <!-- New Chat Button -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/chat.html">
-                        <i class="bi bi-chat-dots"></i> Chat
-                    </a>
-                </li>
-                <li class="nav-item dropdown" id="user-dropdown" style="display: none;">
-                    <a class="btn btn-outline-primary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <span id="user-email">User</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#" id="logout-btn">Logout</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item" id="login-btn"><a class="btn btn-outline-primary me-2" href="/login.html">Login</a></li>
-                <li class="nav-item" id="signup-btn"><a class="btn btn-primary" href="/register.html">Sign up</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<div id="navbar-placeholder"></div>
 
 <div class="container py-4">
     <h1 class="fw-bold">My Boarding Houses</h1>
@@ -116,6 +86,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
 <script>
     const token = sessionStorage.getItem("token");
 
@@ -262,39 +233,6 @@
         }
     }
 
-    function setupNavbar() {
-        const token = sessionStorage.getItem("token");
-        const loginBtn = document.getElementById("login-btn");
-        const signupBtn = document.getElementById("signup-btn");
-        const userDropdown = document.getElementById("user-dropdown");
-        const userEmailSpan = document.getElementById("user-email");
-        const logoutBtn = document.getElementById("logout-btn");
-
-        if (!token) return;
-
-        fetch("/api/auth/me", {
-            headers: { Authorization: "Bearer " + token }
-        })
-            .then(res => res.json())
-            .then(user => {
-                userEmailSpan.textContent = user.email;
-                loginBtn.style.display = "none";
-                signupBtn.style.display = "none";
-                userDropdown.style.display = "block";
-
-                logoutBtn.addEventListener("click", () => {
-                    sessionStorage.removeItem("token");
-                    window.location.href = "/login.html";
-                });
-            })
-            .catch(() => console.warn("Failed to fetch user info for navbar"));
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-        loadUserInfo();
-        fetchHouses();
-        setupNavbar();
-    });
 
     ["keyword", "minRent", "maxRent"].forEach(id => {
         document.getElementById(id).addEventListener("input", debounce(async function () {
@@ -346,6 +284,12 @@
             alert("Error checking approval status. Please try again.");
         }
     }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        loadNavbar();
+        loadUserInfo();
+        fetchHouses();
+    });
 </script>
 </body>
 </html>

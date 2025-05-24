@@ -6,6 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+<div id="navbar-placeholder"></div>
 
 <!-- Header -->
 <header class="bg-blue-100 border border-blue-300 py-4 shadow-sm">
@@ -46,125 +47,127 @@
     <div id="results" class="space-y-3 text-sm"></div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
 <script>
     let token = sessionStorage.getItem("token");
     let currentUserId = null;
     let lastTransactions = [];
 
     async function loadUser() {
-      if (!token) {
-        alert("Please log in.");
-        window.location.href = "/login.html";
-        return;
-      }
+        if (!token) {
+            alert("Please log in.");
+            window.location.href = "/login.html";
+            return;
+        }
 
-      try {
-        const res = await fetch("/api/auth/users/me", {
-          headers: { Authorization: "Bearer " + token }
-        });
+        try {
+            const res = await fetch("/api/auth/users/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
 
-        if (!res.ok) throw new Error("Unauthorized");
-        const user = await res.json();
-        currentUserId = user.id;
-        fetchAndRenderTransactions(`/api/transaction/user/${currentUserId}`);
-      } catch {
-        alert("Session expired. Please log in again.");
-        sessionStorage.removeItem("token");
-        window.location.href = "/login.html";
-      }
+            if (!res.ok) throw new Error("Unauthorized");
+            const user = await res.json();
+            currentUserId = user.id;
+            fetchAndRenderTransactions(`/api/transaction/user/${currentUserId}`);
+        } catch {
+            alert("Session expired. Please log in again.");
+            sessionStorage.removeItem("token");
+            window.location.href = "/login.html";
+        }
     }
 
     function sortTransactions(transactions, sortBy) {
-      const sorted = [...transactions];
-      switch (sortBy) {
-        case "earliest":
-          sorted.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-          break;
-        case "latest":
-          sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          break;
-        case "amount-most":
-          sorted.sort((a, b) => Number(b.amount) - Number(a.amount));
-          break;
-        case "amount-least":
-          sorted.sort((a, b) => Number(a.amount) - Number(b.amount));
-          break;
-        default:
-          // Default to latest
-          sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      }
-      return sorted;
+        const sorted = [...transactions];
+        switch (sortBy) {
+            case "earliest":
+                sorted.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                break;
+            case "latest":
+                sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                break;
+            case "amount-most":
+                sorted.sort((a, b) => Number(b.amount) - Number(a.amount));
+                break;
+            case "amount-least":
+                sorted.sort((a, b) => Number(a.amount) - Number(b.amount));
+                break;
+            default:
+                // Default to latest
+                sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+        return sorted;
     }
 
     async function fetchAndRenderTransactions(url) {
-      const resultsDiv = document.getElementById("results");
-      resultsDiv.innerHTML = "Loading...";
-      try {
-        const res = await fetch(url, {
-          headers: { Authorization: "Bearer " + token }
-        });
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "Loading...";
+        try {
+            const res = await fetch(url, {
+                headers: { Authorization: "Bearer " + token }
+            });
 
-        if (res.status === 401) {
-          alert("Session expired. Please log in again.");
-          sessionStorage.removeItem("token");
-          window.location.href = "/login.html";
-          return;
+            if (res.status === 401) {
+                alert("Session expired. Please log in again.");
+                sessionStorage.removeItem("token");
+                window.location.href = "/login.html";
+                return;
+            }
+
+            if (!res.ok) throw new Error("Failed to fetch");
+
+            let transactions = await res.json();
+            if (!Array.isArray(transactions)) transactions = [transactions];
+
+            lastTransactions = transactions; // Save for sorting
+
+            renderTransactions();
+        } catch {
+            resultsDiv.innerHTML = `<p class="text-red-500">Failed to load transactions.</p>`;
         }
-
-        if (!res.ok) throw new Error("Failed to fetch");
-
-        let transactions = await res.json();
-        if (!Array.isArray(transactions)) transactions = [transactions];
-
-        lastTransactions = transactions; // Save for sorting
-
-        renderTransactions();
-      } catch {
-        resultsDiv.innerHTML = `<p class="text-red-500">Failed to load transactions.</p>`;
-      }
     }
 
     function renderTransactions() {
-      const resultsDiv = document.getElementById("results");
-      const sortBy = document.getElementById("sort")?.value || "latest";
-      const directionFilter = document.getElementById("direction-filter")?.value || "all";
-      let transactions = sortTransactions(lastTransactions, sortBy);
+        const resultsDiv = document.getElementById("results");
+        const sortBy = document.getElementById("sort")?.value || "latest";
+        const directionFilter = document.getElementById("direction-filter")?.value || "all";
+        let transactions = sortTransactions(lastTransactions, sortBy);
 
-      if (directionFilter !== "all") {
-        transactions = transactions.filter(tx => {
-          let direction = "-";
-          if (tx.type === "TOP_UP") {
-            direction = "incoming";
-          } else if (tx.targetUser && currentUserId) {
-            direction = String(tx.targetUser.id) === String(currentUserId) ? "incoming" : "outgoing";
-          }
-          return direction === directionFilter;
-        });
-      }
-
-      if (!transactions.length) {
-        resultsDiv.innerHTML = `<p class="text-gray-500">No transactions found.</p>`;
-        return;
-      }
-
-      resultsDiv.innerHTML = transactions.map(tx => {
-        // Determine incoming/outgoing
-        let direction = "-";
-        if (tx.type === "TOP_UP") {
-          direction = "Incoming";
-        } else if (tx.targetUser && currentUserId) {
-          direction = String(tx.targetUser.id) === String(currentUserId) ? "Incoming" : "Outgoing";
+        if (directionFilter !== "all") {
+            transactions = transactions.filter(tx => {
+                let direction = "-";
+                if (tx.type === "TOP_UP") {
+                    direction = "incoming";
+                } else if (tx.targetUser && currentUserId) {
+                    direction = String(tx.targetUser.id) === String(currentUserId) ? "incoming" : "outgoing";
+                }
+                return direction === directionFilter;
+            });
         }
 
-        // Determine from/to display
-        let fromTo = "";
-        if (tx.type === "TOP_UP") {
-          fromTo = `From <span class="font-semibold">System</span> to <span class="font-semibold">${tx.user?.fullName || tx.user?.username || "You"}</span>`;
-        } else if (tx.user && tx.targetUser) {
-          fromTo = `From <span class="font-semibold">${tx.user.fullName || tx.user.username || "User"}</span> to <span class="font-semibold">${tx.targetUser.fullName || tx.targetUser.username || "User"}</span>`;
+        if (!transactions.length) {
+            resultsDiv.innerHTML = `<p class="text-gray-500">No transactions found.</p>`;
+            return;
         }
 
-        return `
+        resultsDiv.innerHTML = transactions.map(tx => {
+            // Determine incoming/outgoing
+            let direction = "-";
+            if (tx.type === "TOP_UP") {
+                direction = "Incoming";
+            } else if (tx.targetUser && currentUserId) {
+                direction = String(tx.targetUser.id) === String(currentUserId) ? "Incoming" : "Outgoing";
+            }
+
+            // Determine from/to display
+            let fromTo = "";
+            if (tx.type === "TOP_UP") {
+                fromTo = `From <span class="font-semibold">System</span> to <span class="font-semibold">${tx.user?.fullName || tx.user?.username || "You"}</span>`;
+            } else if (tx.user && tx.targetUser) {
+                fromTo = `From <span class="font-semibold">${tx.user.fullName || tx.user.username || "User"}</span> to <span class="font-semibold">${tx.targetUser.fullName || tx.targetUser.username || "User"}</span>`;
+            }
+
+            return `
         <div class="border p-3 rounded bg-gray-50">
           <div class="flex justify-between items-center">
             <strong>${tx.type || "?"}</strong>
@@ -181,7 +184,7 @@
           </div>
         </div>
         `;
-      }).join("");
+        }).join("");
     }
 
     async function loadMiniTransactions() {
@@ -235,39 +238,40 @@
     }
 
     function filterTransactions() {
-      const type = document.getElementById("type").value;
-      const from = document.getElementById("from").value;
-      const to = document.getElementById("to").value;
-      if (!currentUserId) return;
+        const type = document.getElementById("type").value;
+        const from = document.getElementById("from").value;
+        const to = document.getElementById("to").value;
+        if (!currentUserId) return;
 
-      let url = `/api/transaction/user/${currentUserId}`;
-      if (type && from && to) {
-        url = `/api/transaction/filter?userId=${currentUserId}&type=${type}&from=${from}T00:00:00&to=${to}T23:59:59`;
-      } else if (type) {
-        url = `/api/transaction/type?userId=${currentUserId}&type=${type}`;
-      } else if (from && to) {
-        url = `/api/transaction/date?userId=${currentUserId}&from=${from}T00:00:00&to=${to}T23:59:59`;
-      }
+        let url = `/api/transaction/user/${currentUserId}`;
+        if (type && from && to) {
+            url = `/api/transaction/filter?userId=${currentUserId}&type=${type}&from=${from}T00:00:00&to=${to}T23:59:59`;
+        } else if (type) {
+            url = `/api/transaction/type?userId=${currentUserId}&type=${type}`;
+        } else if (from && to) {
+            url = `/api/transaction/date?userId=${currentUserId}&from=${from}T00:00:00&to=${to}T23:59:59`;
+        }
 
-      fetchAndRenderTransactions(url);
+        fetchAndRenderTransactions(url);
     }
 
     const filterForm = document.getElementById("filter-form");
     if (filterForm) {
-      filterForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-        filterTransactions();
-      });
+        filterForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            filterTransactions();
+        });
 
-      // Re-render transactions when sort dropdown changes
-      document.getElementById("sort").addEventListener("change", renderTransactions);
+        // Re-render transactions when sort dropdown changes
+        document.getElementById("sort").addEventListener("change", renderTransactions);
     }
 
     document.getElementById("direction-filter").addEventListener("change", renderMiniTransactions);
 
     window.addEventListener("DOMContentLoaded", () => {
-      loadUser();
-      loadMiniTransactions();
+        loadNavbar();
+        loadUser();
+        loadMiniTransactions();
     });
 </script>
 </body>

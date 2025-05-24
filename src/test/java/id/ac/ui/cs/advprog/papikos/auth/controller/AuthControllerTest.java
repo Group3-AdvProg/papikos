@@ -30,6 +30,9 @@ class AuthControllerTest {
     private UserRepository userRepository;
 
     @Autowired
+    private AuthController authController;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -147,9 +150,16 @@ class AuthControllerTest {
         registerUser(regRequest);
         String token = loginAndGetToken("meuser@example.com", "mypassword");
 
-        mockMvc.perform(get("/api/auth/me")
+        String response = mockMvc.perform(get("/api/auth/me")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        JsonNode json = objectMapper.readTree(response);
+        assertThat(json.get("email").asText()).isEqualTo("meuser@example.com");
+        assertThat(json.get("role").asText()).isEqualTo("ROLE_TENANT");
+        assertThat(json.get("id").isNumber()).isTrue();
+        assertThat(json.get("balance").isNumber()).isTrue();
     }
 
     @Test
@@ -171,9 +181,6 @@ class AuthControllerTest {
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString())
                         .contains("Missing or invalid token"));
     }
-
-    @Autowired
-    private AuthController authController; // Tambahkan ini di atas
 
     @Test
     void testGetCurrentUserWithDeletedUserToken_directCall() throws Exception {
