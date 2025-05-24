@@ -11,6 +11,7 @@ import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, String> {
     List<Transaction> findByUser(User user);
+    List<Transaction> findByTargetUser(User user);
     List<Transaction> findByUserAndType(User user, String type);
     Page<Transaction> findByUserAndTimestampBetween(User user, LocalDateTime from, LocalDateTime to, Pageable pageable);
     Page<Transaction> findByUserAndTypeAndTimestampBetween(

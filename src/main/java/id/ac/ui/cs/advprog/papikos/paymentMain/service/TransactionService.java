@@ -1,9 +1,9 @@
 package id.ac.ui.cs.advprog.papikos.paymentMain.service;
 
 import id.ac.ui.cs.advprog.papikos.paymentMain.model.Transaction;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.paymentMain.repository.TransactionRepository;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
-import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.net.ContentHandler;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -57,5 +58,15 @@ public class TransactionService {
     public Page<Transaction> getTransactionsByUserTypeAndDate(
             User user, String type, LocalDateTime fromDate, LocalDateTime toDate, PageRequest pageRequest) {
         return transactionRepository.findByUserAndTypeAndTimestampBetween(user, type, fromDate, toDate, pageRequest);
+    }
+
+    public List<Transaction> getTransactionsByUserOrTarget(User user) {
+        List<Transaction> asPayer = transactionRepository.findByUser(user);
+        List<Transaction> asRecipient = transactionRepository.findByTargetUser(user);
+        List<Transaction> all = new ArrayList<>();
+        all.addAll(asPayer);
+        all.addAll(asRecipient);
+        all.sort((a, b) -> b.getTimestamp().compareTo(a.getTimestamp())); // latest first
+        return all;
     }
 }

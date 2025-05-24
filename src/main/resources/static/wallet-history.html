@@ -39,6 +39,17 @@
 
     <!-- Results -->
     <div id="results" class="space-y-3 text-sm"></div>
+
+    <!-- Mini Transaction History Section -->
+    <div class="flex items-center gap-2 mb-2">
+        <label for="direction-filter" class="text-sm">Show:</label>
+        <select id="direction-filter" class="border border-gray-300 px-2 py-1 rounded text-sm">
+            <option value="all">All</option>
+            <option value="incoming">Incoming</option>
+            <option value="outgoing">Outgoing</option>
+        </select>
+    </div>
+    <div id="mini-transactions" class="space-y-2"></div>
 </main>
 
 <script>
@@ -157,32 +168,91 @@
       }).join("");
     }
 
+    async function loadMiniTransactions() {
+        if (!currentUserId || !token) return;
+        const res = await fetch(`/api/transaction/user-or-target/${currentUserId}`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+        if (!res.ok) return;
+        const txs = await res.json();
+        window._allMiniTxs = txs; // cache for filtering
+        renderMiniTransactions();
+    }
+
+    function renderMiniTransactions() {
+        const txs = window._allMiniTxs || [];
+        const filter = document.getElementById("direction-filter").value;
+        const filtered = txs.filter(tx => {
+            if (filter === "all") return true;
+            let direction = "-";
+            if (tx.type === "TOP_UP") direction = "incoming";
+            else if (tx.targetUser && currentUserId) {
+                direction = String(tx.targetUser.id) === String(currentUserId) ? "incoming" : "outgoing";
+            }
+            return direction === filter;
+        });
+        const miniDiv = document.getElementById("mini-transactions");
+        if (!filtered.length) {
+            miniDiv.innerHTML = `<p class="text-gray-500 text-sm">No transactions found.</p>`;
+            return;
+        }
+        miniDiv.innerHTML = filtered.slice(0, 5).map(tx => {
+            let direction = "-";
+            if (tx.type === "TOP_UP") direction = "incoming";
+            else if (tx.targetUser && currentUserId) {
+                direction = String(tx.targetUser.id) === String(currentUserId) ? "incoming" : "outgoing";
+            }
+            return `
+            <div class="border p-2 rounded bg-gray-50 flex justify-between items-center">
+                <span>
+                    <strong>${tx.type || "?"}</strong>
+                    <span class="text-xs text-gray-600">ID: ${tx.id || "-"}</span>
+                    <br>
+                    Rp ${Number(tx.amount || 0).toLocaleString('id-ID')}
+                </span>
+                <span class="text-xs ${direction === "outgoing" ? "text-red-500" : "text-green-600"} font-semibold">
+                    ${direction.charAt(0).toUpperCase() + direction.slice(1)}
+                </span>
+            </div>
+            `;
+        }).join("");
+    }
+
+    function filterTransactions() {
+      const type = document.getElementById("type").value;
+      const from = document.getElementById("from").value;
+      const to = document.getElementById("to").value;
+      if (!currentUserId) return;
+
+      let url = `/api/transaction/user/${currentUserId}`;
+      if (type && from && to) {
+        url = `/api/transaction/filter?userId=${currentUserId}&type=${type}&from=${from}T00:00:00&to=${to}T23:59:59`;
+      } else if (type) {
+        url = `/api/transaction/type?userId=${currentUserId}&type=${type}`;
+      } else if (from && to) {
+        url = `/api/transaction/date?userId=${currentUserId}&from=${from}T00:00:00&to=${to}T23:59:59`;
+      }
+
+      fetchAndRenderTransactions(url);
+    }
+
     const filterForm = document.getElementById("filter-form");
     if (filterForm) {
       filterForm.addEventListener("submit", function (e) {
         e.preventDefault();
-        const type = document.getElementById("type").value;
-        const from = document.getElementById("from").value;
-        const to = document.getElementById("to").value;
-        if (!currentUserId) return;
-
-        let url = `/api/transaction/user/${currentUserId}`;
-        if (type && from && to) {
-          url = `/api/transaction/filter?userId=${currentUserId}&type=${type}&from=${from}T00:00:00&to=${to}T23:59:59`;
-        } else if (type) {
-          url = `/api/transaction/type?userId=${currentUserId}&type=${type}`;
-        } else if (from && to) {
-          url = `/api/transaction/date?userId=${currentUserId}&from=${from}T00:00:00&to=${to}T23:59:59`;
-        }
-
-        fetchAndRenderTransactions(url);
+        filterTransactions();
       });
 
       // Re-render transactions when sort dropdown changes
       document.getElementById("sort").addEventListener("change", renderTransactions);
     }
 
-    window.addEventListener("DOMContentLoaded", loadUser);
+    document.getElementById("direction-filter").addEventListener("change", renderMiniTransactions);
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadUser();
+      loadMiniTransactions();
+    });
 </script>
 </body>
 </html>

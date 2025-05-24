@@ -26,7 +26,7 @@ public class TransactionController {
     public List<Transaction> getTransactionsByUser(@PathVariable Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return transactionService.getTransactionsByUser(user);
+        return transactionService.getTransactionsByUserOrTarget(user);
     }
 
     @GetMapping("/type")
@@ -66,5 +66,12 @@ public class TransactionController {
         LocalDateTime toDate = LocalDateTime.parse(to, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
         // You can adjust the page size as needed
         return transactionService.getTransactionsByUserTypeAndDate(user, type, fromDate, toDate, PageRequest.of(0, 100)).getContent();
+    }
+
+    @GetMapping("/user-or-target/{id}")
+    public List<Transaction> getTransactionsByUserOrTarget(@PathVariable Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return transactionService.getTransactionsByUserOrTarget(user);
     }
 }
