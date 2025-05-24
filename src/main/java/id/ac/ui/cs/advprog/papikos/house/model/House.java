@@ -1,17 +1,14 @@
 package id.ac.ui.cs.advprog.papikos.house.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 public class House {
 
     @Id
@@ -25,13 +22,19 @@ public class House {
     private double monthlyRent;
     private String imageUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id", nullable = false)
-    @JsonIgnore
+    @JsonIgnoreProperties({"houses","hibernateLazyInitializer","handler"})
     private User owner;
 
-    public House(String name, String address, String description, int numberOfRooms,
-                 double monthlyRent, String imageUrl, User owner) {
+    // convenience ctor
+    public House(String name,
+                 String address,
+                 String description,
+                 int numberOfRooms,
+                 double monthlyRent,
+                 String imageUrl,
+                 User owner) {
         this.name = name;
         this.address = address;
         this.description = description;

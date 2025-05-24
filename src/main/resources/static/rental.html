@@ -2,22 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Available Rentals</title>
+    <title>Available Houses</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
     <style>
-        :root { --bs-primary: #7065F0; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f9f9ff; }
-        .navbar { background-color: var(--bs-primary); }
-        .navbar a, .navbar-brand { color: white; }
-        .navbar a:hover { color: #ddd; }
-        .section-title { margin: 2rem 0 1rem; color: var(--bs-primary); }
-        .card { border: none; box-shadow: 0 0 8px rgba(0, 0, 0, 0.05); }
-        .btn-outline-primary { color: var(--bs-primary); border-color: var(--bs-primary); }
-        .btn-outline-primary:hover { background-color: var(--bs-primary); color: white; }
+        :root { --bs-primary:#7065F0; }
+        body  { font-family:'Segoe UI',sans-serif;background:#f9f9ff; }
+        .navbar { background:var(--bs-primary); }
+        .navbar a,.navbar-brand { color:#fff; }
+        .navbar a:hover { color:#ddd; }
+
+        .card-clickable{ text-decoration:none;color:inherit; }
+        .card-clickable:hover{ opacity:.9; }
+        .card-body *{ pointer-events:none; }
+        .view-btn{ pointer-events:auto; }         /*  enable button click  */
     </style>
 </head>
+
 <body>
 <nav class="navbar navbar-expand-lg bg-white shadow-sm w-100">
     <div class="container">
@@ -35,55 +39,79 @@
     </div>
 </nav>
 
-<div class="container mt-4">
-    <h2 class="section-title">Available Houses</h2>
-    <div class="row" id="houseList"></div>
+<div class="container py-4">
+    <h2 class="fw-bold mb-4 text-primary">Available Houses</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="houseContainer"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    window.onload = async () => {
-        const token = localStorage.getItem("token");
-        const houseList = document.getElementById("houseList");
+    const token = localStorage.getItem("token");
+    const houseContainer = document.getElementById("houseContainer");
 
-        if (!token) {
-            houseList.innerHTML = `
-        <div class="alert alert-warning">Please log in to view rental listings.</div>
-      `;
+    window.addEventListener("DOMContentLoaded", ()=> {
+        if(!token){
+            houseContainer.innerHTML = `<div class="alert alert-warning">Please log in to view rental listings.</div>`;
             return;
         }
+        fetchHouses();
+    });
 
-        try {
-            const res = await fetch("/api/boarding-houses", {
-                headers: { Authorization: "Bearer " + token }
-            });
-
-            if (!res.ok) throw new Error("Unauthorized");
-
+    async function fetchHouses(){
+        try{
+            const res = await fetch("/api/houses",{ headers:{Authorization:"Bearer "+token}});
+            if(!res.ok) throw new Error(res.status);
             const houses = await res.json();
-
-            houses.forEach(house => {
-                const card = document.createElement("div");
-                card.className = "col-md-4 mb-4";
-                card.innerHTML = `
-          <div class="card p-3">
-            <h5 class="card-title text-primary">${house.name}</h5>
-            <p class="card-text">Location: ${house.location}</p>
-            <p class="card-text">Price: Rp ${house.price.toLocaleString()}</p>
-            <a href="tenant.html?houseId=${house.id}" class="btn btn-outline-primary">View Detail</a>
-          </div>
-        `;
-                houseList.appendChild(card);
-            });
-
-        } catch (err) {
-            houseList.innerHTML = `
-        <div class="alert alert-danger">
-          Failed to load houses. You may not have permission to access this page.
-        </div>
-      `;
-            console.error("Rental page error:", err);
+            renderHouses(houses);
+        }catch(err){
+            houseContainer.innerHTML = `<div class="alert alert-danger">Failed to load houses (${err}).</div>`;
         }
-    };
+    }
+
+    function renderHouses(houses){
+        if(!houses.length){
+            houseContainer.innerHTML = `<div class="alert alert-info">No houses found.</div>`; return;
+        }
+        houseContainer.innerHTML = "";
+        houses.forEach(h => {
+            const address = h.location ?? h.address ?? "-";
+            const price   = (h.price ?? h.monthlyRent ?? 0).toLocaleString("id-ID");
+            const rooms   = h.numberOfRooms ?? "-";
+            const img     = h.imageUrl || "https://via.placeholder.com/400x250.png?text=No+Image";
+            houseContainer.innerHTML += `
+      <div class="col">
+        <a class="card-clickable" href="RentalHouseDetails.html?houseId=${h.id}">
+          <div class="card shadow-sm border-0 position-relative">
+            <div class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 text-dark small">
+              Open&nbsp;<span class="fw-bold">FOR RENT</span>
+            </div>
+            <img src="${img}" class="card-img-top" alt="house">
+            <div class="card-body">
+              <p class="text-uppercase fw-bold text-muted small mb-1">${address}</p>
+              <h5 class="card-title mb-0 text-primary">${h.name}</h5>
+
+              <div class="mt-2">
+                <h4 class="fw-bold mb-0 text-dark">Rp <span>${price}</span></h4>
+                <span class="badge bg-light text-dark border border-secondary fw-semibold small">per month</span>
+              </div>
+
+              <div class="text-muted mt-1 small"><strong>${rooms} rooms</strong></div>
+
+              <div class="d-flex gap-3 mt-3 text-muted small">
+                <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
+                <div><i class="bi bi-droplet-half"></i> 2 Baths</div>
+                <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
+              </div>
+
+              <button class="btn btn-outline-primary w-100 mt-3 view-btn">
+                View Detail
+              </button>
+            </div>
+          </div>
+        </a>
+      </div>`;
+        });
+    }
 </script>
 </body>
 </html>
