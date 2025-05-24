@@ -349,6 +349,20 @@ class RentalControllerTest {
                 .andExpect(jsonPath("$.length()").value(2));
     }
 
+    @Test
+    void testFindAllRentalsSync() throws Exception {
+        Rental r1 = setupRental(1L, 10L, "Kos A");
+        Rental r2 = setupRental(2L, 20L, "Kos B");
+
+        when(rentalService.getAllRentals()).thenReturn(List.of(r1, r2));
+
+        mockMvc.perform(get("/api/rentals"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[1].id").value(2));
+    }
+
 
     @Test void testUpdateRentalAsync_Found() throws Exception {
         Rental rental = setupRental(99L, 123L, "Update Test");
