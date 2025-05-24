@@ -8,6 +8,8 @@ import id.ac.ui.cs.advprog.papikos.paymentMain.service.TransactionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -73,8 +75,21 @@ public class PaymentServiceTest {
     @Test
     void shouldFailWithInvalidPaymentMethod() {
         PaymentRequest request = new PaymentRequest();
-        request.setAmount(50_000.0);    // Use Double
+        request.setAmount(50_000.0);
         request.setMethod("invalid");
+        request.setUserId(1L);
+        request.setTargetId(2L);
+
+        User tenant = new User();
+        tenant.setId(1L);
+        tenant.setBalance(100_000.0);
+
+        User landlord = new User();
+        landlord.setId(2L);
+        landlord.setBalance(0.0);
+
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
         assertFalse(service.handlePayment(request));
     }
@@ -82,8 +97,21 @@ public class PaymentServiceTest {
     @Test
     void shouldFailWhenBalanceIsInsufficient() {
         PaymentRequest request = new PaymentRequest();
-        request.setAmount(100_000.0);   // Use Double
+        request.setAmount(100_000.0);
         request.setMethod("bank");
+        request.setUserId(1L);
+        request.setTargetId(2L);
+
+        User tenant = new User();
+        tenant.setId(1L);
+        tenant.setBalance(50_000.0);
+
+        User landlord = new User();
+        landlord.setId(2L);
+        landlord.setBalance(0.0);
+
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
         assertFalse(service.handlePayment(request));
     }
@@ -153,6 +181,67 @@ public class PaymentServiceTest {
         assertEquals("Landlord not found", thrown.getMessage());
     }
 
+    @Test
+    void testHandlePayment_landlordNotFound_shouldThrowException() {
+        PaymentRequest request = new PaymentRequest();
+        request.setAmount(100_000.0);
+        request.setMethod("bank");
+        request.setUserId(1L);
+        request.setTargetId(2L);
 
+        User tenant = new User();
+        tenant.setId(1L);
+        tenant.setBalance(200_000.0);
+
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.empty());
+
+        ResponseStatusException thrown = assertThrows(ResponseStatusException.class, () -> {
+            service.handlePayment(request);
+        });
+
+        assertEquals(HttpStatus.NOT_FOUND, thrown.getStatusCode());
+        assertEquals("Landlord not found", thrown.getReason());
+    }
+
+    @Test
+    void testHandlePayment_tenantNotFound_shouldThrowException() {
+        PaymentRequest request = new PaymentRequest();
+        request.setAmount(100_000.0);
+        request.setMethod("bank");
+        request.setUserId(1L);
+        request.setTargetId(2L);
+
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        ResponseStatusException thrown = assertThrows(ResponseStatusException.class, () -> {
+            service.handlePayment(request);
+        });
+
+        assertEquals(HttpStatus.NOT_FOUND, thrown.getStatusCode());
+        assertEquals("Tenant not found", thrown.getReason());
+    }
+
+    @Test
+    void testHandlePayment_strategyFails_shouldReturnFalse() {
+        PaymentRequest request = new PaymentRequest();
+        request.setAmount(100_000.0);
+        request.setMethod("fail"); // triggers the test-only strategy
+        request.setUserId(1L);
+        request.setTargetId(2L);
+
+        User tenant = new User();
+        tenant.setId(1L);
+        tenant.setBalance(200_000.0);
+
+        User landlord = new User();
+        landlord.setId(2L);
+        landlord.setBalance(0.0);
+
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
+
+        assertFalse(service.handlePayment(request));
+    }
 
 }
