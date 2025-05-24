@@ -129,14 +129,32 @@
         return;
       }
 
-      resultsDiv.innerHTML = transactions.map(tx => `
+      resultsDiv.innerHTML = transactions.map(tx => {
+        // Determine incoming/outgoing
+        let direction = "-";
+        if (tx.type === "TOP_UP") {
+          direction = "Incoming";
+        } else if (tx.targetUser && currentUserId) {
+          direction = String(tx.targetUser.id) === String(currentUserId) ? "Incoming" : "Outgoing";
+        }
+
+        return `
         <div class="border p-3 rounded bg-gray-50">
-          <strong>${tx.type || "?"}</strong> - Rp ${Number(tx.amount || 0).toLocaleString('id-ID')} via ${tx.method || "-"}
-          ${tx.targetUser && tx.targetUser.fullName ? `<br>To: <span class="font-semibold">${tx.targetUser.fullName}</span>` : ""}
-          <br>
-          <span class="text-xs text-gray-500">${tx.timestamp ? new Date(tx.timestamp).toLocaleString("id-ID") : ""}</span>
+          <div class="flex justify-between items-center">
+            <strong>${tx.type || "?"}</strong>
+            <span class="text-xs text-gray-600">ID: ${tx.id || "-"}</span>
+          </div>
+          <div>
+            Rp ${Number(tx.amount || 0).toLocaleString('id-ID')} via ${tx.method || "-"}
+            ${tx.targetUser && tx.targetUser.fullName ? `<br>To: <span class="font-semibold">${tx.targetUser.fullName}</span>` : ""}
+            <br>
+            <span class="text-xs text-gray-500">${tx.timestamp ? new Date(tx.timestamp).toLocaleString("id-ID") : ""}</span>
+            <br>
+            <span class="text-xs ${direction === "Outgoing" ? "text-red-500" : "text-green-600"} font-semibold">${direction}</span>
+          </div>
         </div>
-      `).join("");
+        `;
+      }).join("");
     }
 
     const filterForm = document.getElementById("filter-form");
