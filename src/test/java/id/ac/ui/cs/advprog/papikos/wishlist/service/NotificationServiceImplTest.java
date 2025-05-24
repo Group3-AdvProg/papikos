@@ -141,25 +141,46 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testNotifyTenantRentalApproved() {
-        User landlord = new User();
-        landlord.setId(1L);
+    void testNotifyTenantRentalApproved_savesNotification() {
+        User tenant = new User();
+        tenant.setId(2L);
 
-        House rentalHouse = new House();
-        rentalHouse.setId(99L);
-        rentalHouse.setName("Thata's House");
-        rentalHouse.setOwner(landlord);
+        House house = new House();
+        house.setId(1L);
+        house.setName("Kos UI");
+        house.setOwner(new User());
 
-        when(houseRepo.findById(99L)).thenReturn(Optional.of(rentalHouse));
+        when(houseRepo.findById(1L)).thenReturn(Optional.of(house));
 
-        notificationService.notifyTenantRentalApproved(1L, 2L, 99L);
+        notificationService.notifyTenantRentalApproved(99L, 2L, 1L).join();
 
         verify(notificationRepo, times(1)).save(argThat(n ->
                 n.getReceiverId().equals(2L) &&
-                        n.getSenderId().equals(1L) &&
-                        n.getMessage().equals("Your rental request for Thata's House has been approved!") &&
+                        n.getSenderId().equals(99L) &&
+                        n.getMessage().equals("Your rental request for Kos UI has been approved!") &&
                         !n.isRead()
         ));
     }
 
+    @Test
+    void testNotifyTenantRentalRejected_savesNotification() {
+        User tenant = new User();
+        tenant.setId(2L);
+
+        House house = new House();
+        house.setId(1L);
+        house.setName("Kos UI");
+        house.setOwner(new User());
+
+        when(houseRepo.findById(1L)).thenReturn(Optional.of(house));
+
+        notificationService.notifyTenantRentalRejected(99L, 2L, 1L).join();
+
+        verify(notificationRepo, times(1)).save(argThat(n ->
+                n.getReceiverId().equals(2L) &&
+                        n.getSenderId().equals(99L) &&
+                        n.getMessage().equals("Your rental request for Kos UI has been rejected.") &&
+                        !n.isRead()
+        ));
+    }
 }
