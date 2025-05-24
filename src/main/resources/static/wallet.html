@@ -4,28 +4,29 @@
     <meta charset="UTF-8">
     <title>My Wallet</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans text-gray-800">
 
 <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <!-- Back Button -->
     <a href="/management.html" class="inline-block text-sm text-blue-600 hover:underline">
         ← Back to My Houses
     </a>
 
+    <!-- Wallet Overview -->
     <section class="bg-white p-6 rounded-xl shadow">
         <h2 class="text-2xl font-bold mb-4">My Wallet</h2>
 
-        <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
+        <div class="px-4 flex justify-between items-center">
             <div>
                 👋 Welcome, <span id="welcome-email" class="font-semibold"></span>
                 <br>
-                <span class="ml-4">💰 Balance: <span id="wallet-balance" class="text-green-700 font-bold">...</span></span>
+                💰 Balance: <span id="wallet-balance" class="text-green-700 font-bold">...</span>
             </div>
         </div>
 
         <!-- Top Up Section -->
-        <div class="mb-8 mt-6">
+        <div class="mt-6 mb-8">
             <h3 class="text-lg font-semibold mb-2">Top Up</h3>
             <form id="topup-form" class="flex flex-col gap-3">
                 <input type="number" id="topup-amount" placeholder="Amount" min="1" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
@@ -33,8 +34,10 @@
                     <option value="bank">Bank Transfer</option>
                     <option value="virtual">Virtual Account</option>
                 </select>
-                <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Top Up</button>
+                <input type="password" id="topup-password" placeholder="Enter your password to confirm"
+                       class="border border-gray-300 px-3 py-2 rounded w-full md:w-64 hidden" required>
+                <button id="topup-confirm-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 hidden">Confirm Top Up</button>
+
                 <p id="topup-msg" class="mt-2 text-sm"></p>
             </form>
         </div>
@@ -42,15 +45,17 @@
         <!-- Pay Rent Section -->
         <div class="mb-8">
             <h3 class="text-lg font-semibold mb-2">Pay Rent</h3>
-            <form id="payrent-form" class="flex flex-col md:flex-row md:items-center gap-2">
+            <form id="payrent-form" class="flex flex-col gap-3">
                 <input type="text" id="pay-landlord" placeholder="Landlord ID" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
                 <input type="number" id="pay-amount" placeholder="Amount" min="1" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
+                <input type="password" id="pay-password" placeholder="Enter your password to confirm" class="border border-gray-300 px-3 py-2 rounded w-full md:w-64" required>
                 <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Pay Rent</button>
+                <p id="payrent-msg" class="mt-2 text-sm"></p>
             </form>
-            <p id="payrent-msg" class="mt-2 text-sm"></p>
         </div>
     </section>
 
+    <!-- Transaction History -->
     <section class="bg-white p-6 rounded-xl shadow">
         <h3 class="text-lg font-semibold mb-4">Transaction History</h3>
         <a href="/wallet-history.html" class="inline-block text-blue-600 hover:underline text-sm">
@@ -86,8 +91,10 @@
     }
 
     function updateBalance(balance) {
-        document.getElementById("wallet-balance").textContent =
-            typeof balance === "number" && !isNaN(balance) ? "Rp " + balance.toLocaleString("id-ID") : "...";
+        const formatted = typeof balance === "number" && !isNaN(balance)
+            ? "Rp " + balance.toLocaleString("id-ID")
+            : "...";
+        document.getElementById("wallet-balance").textContent = formatted;
     }
 
     function refreshBalance() {
@@ -104,68 +111,144 @@
         });
     }
 
+    // --- Top Up Logic ---
     const topupForm = document.getElementById("topup-form");
-    if (topupForm) {
-        topupForm.addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const amount = parseFloat(document.getElementById("topup-amount").value);
-            const method = document.getElementById("topup-method").value;
-            const msgEl = document.getElementById("topup-msg");
-            const captchaToken = grecaptcha.getResponse();
-            msgEl.textContent = "";
+    const topupPassword = document.getElementById("topup-password");
+    const topupConfirmBtn = document.getElementById("topup-confirm-btn");
+    const topupMsg = document.getElementById("topup-msg");
 
-            if (!captchaToken) {
-                msgEl.textContent = "Please complete the CAPTCHA.";
-                msgEl.className = "text-red-600 mt-2 font-semibold";
+    // Hide password and confirm button initially
+    topupPassword.classList.add("hidden");
+    topupConfirmBtn.classList.add("hidden");
+
+    // Show password and confirm button when amount and method are filled and user presses Enter or changes input
+    topupForm.addEventListener("input", function () {
+        const amount = document.getElementById("topup-amount").value;
+        const method = document.getElementById("topup-method").value;
+        if (amount && method) {
+            topupPassword.classList.remove("hidden");
+            topupConfirmBtn.classList.remove("hidden");
+        } else {
+            topupPassword.classList.add("hidden");
+            topupConfirmBtn.classList.add("hidden");
+        }
+    });
+
+    topupForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const amount = parseFloat(document.getElementById("topup-amount").value);
+        const method = document.getElementById("topup-method").value;
+        const password = topupPassword.value;
+        topupMsg.textContent = "";
+
+        if (!currentUserId || isNaN(amount) || amount <= 0 || !password) {
+            topupMsg.textContent = "Please complete all fields.";
+            topupMsg.className = "text-red-600 mt-2 font-semibold";
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/wallet/topup", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    userId: currentUserId,
+                    amount: amount,
+                    method: method,
+                    password: password
+                })
+            });
+
+            const data = await res.json();
+            if (data.status === "SUCCESS") {
+                alert("Top up successful!");
+                refreshBalance();
+                topupForm.reset();
+                topupPassword.classList.add("hidden");
+                topupConfirmBtn.classList.add("hidden");
+                topupMsg.textContent = "";
+            } else {
+                topupMsg.textContent = data.message || "Top up failed. Please try again.";
+                topupMsg.className = "text-red-600 mt-2 font-semibold";
+            }
+        } catch (err) {
+            topupMsg.textContent = "Top up failed. Please try again.";
+            topupMsg.className = "text-red-600 mt-2 font-semibold";
+        }
+    });
+
+    // --- Pay Rent Logic ---
+    const payrentForm = document.getElementById("payrent-form");
+    const payPassword = document.getElementById("pay-password");
+    const payrentMsg = document.getElementById("payrent-msg");
+
+    // Hide password initially
+    payPassword.classList.add("hidden");
+
+    payrentForm.addEventListener("input", function () {
+        const landlord = document.getElementById("pay-landlord").value;
+        const amount = document.getElementById("pay-amount").value;
+        if (landlord && amount) {
+            payPassword.classList.remove("hidden");
+        } else {
+            payPassword.classList.add("hidden");
+        }
+    });
+
+    payrentForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const landlordId = document.getElementById("pay-landlord").value;
+        const amount = parseFloat(document.getElementById("pay-amount").value);
+        const password = payPassword.value;
+        payrentMsg.textContent = "";
+
+        if (!currentUserId || !landlordId || isNaN(amount) || amount <= 0 || !password) {
+            payrentMsg.textContent = "Please complete all fields.";
+            payrentMsg.className = "text-red-600 mt-2 font-semibold";
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/wallet/payrent", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    userId: currentUserId,
+                    landlordId: landlordId,
+                    amount: amount,
+                    password: password
+                })
+            });
+
+            if (res.status === 401) {
+                alert("Session expired. Please log in again.");
+                localStorage.removeItem("token");
+                window.location.href = "/login.html";
                 return;
             }
 
-            if (!currentUserId || isNaN(amount) || amount <= 0) {
-                msgEl.textContent = "Please enter a valid amount.";
-                msgEl.className = "text-red-600 mt-2 font-semibold";
-                return;
+            const data = await res.json();
+            if (data.status === "SUCCESS") {
+                alert("Payment successful!");
+                refreshBalance();
+                payrentForm.reset();
+                payPassword.classList.add("hidden");
+                payrentMsg.textContent = "";
+            } else {
+                payrentMsg.textContent = data.message || "Payment failed. Please try again.";
+                payrentMsg.className = "text-red-600 mt-2 font-semibold";
             }
-
-            try {
-                const res = await fetch("/api/wallet/topup", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + token
-                    },
-                    body: JSON.stringify({
-                        userId: currentUserId,
-                        amount: amount,
-                        method: method,
-                        captchaToken: captchaToken
-                    })
-                });
-
-                if (res.status === 401) throw new Error("Unauthorized");
-
-                const data = await res.json();
-                msgEl.textContent = data.message || "Unknown response";
-                msgEl.className = data.status === "SUCCESS"
-                    ? "text-green-600 mt-2 font-semibold"
-                    : "text-red-600 mt-2 font-semibold";
-                if (data.status === "SUCCESS") {
-                    alert("Top up successful!");
-                    refreshBalance();
-                    topupForm.reset();
-                    grecaptcha.reset(); // reset CAPTCHA after successful topup
-                }
-            } catch (err) {
-                if (err.message === "Unauthorized") {
-                    alert("Session expired. Please log in again.");
-                    localStorage.removeItem("token");
-                    window.location.href = "/login.html";
-                } else {
-                    msgEl.textContent = "Top up failed. Please try again.";
-                    msgEl.className = "text-red-600 mt-2 font-semibold";
-                }
-            }
-        });
-    }
+        } catch (err) {
+            payrentMsg.textContent = "Payment failed. Please try again.";
+            payrentMsg.className = "text-red-600 mt-2 font-semibold";
+        }
+    });
 
     window.addEventListener("DOMContentLoaded", loadUserInfoAndBalance);
 </script>

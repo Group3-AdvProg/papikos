@@ -20,7 +20,7 @@
 <!-- Main Content -->
 <main class="max-w-4xl mx-auto px-4 py-8">
     <!-- Filter Form -->
-    <form id="filter-form" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-6">
+    <form id="filter-form" class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-6">
         <select id="type" class="border border-gray-300 px-3 py-2 rounded">
             <option value="">All Types</option>
             <option value="TOP_UP">Top-Up</option>
@@ -28,6 +28,12 @@
         </select>
         <input type="date" id="from" class="border border-gray-300 px-3 py-2 rounded" />
         <input type="date" id="to" class="border border-gray-300 px-3 py-2 rounded" />
+        <select id="sort" class="border border-gray-300 px-3 py-2 rounded">
+            <option value="latest">Latest</option>
+            <option value="earliest">Earliest</option>
+            <option value="amount-most">Amount (Most)</option>
+            <option value="amount-least">Amount (Least)</option>
+        </select>
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Filter</button>
     </form>
 
@@ -38,6 +44,7 @@
 <script>
     let token = localStorage.getItem("token");
     let currentUserId = null;
+    let lastTransactions = [];
 
     async function loadUser() {
       if (!token) {
@@ -62,6 +69,28 @@
       }
     }
 
+    function sortTransactions(transactions, sortBy) {
+      const sorted = [...transactions];
+      switch (sortBy) {
+        case "earliest":
+          sorted.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          break;
+        case "latest":
+          sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          break;
+        case "amount-most":
+          sorted.sort((a, b) => Number(b.amount) - Number(a.amount));
+          break;
+        case "amount-least":
+          sorted.sort((a, b) => Number(a.amount) - Number(b.amount));
+          break;
+        default:
+          // Default to latest
+          sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      }
+      return sorted;
+    }
+
     async function fetchAndRenderTransactions(url) {
       const resultsDiv = document.getElementById("results");
       resultsDiv.innerHTML = "Loading...";
@@ -82,20 +111,32 @@
         let transactions = await res.json();
         if (!Array.isArray(transactions)) transactions = [transactions];
 
-        if (!transactions.length) {
-          resultsDiv.innerHTML = `<p class="text-gray-500">No transactions found.</p>`;
-          return;
-        }
+        lastTransactions = transactions; // Save for sorting
 
-        resultsDiv.innerHTML = transactions.map(tx => `
-          <div class="border p-3 rounded bg-gray-50">
-            <strong>${tx.type || "?"}</strong> - Rp ${Number(tx.amount || 0).toLocaleString('id-ID')} via ${tx.method || "-"}<br/>
-            <span class="text-xs text-gray-500">${tx.timestamp ? new Date(tx.timestamp).toLocaleString("id-ID") : ""}</span>
-          </div>
-        `).join("");
+        renderTransactions();
       } catch {
         resultsDiv.innerHTML = `<p class="text-red-500">Failed to load transactions.</p>`;
       }
+    }
+
+    function renderTransactions() {
+      const resultsDiv = document.getElementById("results");
+      const sortBy = document.getElementById("sort")?.value || "latest";
+      const transactions = sortTransactions(lastTransactions, sortBy);
+
+      if (!transactions.length) {
+        resultsDiv.innerHTML = `<p class="text-gray-500">No transactions found.</p>`;
+        return;
+      }
+
+      resultsDiv.innerHTML = transactions.map(tx => `
+        <div class="border p-3 rounded bg-gray-50">
+          <strong>${tx.type || "?"}</strong> - Rp ${Number(tx.amount || 0).toLocaleString('id-ID')} via ${tx.method || "-"}
+          ${tx.targetUser && tx.targetUser.fullName ? `<br>To: <span class="font-semibold">${tx.targetUser.fullName}</span>` : ""}
+          <br>
+          <span class="text-xs text-gray-500">${tx.timestamp ? new Date(tx.timestamp).toLocaleString("id-ID") : ""}</span>
+        </div>
+      `).join("");
     }
 
     const filterForm = document.getElementById("filter-form");
@@ -118,6 +159,9 @@
 
         fetchAndRenderTransactions(url);
       });
+
+      // Re-render transactions when sort dropdown changes
+      document.getElementById("sort").addEventListener("change", renderTransactions);
     }
 
     window.addEventListener("DOMContentLoaded", loadUser);

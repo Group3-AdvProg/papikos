@@ -24,7 +24,6 @@ public class TransactionController {
 
     @GetMapping("/user/{id}")
     public List<Transaction> getTransactionsByUser(@PathVariable Long id) {
-        System.out.println("TransactionController: Called for user " + id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return transactionService.getTransactionsByUser(user);
