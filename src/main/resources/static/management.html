@@ -7,56 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     <link href="/css/papikos.css" rel="stylesheet" />
-<!--    <style>-->
-<!--        :root {-->
-<!--            &#45;&#45;bs-primary: #7065F0;-->
-<!--        }-->
-
-<!--        .text-primary {-->
-<!--            color: var(&#45;&#45;bs-primary) !important;-->
-<!--        }-->
-
-<!--        .bg-primary {-->
-<!--            background-color: var(&#45;&#45;bs-primary) !important;-->
-<!--        }-->
-
-<!--        body {-->
-<!--            font-family: 'Segoe UI', sans-serif;-->
-<!--            background-color: #f9f9ff;-->
-<!--        }-->
-
-<!--        .btn-primary {-->
-<!--            background-color: var(&#45;&#45;bs-primary);-->
-<!--            border-color: var(&#45;&#45;bs-primary);-->
-<!--        }-->
-
-<!--        .btn-outline-primary {-->
-<!--            color: var(&#45;&#45;bs-primary);-->
-<!--            border-color: var(&#45;&#45;bs-primary);-->
-<!--        }-->
-
-<!--        .btn-outline-primary:hover {-->
-<!--            background-color: var(&#45;&#45;bs-primary);-->
-<!--            color: white;-->
-<!--        }-->
-
-<!--        .card-clickable {-->
-<!--            text-decoration: none;-->
-<!--            color: inherit;-->
-<!--        }-->
-
-<!--        .card-clickable:hover {-->
-<!--            opacity: 0.9;-->
-<!--        }-->
-
-<!--        .card-body * {-->
-<!--            pointer-events: none;-->
-<!--        }-->
-
-<!--        .action-buttons {-->
-<!--            pointer-events: auto;-->
-<!--        }-->
-<!--    </style>-->
 </head>
 <body>
 
@@ -71,6 +21,12 @@
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="/management.html">My Houses</a></li>
                 <li class="nav-item"><a class="nav-link" href="/wallet.html">Wallet</a></li>
+                <!-- New Chat Button -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/chat.html">
+                        <i class="bi bi-chat-dots"></i> Chat
+                    </a>
+                </li>
                 <li class="nav-item dropdown" id="user-dropdown" style="display: none;">
                     <a class="btn btn-outline-primary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <span id="user-email">User</span>
@@ -85,9 +41,9 @@
         </div>
     </div>
 </nav>
+
 <div class="container py-4">
     <h1 class="fw-bold">My Boarding Houses</h1>
-
     <button class="btn btn-primary mb-3" onclick="checkApprovalBeforeAdd()">
         ➕ Add New House
     </button>
@@ -161,7 +117,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     async function fetchHouses() {
         try {
@@ -173,8 +129,8 @@
             renderHouses(houses);
         } catch (err) {
             document.getElementById("houseContainer").innerHTML = `
-                <div class="alert alert-danger">Failed to load houses. Please log in.</div>
-            `;
+        <div class="alert alert-danger">Failed to load houses. Please log in.</div>
+      `;
         }
     }
 
@@ -183,45 +139,45 @@
         container.innerHTML = "";
         houses.forEach((house) => {
             container.innerHTML += `
-            <div class="col">
-                <div class="card shadow-sm border-0 position-relative">
-                    <a href="houseDetails.html?id=${house.id}" class="card-clickable text-decoration-none text-dark">
-                        <div class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 text-dark small">
-                            Open: <span class="fw-bold">BEST NEAR UI!</span>
-                        </div>
-                        <img src="${house.imageUrl || "https://via.placeholder.com/400x250.png?text=No+Image"}"
-                             class="card-img-top" alt="House image">
-                        <div class="card-body">
-                            <p class="text-uppercase fw-bold text-muted small mb-1">${house.address}</p>
-                            <h5 class="card-title mb-0 text-primary">${house.name}</h5>
-                            <div class="mt-2">
-                                <h4 class="fw-bold mb-0 text-dark">Rp <span>${house.monthlyRent}</span></h4>
-                                <span class="badge bg-light text-dark border border-secondary fw-semibold small">NO FEE</span>
-                            </div>
-                            <div class="text-muted mt-1 small"><strong>${house.numberOfRooms} rooms</strong><br>12-month lease</div>
-                            <div class="d-flex gap-3 mt-3 text-muted small">
-                                <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
-                                <div><i class="bi bi-droplet-half"></i> 2 baths</div>
-                                <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
-                            </div>
-                        </div>
-                    </a>
-                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between px-3 pb-3 action-buttons">
-                        <button class="btn btn-sm btn-warning"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editHouseModal"
-                                data-id="${house.id}" data-name="${house.name}" data-address="${house.address}"
-                                data-description="${house.description}" data-rooms="${house.numberOfRooms}"
-                                data-rent="${house.monthlyRent}" data-image="${house.imageUrl}">
-                            ✏️ Edit
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); event.preventDefault(); deleteHouse(${house.id})">
-                            ❌ Delete
-                        </button>
-                    </div>
+        <div class="col">
+          <div class="card shadow-sm border-0 position-relative">
+            <a href="houseDetails.html?id=${house.id}" class="card-clickable text-decoration-none text-dark">
+              <div class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 text-dark small">
+                Open: <span class="fw-bold">BEST NEAR UI!</span>
+              </div>
+              <img src="${house.imageUrl || "https://via.placeholder.com/400x250.png?text=No+Image"}"
+                   class="card-img-top" alt="House image">
+              <div class="card-body">
+                <p class="text-uppercase fw-bold text-muted small mb-1">${house.address}</p>
+                <h5 class="card-title mb-0 text-primary">${house.name}</h5>
+                <div class="mt-2">
+                  <h4 class="fw-bold mb-0 text-dark">Rp <span>${house.monthlyRent}</span></h4>
+                  <span class="badge bg-light text-dark border border-secondary fw-semibold small">NO FEE</span>
                 </div>
+                <div class="text-muted mt-1 small"><strong>${house.numberOfRooms} rooms</strong><br>12-month lease</div>
+                <div class="d-flex gap-3 mt-3 text-muted small">
+                  <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
+                  <div><i class="bi bi-droplet-half"></i> 2 baths</div>
+                  <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
+                </div>
+              </div>
+            </a>
+            <div class="card-footer bg-white border-top-0 d-flex justify-content-between px-3 pb-3 action-buttons">
+              <button class="btn btn-sm btn-warning"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editHouseModal"
+                      data-id="${house.id}" data-name="${house.name}" data-address="${house.address}"
+                      data-description="${house.description}" data-rooms="${house.numberOfRooms}"
+                      data-rent="${house.monthlyRent}" data-image="${house.imageUrl}">
+                ✏️ Edit
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); event.preventDefault(); deleteHouse(${house.id})">
+                ❌ Delete
+              </button>
             </div>
-        `;
+          </div>
+        </div>
+      `;
         });
     }
 
@@ -288,81 +244,71 @@
     }
 
     async function loadUserInfo() {
-  const token = localStorage.getItem("token");
-    if (!token) {
-      document.getElementById("welcome-email").textContent = "Welcome, Guest";
-      document.getElementById("wallet-balance").textContent = "0";
-      return;
+        const token = sessionStorage.getItem("token");
+        if (!token) {
+            document.getElementById("welcome-email").textContent = "Welcome, Guest";
+            document.getElementById("wallet-balance").textContent = "0";
+            return;
+        }
+        try {
+            const res = await fetch("/api/auth/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
+            const user = await res.json();
+            document.getElementById("welcome-email").textContent = `Welcome ${user.email} (UserID:${user.id})`;
+            document.getElementById("wallet-balance").textContent = user.balance.toLocaleString("id-ID");
+        } catch (err) {
+            console.warn("Failed to load user info");
+        }
     }
 
+    function setupNavbar() {
+        const token = sessionStorage.getItem("token");
+        const loginBtn = document.getElementById("login-btn");
+        const signupBtn = document.getElementById("signup-btn");
+        const userDropdown = document.getElementById("user-dropdown");
+        const userEmailSpan = document.getElementById("user-email");
+        const logoutBtn = document.getElementById("logout-btn");
 
-  try {
-    const res = await fetch("/api/auth/me", {
-      headers: {
-        Authorization: "Bearer " + token
-      }
+        if (!token) return;
+
+        fetch("/api/auth/me", {
+            headers: { Authorization: "Bearer " + token }
+        })
+            .then(res => res.json())
+            .then(user => {
+                userEmailSpan.textContent = user.email;
+                loginBtn.style.display = "none";
+                signupBtn.style.display = "none";
+                userDropdown.style.display = "block";
+
+                logoutBtn.addEventListener("click", () => {
+                    sessionStorage.removeItem("token");
+                    window.location.href = "/login.html";
+                });
+            })
+            .catch(() => console.warn("Failed to fetch user info for navbar"));
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        loadUserInfo();
+        fetchHouses();
+        setupNavbar();
     });
-    const user = await res.json();
-    document.getElementById("welcome-email").textContent = `Welcome ${user.email} (UserID:${user.id})`;
-    document.getElementById("wallet-balance").textContent = user.balance.toLocaleString("id-ID");
-  } catch (err) {
-    console.warn("Failed to load user info");
-  }
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  loadUserInfo();
-  fetchHouses();
-  setupNavbar();
-});
-
-
-function setupNavbar() {
-  const token = localStorage.getItem("token");
-  const loginBtn = document.getElementById("login-btn");
-  const signupBtn = document.getElementById("signup-btn");
-  const userDropdown = document.getElementById("user-dropdown");
-  const userEmailSpan = document.getElementById("user-email");
-  const logoutBtn = document.getElementById("logout-btn");
-
-  if (!token) return;
-
-  fetch("/api/auth/me", {
-    headers: { Authorization: "Bearer " + token }
-  })
-    .then(res => res.json())
-    .then(user => {
-      userEmailSpan.textContent = user.email;
-      loginBtn.style.display = "none";
-      signupBtn.style.display = "none";
-      userDropdown.style.display = "block";
-
-      logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("token");
-        window.location.href = "/login.html";
-      });
-    })
-    .catch(() => console.warn("Failed to fetch user info for navbar"));
-}
-    window.onload = fetchHouses;
 
     ["keyword", "minRent", "maxRent"].forEach(id => {
         document.getElementById(id).addEventListener("input", debounce(async function () {
             const keyword = document.getElementById("keyword").value;
             const minRent = document.getElementById("minRent").value;
             const maxRent = document.getElementById("maxRent").value;
-
             const params = new URLSearchParams();
             if (keyword) params.append("keyword", keyword);
             if (minRent) params.append("minRent", minRent);
             if (maxRent) params.append("maxRent", maxRent);
-
             const res = await fetch(`/api/management/houses/search?${params.toString()}`, {
                 headers: { Authorization: "Bearer " + token }
             });
-
             if (!res.ok) return;
-
             const filteredHouses = await res.json();
             renderHouses(filteredHouses);
         }, 300));
@@ -389,7 +335,6 @@ function setupNavbar() {
                 headers: { Authorization: "Bearer " + token }
             });
             if (!res.ok) throw new Error("Failed to fetch user");
-
             const user = await res.json();
             if (user.approved) {
                 const modal = new bootstrap.Modal(document.getElementById("createHouseModal"));
@@ -401,7 +346,6 @@ function setupNavbar() {
             alert("Error checking approval status. Please try again.");
         }
     }
-
 </script>
 </body>
 </html>

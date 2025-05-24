@@ -53,7 +53,7 @@
 </main>
 
 <script>
-    let token = localStorage.getItem("token");
+    let token = sessionStorage.getItem("token");
     let currentUserId = null;
     let lastTransactions = [];
 
@@ -75,7 +75,7 @@
         fetchAndRenderTransactions(`/api/transaction/user/${currentUserId}`);
       } catch {
         alert("Session expired. Please log in again.");
-        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
         window.location.href = "/login.html";
       }
     }
@@ -112,7 +112,7 @@
 
         if (res.status === 401) {
           alert("Session expired. Please log in again.");
-          localStorage.removeItem("token");
+          sessionStorage.removeItem("token");
           window.location.href = "/login.html";
           return;
         }

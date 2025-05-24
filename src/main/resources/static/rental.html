@@ -18,22 +18,34 @@
         .card-clickable{ text-decoration:none;color:inherit; }
         .card-clickable:hover{ opacity:.9; }
         .card-body *{ pointer-events:none; }
-        .view-btn{ pointer-events:auto; }         /*  enable button click  */
+        .view-btn{ pointer-events:auto; }         /* enable button click */
     </style>
 </head>
 
 <body>
-<nav class="navbar navbar-expand-lg bg-white shadow-sm w-100">
+<nav class="navbar navbar-expand-lg shadow-sm w-100">
     <div class="container">
-        <a class="navbar-brand fw-bold text-primary" href="/rental.html">Papikos</a>
+        <a class="navbar-brand fw-bold" href="/rental.html">Papikos</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="/management.html">My Houses</a></li>
-                <li class="nav-item"><a class="btn btn-outline-primary me-2" href="/login.html">Login</a></li>
-                <li class="nav-item"><a class="btn btn-primary" href="/register.html">Sign up</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/management.html">My Houses</a>
+                </li>
+                <!-- Chat button now styled as outline-primary -->
+                <li class="nav-item">
+                    <a class="btn btn-outline-primary me-2" href="/chat.html">
+                        <i class="bi bi-chat-dots-fill"></i> Chat
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-outline-primary me-2" href="/login.html">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="btn btn-primary" href="/register.html">Sign up</a>
+                </li>
             </ul>
         </div>
     </div>
@@ -46,38 +58,40 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const houseContainer = document.getElementById("houseContainer");
 
-    window.addEventListener("DOMContentLoaded", ()=> {
-        if(!token){
+    window.addEventListener("DOMContentLoaded", () => {
+        if (!token) {
             houseContainer.innerHTML = `<div class="alert alert-warning">Please log in to view rental listings.</div>`;
             return;
         }
         fetchHouses();
     });
 
-    async function fetchHouses(){
-        try{
-            const res = await fetch("/api/houses",{ headers:{Authorization:"Bearer "+token}});
-            if(!res.ok) throw new Error(res.status);
+    async function fetchHouses() {
+        try {
+            const res = await fetch("/api/houses", { headers: { Authorization: "Bearer " + token } });
+            if (!res.ok) throw new Error(res.status);
             const houses = await res.json();
             renderHouses(houses);
-        }catch(err){
+        } catch (err) {
             houseContainer.innerHTML = `<div class="alert alert-danger">Failed to load houses (${err}).</div>`;
         }
     }
 
-    function renderHouses(houses){
-        if(!houses.length){
-            houseContainer.innerHTML = `<div class="alert alert-info">No houses found.</div>`; return;
+    function renderHouses(houses) {
+        if (!houses.length) {
+            houseContainer.innerHTML = `<div class="alert alert-info">No houses found.</div>`;
+            return;
         }
         houseContainer.innerHTML = "";
         houses.forEach(h => {
             const address = h.location ?? h.address ?? "-";
-            const price   = (h.price ?? h.monthlyRent ?? 0).toLocaleString("id-ID");
-            const rooms   = h.numberOfRooms ?? "-";
-            const img     = h.imageUrl || "https://via.placeholder.com/400x250.png?text=No+Image";
+            const price = (h.price ?? h.monthlyRent ?? 0).toLocaleString("id-ID");
+            const rooms = h.numberOfRooms ?? "-";
+            const img = h.imageUrl || "https://via.placeholder.com/400x250.png?text=No+Image";
+
             houseContainer.innerHTML += `
       <div class="col">
         <a class="card-clickable" href="RentalHouseDetails.html?houseId=${h.id}">
@@ -89,20 +103,16 @@
             <div class="card-body">
               <p class="text-uppercase fw-bold text-muted small mb-1">${address}</p>
               <h5 class="card-title mb-0 text-primary">${h.name}</h5>
-
               <div class="mt-2">
                 <h4 class="fw-bold mb-0 text-dark">Rp <span>${price}</span></h4>
                 <span class="badge bg-light text-dark border border-secondary fw-semibold small">per month</span>
               </div>
-
               <div class="text-muted mt-1 small"><strong>${rooms} rooms</strong></div>
-
               <div class="d-flex gap-3 mt-3 text-muted small">
                 <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
                 <div><i class="bi bi-droplet-half"></i> 2 Baths</div>
                 <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
               </div>
-
               <button class="btn btn-outline-primary w-100 mt-3 view-btn">
                 View Detail
               </button>

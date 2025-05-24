@@ -25,7 +25,7 @@
 </div>
 
 <script>
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     async function fetchUserId() {
         const res = await fetch("/api/auth/users/me", {

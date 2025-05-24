@@ -62,7 +62,7 @@
 
 <script>
     let currentUserId = null;
-    let token = localStorage.getItem("token");
+    let token = sessionStorage.getItem("token");
 
     async function loadUserInfoAndBalance() {
         if (!token) {
@@ -81,7 +81,7 @@
             updateBalance(user.balance);
         } catch {
             alert("Session expired. Please log in again.");
-            localStorage.removeItem("token");
+            sessionStorage.removeItem("token");
             window.location.href = "/login.html";
         }
     }
@@ -102,7 +102,7 @@
         .then(balance => updateBalance(Number(balance)))
         .catch(() => {
             alert("Session expired. Please log in again.");
-            localStorage.removeItem("token");
+            sessionStorage.removeItem("token");
             window.location.href = "/login.html";
         });
     }
@@ -196,7 +196,7 @@
 
             if (res.status === 401) {
                 alert("Session expired. Please log in again.");
-                localStorage.removeItem("token");
+                sessionStorage.removeItem("token");
                 window.location.href = "/login.html";
                 return;
             }

@@ -38,6 +38,7 @@ dependencies {
 	// Spring Boot starters
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation ("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
 	// ✅ WebSocket & Messaging support
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
