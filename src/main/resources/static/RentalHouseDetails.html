@@ -40,7 +40,6 @@
     document.addEventListener("DOMContentLoaded", async () => {
         if (!token) return location.href = "/login.html";
 
-        // 1) Get the current user and ensure they’re a tenant
         const meResp = await fetch("/api/auth/users/me", {
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -48,7 +47,6 @@
         if (!me.role?.includes("TENANT")) return location.href = "/login.html";
         currentUser = me;
 
-        // 2) Load the house data
         await loadHouse();
     });
 
@@ -173,14 +171,14 @@
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
-                alert("Booking berhasil!");
-                location.href = `/rentalRequests.html?houseId=${currentHouse.id}`;
+                alert("Request sent!");
+                location.href = `/RentalHouseDetails.html?houseId=${currentHouse.id}`;
             } else {
                 const err = await res.text();
-                alert("Gagal booking: " + err);
+                alert("Request failed: " + err);
             }
         } catch (e) {
-            alert("Booking error: " + e.message);
+            alert("Request error: " + e.message);
         }
     }
 

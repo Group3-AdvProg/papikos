@@ -150,6 +150,12 @@ public class HouseManagementController {
                 houseManagementService.updateHouse(house.getId(), house).join();
                 logger.info("House [{}] room count updated by user [{}]", house.getId(), landlord.getEmail());
             }
+
+            notificationService.notifyTenantRentalApproved(
+                    landlord.getId(),
+                    rental.getTenant().getId(),
+                    house.getId()
+            );
         }
 
         return ResponseEntity.ok("Rental approved.");

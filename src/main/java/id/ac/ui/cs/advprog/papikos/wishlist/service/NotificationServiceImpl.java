@@ -73,5 +73,19 @@ public class NotificationServiceImpl implements NotificationService {
             notificationRepo.save(notif);
         }
     }
+
+    @Override
+    public void notifyTenantRentalApproved(Long senderId, Long receiverId, Long houseId) {
+        houseRepo.findById(houseId).ifPresent(house -> {
+            Notification notif = Notification.builder()
+                    .senderId(senderId)
+                    .receiverId(receiverId)
+                    .message("Your rental request for " + house.getName() + " has been approved!")
+                    .createdAt(LocalDateTime.now())
+                    .isRead(false)
+                    .build();
+            notificationRepo.save(notif);
+        });
+    }
 }
 
