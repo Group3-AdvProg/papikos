@@ -15,40 +15,26 @@ window.setupNavbar = function () {
         return;
     }
 
-    let payload;
-    try {
-        payload = JSON.parse(atob(token.split('.')[1]));
-    } catch (e) {
-        // Invalid token format
-        sessionStorage.removeItem("token");
-        showGuestNavbar();
-        return;
-    }
-
     fetch("/api/auth/me", {
         headers: { Authorization: "Bearer " + token }
     })
         .then(res => {
-            if (!res.ok) throw new Error("Invalid token or unauthorized");
+            if (!res.ok) throw new Error("Invalid token");
             return res.json();
         })
         .then(user => {
             const links = [];
-            const authorities = payload.authorities || [];
+            const role = user.role;
 
-            const isAdmin = authorities.some(a => a.authority === "ROLE_ADMIN");
-            const isLandlord = authorities.some(a => a.authority === "ROLE_LANDLORD");
-            const isTenant = authorities.some(a => a.authority === "ROLE_TENANT");
-
-            if (isAdmin) {
+            if (role === "ROLE_ADMIN") {
                 links.push(`<li class="nav-item"><a class="nav-link" href="/admin.html">Admin Dashboard</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/inbox.html">Inbox</a></li>`);
-            } else if (isLandlord) {
+            } else if (role === "ROLE_LANDLORD") {
                 links.push(`<li class="nav-item"><a class="nav-link" href="/management.html">My Houses</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/wallet.html">My Wallet</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/chat.html"><i class="bi bi-chat-dots"></i> Chat</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/inbox.html">Inbox</a></li>`);
-            } else if (isTenant) {
+            } else if (role === "ROLE_TENANT") {
                 links.push(`<li class="nav-item"><a class="nav-link" href="/rental.html">Browse Rentals</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/wallet.html">My Wallet</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/chat.html"><i class="bi bi-chat-dots"></i> Chat</a></li>`);
@@ -78,7 +64,6 @@ window.setupNavbar = function () {
             });
         })
         .catch(() => {
-            // Token invalid or backend rejected it
             sessionStorage.removeItem("token");
             showGuestNavbar();
         });
