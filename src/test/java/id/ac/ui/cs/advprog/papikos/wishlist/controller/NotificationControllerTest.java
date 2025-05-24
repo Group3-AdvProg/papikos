@@ -34,36 +34,36 @@ class NotificationControllerTest {
     }
 
     @Test
-    void testGetTenantNotifications_NotEmpty() throws Exception {
-        when(notificationService.getNotificationsByTenant(1L)).thenReturn(dummyNotifications);
+    void testGetNotificationsByReceiver_NotEmpty() throws Exception {
+        when(notificationService.getNotificationsByReceiver(1L)).thenReturn(dummyNotifications);
 
-        mockMvc.perform(get("/api/notifications/tenant/1"))
+        mockMvc.perform(get("/api/notifications/receiver/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0]").value("House 1 available!"));
     }
 
     @Test
-    void testGetTenantNotifications_Empty() throws Exception {
-        when(notificationService.getNotificationsByTenant(2L)).thenReturn(List.of());
+    void testGetNotificationsByReceiver_Empty() throws Exception {
+        when(notificationService.getNotificationsByReceiver(2L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/notifications/tenant/2"))
+        mockMvc.perform(get("/api/notifications/receiver/2"))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void testGetOwnerNotifications_NotEmpty() throws Exception {
-        when(notificationService.getNotificationsByOwner(10L)).thenReturn(dummyNotifications);
+    void testGetNotificationsBySender_NotEmpty() throws Exception {
+        when(notificationService.getNotificationsBySender(10L)).thenReturn(dummyNotifications);
 
-        mockMvc.perform(get("/api/notifications/owner/10"))
+        mockMvc.perform(get("/api/notifications/sender/10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[1]").value("House 2 is ready!"));
     }
 
     @Test
-    void testGetOwnerNotifications_Empty() throws Exception {
-        when(notificationService.getNotificationsByOwner(99L)).thenReturn(List.of());
+    void testGetNotificationsBySender_Empty() throws Exception {
+        when(notificationService.getNotificationsBySender(99L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/notifications/owner/99"))
+        mockMvc.perform(get("/api/notifications/sender/99"))
                 .andExpect(status().isNoContent());
     }
 
@@ -75,5 +75,17 @@ class NotificationControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(notificationService, times(1)).notifyAvailability(5L);
+    }
+
+    @Test
+    void testSendGlobalNotification() throws Exception {
+        doNothing().when(notificationService).sendToAllUsers(1L, "Hello everyone!");
+
+        mockMvc.perform(post("/api/notifications/broadcast")
+                        .param("senderId", "1")
+                        .param("message", "Hello everyone!"))
+                .andExpect(status().isOk());
+
+        verify(notificationService, times(1)).sendToAllUsers(1L, "Hello everyone!");
     }
 }

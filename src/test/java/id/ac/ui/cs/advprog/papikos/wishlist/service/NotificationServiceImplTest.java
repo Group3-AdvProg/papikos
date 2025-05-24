@@ -1,7 +1,8 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.service;
 
-import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
@@ -32,6 +33,9 @@ class NotificationServiceImplTest {
     @Mock
     private WishlistItemRepository wishlistRepo;
 
+    @Mock
+    private UserRepository userRepo;
+
     @InjectMocks
     private NotificationServiceImpl notificationService;
 
@@ -48,42 +52,43 @@ class NotificationServiceImplTest {
         house.setId(10L);
         house.setOwner(owner);
 
-        wishlistItem = WishlistItem.builder().tenantId(2L).houseId(10L).build();
+        wishlistItem = WishlistItem.builder()
+                .tenantId(2L)
+                .houseId(10L)
+                .build();
     }
 
     @Test
-    void testGetNotificationsByTenant() {
+    void testGetNotificationsByReceiver() {
         Notification notif = Notification.builder()
-                .tenantId(2L)
-                .ownerId(1L)
+                .receiverId(2L)
+                .senderId(1L)
                 .message("Test message")
                 .createdAt(LocalDateTime.now())
                 .isRead(false)
                 .build();
 
-        when(notificationRepo.findByTenantId(2L)).thenReturn(List.of(notif));
+        when(notificationRepo.findByReceiverId(2L)).thenReturn(List.of(notif));
 
-        var result = notificationService.getNotificationsByTenant(2L);
+        var result = notificationService.getNotificationsByReceiver(2L);
         assertEquals(List.of("Test message"), result);
     }
 
-
     @Test
-    void testGetNotificationsByOwner() {
+    void testGetNotificationsBySender() {
         Notification notif = Notification.builder()
-                .tenantId(2L)
-                .ownerId(1L)
-                .message("Owner message")
+                .receiverId(2L)
+                .senderId(1L)
+                .message("Sender message")
                 .createdAt(LocalDateTime.now())
                 .isRead(false)
                 .build();
 
-        when(notificationRepo.findByOwnerId(1L)).thenReturn(List.of(notif));
+        when(notificationRepo.findBySenderId(1L)).thenReturn(List.of(notif));
 
-        var result = notificationService.getNotificationsByOwner(1L);
-        assertEquals(List.of("Owner message"), result);
+        var result = notificationService.getNotificationsBySender(1L);
+        assertEquals(List.of("Sender message"), result);
     }
-
 
     @Test
     void testNotifyAvailability() {
@@ -92,7 +97,12 @@ class NotificationServiceImplTest {
 
         notificationService.notifyAvailability(10L).join();
 
-        verify(notificationRepo, times(1)).save(any(Notification.class));
+        verify(notificationRepo, times(1)).save(argThat(n ->
+                n.getReceiverId().equals(2L) &&
+                        n.getSenderId().equals(1L) &&
+                        n.getMessage().contains("House 10 is now available") &&
+                        !n.isRead()
+        ));
     }
 
     @Test
@@ -103,13 +113,28 @@ class NotificationServiceImplTest {
 
         notificationService.notifyAvailability(10L).join();
 
-        verify(notificationRepo).save(argThat(n ->
-                n.getTenantId().equals(2L) &&
-                        n.getOwnerId() == null &&
+        verify(notificationRepo, times(1)).save(argThat(n ->
+                n.getReceiverId().equals(2L) &&
+                        n.getSenderId() == null &&
                         n.getMessage().contains("House 10 is now available") &&
-                        n.getCreatedAt() != null &&
                         !n.isRead()
         ));
     }
 
+    @Test
+    void testSendToAllUsers() {
+        User u1 = new User(); u1.setId(10L);
+        User u2 = new User(); u2.setId(20L);
+
+        when(userRepo.findAll()).thenReturn(List.of(u1, u2));
+
+        notificationService.sendToAllUsers(99L, "Admin broadcast");
+
+        verify(notificationRepo, times(2)).save(argThat(n ->
+                (n.getReceiverId().equals(10L) || n.getReceiverId().equals(20L)) &&
+                        n.getSenderId().equals(99L) &&
+                        n.getMessage().equals("Admin broadcast") &&
+                        !n.isRead()
+        ));
+    }
 }
