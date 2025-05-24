@@ -95,6 +95,6 @@ public class AuthController {
         }
 
         logger.info("Returning profile for {}", email);
-        return ResponseEntity.ok(new UserProfileDTO(user.getId(), user.getEmail(), user.getBalance()));
+        return ResponseEntity.ok(new UserProfileDTO(user.getId(), user.getEmail(), user.getBalance(), user.getRole()));
     }
 }
