@@ -340,7 +340,7 @@ class RentalControllerTest {
         when(rentalService.getAllRentalsAsync())
                 .thenReturn(CompletableFuture.completedFuture(List.of(r1, r2)));
 
-        var result = mockMvc.perform(get("/api/rentals"))
+        var result = mockMvc.perform(get("/api/rentals/async")) // ✅ path yang benar
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
@@ -348,6 +348,7 @@ class RentalControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
+
 
     @Test void testUpdateRentalAsync_Found() throws Exception {
         Rental rental = setupRental(99L, 123L, "Update Test");
