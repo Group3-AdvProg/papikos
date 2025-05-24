@@ -6,7 +6,7 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
-import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
+import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +29,7 @@ public class HouseManagementController {
     private RentalService rentalService;
 
     @Autowired
-    private WishlistService wishlistService;
+    private NotificationService notificationService;
 
     @Autowired
     private UserRepository userRepository;
@@ -89,7 +89,7 @@ public class HouseManagementController {
 
         if (updatedHouse.getNumberOfRooms() > existingHouse.get().getNumberOfRooms()) {
             logger.info("User [{}] triggered wishlist notification for house [{}]", owner.getEmail(), id);
-            wishlistService.notifyAvailability(id);
+            notificationService.notifyAvailability(id);
         }
 
         return ResponseEntity.ok(updatedHouse);

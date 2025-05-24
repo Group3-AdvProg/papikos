@@ -7,7 +7,7 @@ import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
-import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
+import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +23,7 @@ public class RentalController {
     private final RentalService service;
     private final HouseRepository houseRepository;
     private final UserRepository userRepository;
-    private final WishlistService wishlistService;
+    private final NotificationService notificationService;
 
     @PostMapping
     public ResponseEntity<Rental> create(@RequestBody RentalDTO dto) {
@@ -109,7 +109,7 @@ public class RentalController {
             House house = rental.getHouse();
             house.setNumberOfRooms(house.getNumberOfRooms() + 1);
             houseRepository.save(house);
-            wishlistService.notifyAvailability(house.getId());
+            notificationService.notifyAvailability(house.getId());
 
             return service.deleteRentalAsync(id)
                     .thenApply(v -> ResponseEntity.ok("Rental deleted and availability updated"));
@@ -140,7 +140,7 @@ public class RentalController {
         house.setNumberOfRooms(house.getNumberOfRooms() + 1);
         houseRepository.save(house);
 
-        wishlistService.notifyAvailability(house.getId());
+        notificationService.notifyAvailability(house.getId());
 
         return ResponseEntity.ok("Rental deleted and availability updated");
     }

@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:63342")
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
@@ -16,11 +15,22 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping("/tenant/{tenantId}")
-    public ResponseEntity<List<String>> getNotificationsByTenant(@PathVariable Long tenantId) {
-        List<String> notifications = notificationService.getNotificationsByTenant(tenantId);
-        if (notifications == null || notifications.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
+    public ResponseEntity<List<String>> getTenantNotifications(@PathVariable Long tenantId) {
+        var notifications = notificationService.getNotificationsByTenant(tenantId);
+        if (notifications.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(notifications);
+    }
+
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<List<String>> getOwnerNotifications(@PathVariable Long ownerId) {
+        var notifications = notificationService.getNotificationsByOwner(ownerId);
+        if (notifications.isEmpty()) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(notifications);
+    }
+
+    @PostMapping("/house/{houseId}/trigger")
+    public ResponseEntity<Void> triggerHouseNotification(@PathVariable Long houseId) {
+        notificationService.notifyAvailability(houseId);
+        return ResponseEntity.noContent().build();
     }
 }
