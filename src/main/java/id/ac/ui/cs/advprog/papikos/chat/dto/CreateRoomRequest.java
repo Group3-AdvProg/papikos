@@ -4,10 +4,7 @@ package id.ac.ui.cs.advprog.papikos.chat.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
-@Getter
+@Getter @Setter
 public class CreateRoomRequest {
-    private Long tenantId;
-    private Long landlordId;
-
+    private String landlordEmail;
 }
