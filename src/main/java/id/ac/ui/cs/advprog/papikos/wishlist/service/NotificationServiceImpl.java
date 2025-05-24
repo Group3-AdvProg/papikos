@@ -25,15 +25,13 @@ public class NotificationServiceImpl implements NotificationService {
     private final UserRepository userRepo;
 
     @Override
-    public List<String> getNotificationsByReceiver(Long receiverId) {
-        return notificationRepo.findByReceiverId(receiverId)
-                .stream().map(Notification::getMessage).toList();
+    public List<Notification> getNotificationsByReceiver(Long receiverId) {
+        return notificationRepo.findByReceiverId(receiverId);
     }
 
     @Override
-    public List<String> getNotificationsBySender(Long senderId) {
-        return notificationRepo.findBySenderId(senderId)
-                .stream().map(Notification::getMessage).toList();
+    public List<Notification> getNotificationsBySender(Long senderId) {
+        return notificationRepo.findBySenderId(senderId);
     }
 
     @Async

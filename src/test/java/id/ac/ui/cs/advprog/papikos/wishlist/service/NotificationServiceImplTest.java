@@ -71,7 +71,8 @@ class NotificationServiceImplTest {
         when(notificationRepo.findByReceiverId(2L)).thenReturn(List.of(notif));
 
         var result = notificationService.getNotificationsByReceiver(2L);
-        assertEquals(List.of("Test message"), result);
+        assertEquals(1, result.size());
+        assertEquals("Test message", result.get(0).getMessage());
     }
 
     @Test
@@ -87,7 +88,8 @@ class NotificationServiceImplTest {
         when(notificationRepo.findBySenderId(1L)).thenReturn(List.of(notif));
 
         var result = notificationService.getNotificationsBySender(1L);
-        assertEquals(List.of("Sender message"), result);
+        assertEquals(1, result.size());
+        assertEquals("Sender message", result.get(0).getMessage());
     }
 
     @Test

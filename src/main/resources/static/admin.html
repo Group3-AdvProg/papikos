@@ -66,6 +66,16 @@
     <div id="landlordContainer" class="row g-4"></div>
 </div>
 
+<h1 class="fw-bold mb-4">📢 Broadcast Notification</h1>
+<div class="card shadow-sm p-4 mb-5">
+    <div class="mb-3">
+        <label for="broadcastMessage" class="form-label fw-semibold">Message</label>
+        <textarea class="form-control" id="broadcastMessage" rows="3" placeholder="Write a message to notify all users..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="sendBroadcast()">Send Notification</button>
+    <div id="broadcastStatus" class="mt-3 text-success fw-semibold"></div>
+</div>
+
 <script>
     const token = localStorage.getItem("token");
 
@@ -138,6 +148,39 @@
     }
 
     window.onload = fetchPendingLandlords;
+
+    async function getAdminId() {
+        const res = await fetch("/api/auth/users/me", {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const user = await res.json();
+        return user.id;
+    }
+
+    async function sendBroadcast() {
+        const message = document.getElementById("broadcastMessage").value;
+        const senderId = await getAdminId();
+
+        if (!message.trim()) {
+            alert("Message cannot be empty!");
+            return;
+        }
+
+        const res = await fetch(`/api/notifications/broadcast?senderId=${senderId}&message=${encodeURIComponent(message)}`, {
+            method: "POST",
+            headers: {
+                Authorization: "Bearer " + token
+            }
+        });
+
+        if (res.ok) {
+            document.getElementById("broadcastStatus").textContent = "✅ Notification sent!";
+            document.getElementById("broadcastMessage").value = "";
+        } else {
+            document.getElementById("broadcastStatus").textContent = "❌ Failed to send notification.";
+            document.getElementById("broadcastStatus").classList.replace("text-success", "text-danger");
+        }
+    }
 </script>
 
 </body>

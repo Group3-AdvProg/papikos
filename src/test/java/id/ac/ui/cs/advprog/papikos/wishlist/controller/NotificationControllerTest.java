@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.controller;
 
+import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -26,11 +28,14 @@ class NotificationControllerTest {
     @MockBean
     private NotificationService notificationService;
 
-    private List<String> dummyNotifications;
+    private List<Notification> dummyNotifications;
 
     @BeforeEach
     void setUp() {
-        dummyNotifications = List.of("House 1 available!", "House 2 is ready!");
+        dummyNotifications = List.of(
+                Notification.builder().message("House 1 available!").createdAt(LocalDateTime.now()).build(),
+                Notification.builder().message("House 2 is ready!").createdAt(LocalDateTime.now()).build()
+        );
     }
 
     @Test
@@ -39,7 +44,7 @@ class NotificationControllerTest {
 
         mockMvc.perform(get("/api/notifications/receiver/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0]").value("House 1 available!"));
+                .andExpect(jsonPath("$[0].message").value("House 1 available!"));
     }
 
     @Test
@@ -56,7 +61,7 @@ class NotificationControllerTest {
 
         mockMvc.perform(get("/api/notifications/sender/10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[1]").value("House 2 is ready!"));
+                .andExpect(jsonPath("$[1].message").value("House 2 is ready!"));
     }
 
     @Test
