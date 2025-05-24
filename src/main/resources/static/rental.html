@@ -23,33 +23,7 @@
 </head>
 
 <body>
-<nav class="navbar navbar-expand-lg shadow-sm w-100">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/rental.html">Papikos</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/management.html">My Houses</a>
-                </li>
-                <!-- Chat button now styled as outline-primary -->
-                <li class="nav-item">
-                    <a class="btn btn-outline-primary me-2" href="/chat.html">
-                        <i class="bi bi-chat-dots-fill"></i> Chat
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn btn-outline-primary me-2" href="/login.html">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn btn-primary" href="/register.html">Sign up</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<div id="navbar-placeholder"></div>
 
 <div class="container py-4">
     <h2 class="fw-bold mb-4 text-primary">Available Houses</h2>
@@ -57,11 +31,13 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
 <script>
     const token = sessionStorage.getItem("token");
     const houseContainer = document.getElementById("houseContainer");
 
     window.addEventListener("DOMContentLoaded", () => {
+        loadNavbar();
         if (!token) {
             houseContainer.innerHTML = `<div class="alert alert-warning">Please log in to view rental listings.</div>`;
             return;

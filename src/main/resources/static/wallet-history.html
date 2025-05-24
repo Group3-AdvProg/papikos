@@ -52,6 +52,8 @@
     <div id="mini-transactions" class="space-y-2"></div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
 <script>
     let token = sessionStorage.getItem("token");
     let currentUserId = null;
@@ -250,8 +252,9 @@
     document.getElementById("direction-filter").addEventListener("change", renderMiniTransactions);
 
     window.addEventListener("DOMContentLoaded", () => {
-      loadUser();
-      loadMiniTransactions();
+        loadNavbar();
+        loadUser();
+        loadMiniTransactions();
     });
 </script>
 </body>
