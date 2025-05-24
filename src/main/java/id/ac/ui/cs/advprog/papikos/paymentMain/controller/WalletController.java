@@ -13,7 +13,6 @@ import id.ac.ui.cs.advprog.papikos.paymentMain.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,8 +29,6 @@ public class WalletController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     private final PaymentContext context = new PaymentContext();
 
@@ -42,9 +39,6 @@ public class WalletController {
             User user = userRepository.findById(request.getUserId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-            if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                return ResponseEntity.ok(new ApiResponse("FAILED", "Invalid password.", "/wallet/topup"));
-            }
 
             PaymentStrategy strategy = switch (request.getMethod().toLowerCase()) {
                 case "bank" -> new BankTransferPayment();
@@ -104,10 +98,6 @@ public class WalletController {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
             User landlord = userRepository.findById(request.getTargetId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Landlord not found"));
-
-            if (!passwordEncoder.matches(request.getMethod(), tenant.getPassword())) { // TEMPORARY: overload method as password
-                return ResponseEntity.ok(new ApiResponse("FAILED", "Invalid password.", null));
-            }
 
             if (tenant.getBalance() < request.getAmount()) {
                 return ResponseEntity.ok(new ApiResponse("FAILED", "Insufficient balance.", null));

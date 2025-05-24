@@ -30,7 +30,6 @@ public class PaymentServiceTest {
     void shouldSucceedForBankPayment() {
         PaymentRequest request = new PaymentRequest();
         request.setAmount(100_000.0);
-        request.setBalance(200_000.0);
         request.setMethod("bank");
         request.setUserId(1L);
         request.setTargetId(2L);
@@ -53,7 +52,6 @@ public class PaymentServiceTest {
     void shouldSucceedForVirtualAccountPayment() {
         PaymentRequest request = new PaymentRequest();
         request.setAmount(75_000.0);
-        request.setBalance(100_000.0);
         request.setMethod("virtual");
         request.setUserId(1L);      // Add this
         request.setTargetId(2L);    // Add this
@@ -76,7 +74,6 @@ public class PaymentServiceTest {
     void shouldFailWithInvalidPaymentMethod() {
         PaymentRequest request = new PaymentRequest();
         request.setAmount(50_000.0);    // Use Double
-        request.setBalance(100_000.0);  // Use Double
         request.setMethod("invalid");
 
         assertFalse(service.handlePayment(request));
@@ -86,7 +83,6 @@ public class PaymentServiceTest {
     void shouldFailWhenBalanceIsInsufficient() {
         PaymentRequest request = new PaymentRequest();
         request.setAmount(100_000.0);   // Use Double
-        request.setBalance(20_000.0);   // Use Double
         request.setMethod("bank");
 
         assertFalse(service.handlePayment(request));

@@ -34,10 +34,7 @@
                     <option value="bank">Bank Transfer</option>
                     <option value="virtual">Virtual Account</option>
                 </select>
-                <input type="password" id="topup-password" placeholder="Enter your password to confirm"
-                       class="border border-gray-300 px-3 py-2 rounded w-full md:w-64 hidden" required>
-                <button id="topup-confirm-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 hidden">Confirm Top Up</button>
-
+                <button id="topup-confirm-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Top Up</button>
                 <p id="topup-msg" class="mt-2 text-sm"></p>
             </form>
         </div>
@@ -48,7 +45,6 @@
             <form id="payrent-form" class="flex flex-col gap-3">
                 <input type="text" id="pay-landlord" placeholder="Landlord ID" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
                 <input type="number" id="pay-amount" placeholder="Amount" min="1" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
-                <input type="password" id="pay-password" placeholder="Enter your password to confirm" class="border border-gray-300 px-3 py-2 rounded w-full md:w-64" required>
                 <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Pay Rent</button>
                 <p id="payrent-msg" class="mt-2 text-sm"></p>
             </form>
@@ -113,37 +109,23 @@
 
     // --- Top Up Logic ---
     const topupForm = document.getElementById("topup-form");
-    const topupPassword = document.getElementById("topup-password");
     const topupConfirmBtn = document.getElementById("topup-confirm-btn");
     const topupMsg = document.getElementById("topup-msg");
-
-    // Hide password and confirm button initially
-    topupPassword.classList.add("hidden");
-    topupConfirmBtn.classList.add("hidden");
-
-    // Show password and confirm button when amount and method are filled and user presses Enter or changes input
-    topupForm.addEventListener("input", function () {
-        const amount = document.getElementById("topup-amount").value;
-        const method = document.getElementById("topup-method").value;
-        if (amount && method) {
-            topupPassword.classList.remove("hidden");
-            topupConfirmBtn.classList.remove("hidden");
-        } else {
-            topupPassword.classList.add("hidden");
-            topupConfirmBtn.classList.add("hidden");
-        }
-    });
 
     topupForm.addEventListener("submit", async function (e) {
         e.preventDefault();
         const amount = parseFloat(document.getElementById("topup-amount").value);
         const method = document.getElementById("topup-method").value;
-        const password = topupPassword.value;
         topupMsg.textContent = "";
 
-        if (!currentUserId || isNaN(amount) || amount <= 0 || !password) {
+        if (!currentUserId || isNaN(amount) || amount <= 0) {
             topupMsg.textContent = "Please complete all fields.";
             topupMsg.className = "text-red-600 mt-2 font-semibold";
+            return;
+        }
+
+        // Confirmation dialog for top up
+        if (!confirm(`Are you sure you want to top up Rp ${amount.toLocaleString("id-ID")} using ${method}?`)) {
             return;
         }
 
@@ -157,8 +139,7 @@
                 body: JSON.stringify({
                     userId: currentUserId,
                     amount: amount,
-                    method: method,
-                    password: password
+                    method: method
                 })
             });
 
@@ -167,8 +148,6 @@
                 alert("Top up successful!");
                 refreshBalance();
                 topupForm.reset();
-                topupPassword.classList.add("hidden");
-                topupConfirmBtn.classList.add("hidden");
                 topupMsg.textContent = "";
             } else {
                 topupMsg.textContent = data.message || "Top up failed. Please try again.";
@@ -182,37 +161,27 @@
 
     // --- Pay Rent Logic ---
     const payrentForm = document.getElementById("payrent-form");
-    const payPassword = document.getElementById("pay-password");
     const payrentMsg = document.getElementById("payrent-msg");
-
-    // Hide password initially
-    payPassword.classList.add("hidden");
-
-    payrentForm.addEventListener("input", function () {
-        const landlord = document.getElementById("pay-landlord").value;
-        const amount = document.getElementById("pay-amount").value;
-        if (landlord && amount) {
-            payPassword.classList.remove("hidden");
-        } else {
-            payPassword.classList.add("hidden");
-        }
-    });
 
     payrentForm.addEventListener("submit", async function (e) {
         e.preventDefault();
         const landlordId = document.getElementById("pay-landlord").value;
         const amount = parseFloat(document.getElementById("pay-amount").value);
-        const password = payPassword.value;
         payrentMsg.textContent = "";
 
-        if (!currentUserId || !landlordId || isNaN(amount) || amount <= 0 || !password) {
+        if (!currentUserId || !landlordId || isNaN(amount) || amount <= 0) {
             payrentMsg.textContent = "Please complete all fields.";
             payrentMsg.className = "text-red-600 mt-2 font-semibold";
             return;
         }
 
+        // Confirmation dialog for pay rent
+        if (!confirm(`Are you sure you want to pay Rp ${amount.toLocaleString("id-ID")} to landlord ID ${landlordId}?`)) {
+            return;
+        }
+
         try {
-            const res = await fetch("/api/wallet/payrent", {
+            const res = await fetch("/api/wallet/pay-rent", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -220,9 +189,8 @@
                 },
                 body: JSON.stringify({
                     userId: currentUserId,
-                    landlordId: landlordId,
-                    amount: amount,
-                    password: password
+                    targetId: landlordId,
+                    amount: amount
                 })
             });
 
@@ -238,7 +206,6 @@
                 alert("Payment successful!");
                 refreshBalance();
                 payrentForm.reset();
-                payPassword.classList.add("hidden");
                 payrentMsg.textContent = "";
             } else {
                 payrentMsg.textContent = data.message || "Payment failed. Please try again.";

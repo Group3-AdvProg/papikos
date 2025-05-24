@@ -101,6 +101,11 @@ public class WalletControllerTest {
     void topUpInvalidMethod_shouldFail() throws Exception {
         TopUpRequest request = buildRequest("crypto"); // Invalid method
 
+        User user = new User();
+        user.setId(1L);
+        user.setBalance(0.0);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user)); // <-- add this
+
         var mvcResult = mockMvc.perform(post("/api/wallet/topup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
