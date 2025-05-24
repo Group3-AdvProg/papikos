@@ -50,6 +50,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/management/**").hasRole("LANDLORD")
                                 .requestMatchers("/api/auth/users/**").hasRole("ADMIN")
                                 .requestMatchers("/api/boarding-houses/**").hasRole("TENANT")
+                                .requestMatchers("/api/notifications/broadcast").hasRole("ADMIN")
 
                                 /* ---------- chat API ---------- */
                                 // OPTION A – any authenticated user can hit /api/chat/**
