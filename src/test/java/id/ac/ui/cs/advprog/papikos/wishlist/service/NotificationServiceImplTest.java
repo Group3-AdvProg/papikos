@@ -139,4 +139,27 @@ class NotificationServiceImplTest {
                         !n.isRead()
         ));
     }
+
+    @Test
+    void testNotifyTenantRentalApproved() {
+        User landlord = new User();
+        landlord.setId(1L);
+
+        House rentalHouse = new House();
+        rentalHouse.setId(99L);
+        rentalHouse.setName("Thata's House");
+        rentalHouse.setOwner(landlord);
+
+        when(houseRepo.findById(99L)).thenReturn(Optional.of(rentalHouse));
+
+        notificationService.notifyTenantRentalApproved(1L, 2L, 99L);
+
+        verify(notificationRepo, times(1)).save(argThat(n ->
+                n.getReceiverId().equals(2L) &&
+                        n.getSenderId().equals(1L) &&
+                        n.getMessage().equals("Your rental request for Thata's House has been approved!") &&
+                        !n.isRead()
+        ));
+    }
+
 }
