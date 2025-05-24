@@ -1,54 +1,79 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.controller;
 
-import id.ac.ui.cs.advprog.papikos.auth.filter.JwtFilter;
-import id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil;
-import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
+import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(NotificationController.class)
+@SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
-public class NotificationControllerTest {
+class NotificationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private WishlistService wishlistService;
+    private NotificationService notificationService;
 
-    @MockBean
-    private JwtUtil jwtUtil;
+    private List<String> dummyNotifications;
 
-    @MockBean
-    private JwtFilter jwtFilter;
-
-    @Test
-    void testGetNotificationsByTenant() throws Exception {
-        when(wishlistService.getNotificationsByTenant(123L))
-                .thenReturn(List.of("Room type Kamar AC is now available!"));
-
-        mockMvc.perform(get("/api/notifications/notifications/tenant123"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(1))
-                .andExpect(jsonPath("$[0]").value("Room type Kamar AC is now available!"));
+    @BeforeEach
+    void setUp() {
+        dummyNotifications = List.of("House 1 available!", "House 2 is ready!");
     }
 
     @Test
-    void testGetNotificationsByTenantEmpty() throws Exception {
-        when(wishlistService.getNotificationsByTenant(123L))
-                .thenReturn(List.of());
+    void testGetTenantNotifications_NotEmpty() throws Exception {
+        when(notificationService.getNotificationsByTenant(1L)).thenReturn(dummyNotifications);
 
-        mockMvc.perform(get("/api/notifications/notifications/tenant/123"))
+        mockMvc.perform(get("/api/notifications/tenant/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value("House 1 available!"));
+    }
+
+    @Test
+    void testGetTenantNotifications_Empty() throws Exception {
+        when(notificationService.getNotificationsByTenant(2L)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/notifications/tenant/2"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testGetOwnerNotifications_NotEmpty() throws Exception {
+        when(notificationService.getNotificationsByOwner(10L)).thenReturn(dummyNotifications);
+
+        mockMvc.perform(get("/api/notifications/owner/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[1]").value("House 2 is ready!"));
+    }
+
+    @Test
+    void testGetOwnerNotifications_Empty() throws Exception {
+        when(notificationService.getNotificationsByOwner(99L)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/notifications/owner/99"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testTriggerHouseNotification() throws Exception {
+        doReturn(CompletableFuture.completedFuture(null)).when(notificationService).notifyAvailability(5L);
+
+        mockMvc.perform(post("/api/notifications/house/5/trigger"))
+                .andExpect(status().isNoContent());
+
+        verify(notificationService, times(1)).notifyAvailability(5L);
     }
 }

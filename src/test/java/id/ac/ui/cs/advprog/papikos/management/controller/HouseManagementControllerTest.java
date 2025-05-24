@@ -7,7 +7,7 @@ import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
-import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
+import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,7 +39,7 @@ class HouseManagementControllerTest {
     private RentalService rentalService;
 
     @MockBean
-    private WishlistService wishlistService;
+    private NotificationService notificationService;
 
     @MockBean
     private UserRepository userRepository;
@@ -173,7 +173,7 @@ class HouseManagementControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Kos A"));
 
-        verify(wishlistService, times(1)).notifyAvailability(1L);
+        verify(notificationService, times(1)).notifyAvailability(1L);
     }
 
     @Test

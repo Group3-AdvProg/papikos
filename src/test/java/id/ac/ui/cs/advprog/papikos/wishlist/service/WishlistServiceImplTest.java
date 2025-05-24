@@ -1,142 +1,80 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.service;
 
-import id.ac.ui.cs.advprog.papikos.auth.entity.User;
-import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
-import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
-import id.ac.ui.cs.advprog.papikos.wishlist.observer.WishlistNotifier;
-import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class WishlistServiceImplTest {
 
-    @MockBean
-    private WishlistItemRepository wishlistItemRepo;
+    @Mock
+    private WishlistItemRepository wishlistRepo;
 
-    @MockBean
-    private NotificationRepository notificationRepo;
-
-    @MockBean
-    private HouseRepository houseRepo;
-
-    @MockBean
-    private WishlistNotifier notifier;
-
+    @InjectMocks
     private WishlistServiceImpl wishlistService;
 
-    private final Long tenantId = 1L;
-    private final Long houseId = 100L;
-    private final Long ownerId = 200L;
-
-    private House sampleHouse;
+    private WishlistItem item;
 
     @BeforeEach
     void setUp() {
-        wishlistService = new WishlistServiceImpl(wishlistItemRepo, notificationRepo, houseRepo, notifier);
-
-        sampleHouse = new House();
-        sampleHouse.setId(houseId);
-        User owner = new User();
-        owner.setId(ownerId);
-        sampleHouse.setOwner(owner);
+        item = WishlistItem.builder()
+                .id(1L)
+                .tenantId(1L)
+                .houseId(100L)
+                .build();
     }
 
     @Test
-    void testAddToWishlistSuccess() {
-        when(houseRepo.findById(houseId)).thenReturn(Optional.of(sampleHouse));
-        when(wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId)).thenReturn(null);
+    void testAddToWishlist_Success() {
+        when(wishlistRepo.findByTenantIdAndHouseId(1L, 100L)).thenReturn(null);
+        wishlistService.addToWishlist(1L, 100L);
 
-        wishlistService.addToWishlist(tenantId, houseId);
-
-        verify(wishlistItemRepo, times(1)).save(any(WishlistItem.class));
-        verify(notifier, times(1)).notifyObservers(houseId, ownerId);
-    }
-
-    @Test
-    void testAddToWishlistWhenAlreadyExists() {
-        when(houseRepo.findById(houseId)).thenReturn(Optional.of(sampleHouse));
-        when(wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId)).thenReturn(new WishlistItem());
-
-        wishlistService.addToWishlist(tenantId, houseId);
-
-        verify(wishlistItemRepo, never()).save(any());
-        verify(notifier, never()).notifyObservers(any(), any());
+        verify(wishlistRepo, times(1)).save(any(WishlistItem.class));
     }
 
     @Test
     void testRemoveFromWishlist() {
-        WishlistItem item = WishlistItem.builder().id(1L).tenantId(tenantId).houseId(houseId).build();
-        when(wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId)).thenReturn(item);
+        when(wishlistRepo.findByTenantIdAndHouseId(1L, 100L)).thenReturn(item);
+        wishlistService.removeFromWishlist(1L, 100L);
 
-        wishlistService.removeFromWishlist(tenantId, houseId);
-
-        verify(wishlistItemRepo, times(1)).delete(item);
-    }
-
-    @Test
-    void testRemoveFromWishlistItemNotFound() {
-        when(wishlistItemRepo.findByTenantIdAndHouseId(tenantId, houseId)).thenReturn(null);
-
-        assertDoesNotThrow(() -> wishlistService.removeFromWishlist(tenantId, houseId));
-        verify(wishlistItemRepo, never()).delete(any());
+        verify(wishlistRepo, times(1)).delete(item);
     }
 
     @Test
     void testGetWishlistByTenant() {
-        WishlistItem item1 = WishlistItem.builder().tenantId(tenantId).houseId(1L).build();
-        WishlistItem item2 = WishlistItem.builder().tenantId(tenantId).houseId(2L).build();
-        when(wishlistItemRepo.findByTenantId(tenantId)).thenReturn(List.of(item1, item2));
+        WishlistItem item1 = WishlistItem.builder().houseId(101L).build();
+        WishlistItem item2 = WishlistItem.builder().houseId(102L).build();
 
-        List<Long> result = wishlistService.getWishlistByTenant(tenantId);
-        assertEquals(List.of(1L, 2L), result);
+        when(wishlistRepo.findByTenantId(1L)).thenReturn(List.of(item1, item2));
+
+        List<Long> result = wishlistService.getWishlistByTenant(1L);
+        assertEquals(List.of(101L, 102L), result);
     }
 
     @Test
-    void testGetNotificationsByTenant() {
-        Notification n1 = Notification.builder().tenantId(tenantId).message("Hello").build();
-        Notification n2 = Notification.builder().tenantId(tenantId).message("World").build();
-        when(notificationRepo.findByTenantId(tenantId)).thenReturn(List.of(n1, n2));
+    void testAddToWishlist_ItemAlreadyExists() {
+        when(wishlistRepo.findByTenantIdAndHouseId(1L, 100L)).thenReturn(item);
+        wishlistService.addToWishlist(1L, 100L);
 
-        List<String> messages = wishlistService.getNotificationsByTenant(tenantId);
-        assertEquals(List.of("Hello", "World"), messages);
+        verify(wishlistRepo, never()).save(any(WishlistItem.class)); // nothing should be saved
     }
 
     @Test
-    void testGetNotificationsByOwner() {
-        Notification n1 = Notification.builder().ownerId(ownerId).message("Admin update 1").build();
-        when(notificationRepo.findByOwnerId(ownerId)).thenReturn(List.of(n1));
+    void testRemoveFromWishlist_ItemDoesNotExist() {
+        when(wishlistRepo.findByTenantIdAndHouseId(1L, 100L)).thenReturn(null);
+        wishlistService.removeFromWishlist(1L, 100L);
 
-        List<String> messages = wishlistService.getNotificationsByOwner(ownerId);
-        assertEquals(List.of("Admin update 1"), messages);
+        verify(wishlistRepo, never()).delete(any());
     }
 
-    @Test
-    void testNotifyAvailabilityValidHouse() {
-        when(houseRepo.findById(houseId)).thenReturn(Optional.of(sampleHouse));
-
-        wishlistService.notifyAvailability(houseId);
-
-        verify(notifier, times(1)).notifyObservers(houseId, ownerId);
-    }
-
-    @Test
-    void testNotifyAvailabilityHouseNotFound() {
-        when(houseRepo.findById(999L)).thenReturn(Optional.empty());
-
-        assertDoesNotThrow(() -> wishlistService.notifyAvailability(999L));
-        verify(notifier, never()).notifyObservers(any(), any());
-    }
 }

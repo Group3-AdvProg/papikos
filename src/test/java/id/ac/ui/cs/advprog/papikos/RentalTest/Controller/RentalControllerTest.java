@@ -11,7 +11,7 @@ import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
-import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
+import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -38,7 +38,7 @@ class RentalControllerTest {
     @Mock private RentalService rentalService;
     @Mock private HouseRepository houseRepository;
     @Mock private UserRepository userRepository;
-    @Mock private WishlistService wishlistService;
+    @Mock private NotificationService notificationService;
 
     @InjectMocks private RentalController controller;
 
@@ -330,7 +330,7 @@ class RentalControllerTest {
                 .andExpect(content().string(containsString("Rental deleted and availability updated")));
 
         verify(houseRepository).save(house);
-        verify(wishlistService).notifyAvailability(house.getId());
+        verify(notificationService).notifyAvailability(house.getId());
     }
 
     @Test void testFindAllRentalsAsync() throws Exception {
