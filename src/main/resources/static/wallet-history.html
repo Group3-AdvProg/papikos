@@ -2,32 +2,125 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Transaction History</title>
-    <script defer src="/js/transaction.js"></script>
+    <title>Wallet Transaction History</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-8 font-sans">
-<div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow">
-    <a href="/management.html" class="inline-block mb-4 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">
-        ← Back to My Houses
-    </a>
-    <h2 class="text-2xl font-bold mb-4">Transaction History</h2>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
 
-    <form id="filter-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <input type="text" id="userId" placeholder="User ID" class="border px-3 py-2 rounded" required />
-        <select id="type" class="border px-3 py-2 rounded">
+<!-- Header -->
+<header class="bg-blue-100 border border-blue-300 py-4 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
+        <div>
+            🧾 <span class="font-semibold">Transaction History</span>
+        </div>
+        <a href="/wallet.html" class="text-sm text-blue-600 hover:underline">← Back to Wallet</a>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Filter Form -->
+    <form id="filter-form" class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-6">
+        <select id="type" class="border border-gray-300 px-3 py-2 rounded">
             <option value="">All Types</option>
             <option value="TOP_UP">Top-Up</option>
             <option value="RENT_PAYMENT">Rent Payment</option>
         </select>
-        <input type="date" id="from" class="border px-3 py-2 rounded" />
-        <input type="date" id="to" class="border px-3 py-2 rounded" />
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded col-span-1 md:col-span-3">
-            Filter
-        </button>
+        <input type="date" id="from" class="border border-gray-300 px-3 py-2 rounded" />
+        <input type="date" id="to" class="border border-gray-300 px-3 py-2 rounded" />
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Filter</button>
     </form>
 
-    <div id="results" class="space-y-2 text-sm text-gray-800"></div>
-</div>
+    <!-- Results -->
+    <div id="results" class="space-y-3 text-sm"></div>
+</main>
+
+<script>
+    let token = localStorage.getItem("token");
+    let currentUserId = null;
+
+    async function loadUser() {
+      if (!token) {
+        alert("Please log in.");
+        window.location.href = "/login.html";
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/auth/users/me", {
+          headers: { Authorization: "Bearer " + token }
+        });
+
+        if (!res.ok) throw new Error("Unauthorized");
+        const user = await res.json();
+        currentUserId = user.id;
+        fetchAndRenderTransactions(`/api/transaction/user/${currentUserId}`);
+      } catch {
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem("token");
+        window.location.href = "/login.html";
+      }
+    }
+
+    async function fetchAndRenderTransactions(url) {
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "Loading...";
+      try {
+        const res = await fetch(url, {
+          headers: { Authorization: "Bearer " + token }
+        });
+
+        if (res.status === 401) {
+          alert("Session expired. Please log in again.");
+          localStorage.removeItem("token");
+          window.location.href = "/login.html";
+          return;
+        }
+
+        if (!res.ok) throw new Error("Failed to fetch");
+
+        let transactions = await res.json();
+        if (!Array.isArray(transactions)) transactions = [transactions];
+
+        if (!transactions.length) {
+          resultsDiv.innerHTML = `<p class="text-gray-500">No transactions found.</p>`;
+          return;
+        }
+
+        resultsDiv.innerHTML = transactions.map(tx => `
+          <div class="border p-3 rounded bg-gray-50">
+            <strong>${tx.type || "?"}</strong> - Rp ${Number(tx.amount || 0).toLocaleString('id-ID')} via ${tx.method || "-"}<br/>
+            <span class="text-xs text-gray-500">${tx.timestamp ? new Date(tx.timestamp).toLocaleString("id-ID") : ""}</span>
+          </div>
+        `).join("");
+      } catch {
+        resultsDiv.innerHTML = `<p class="text-red-500">Failed to load transactions.</p>`;
+      }
+    }
+
+    const filterForm = document.getElementById("filter-form");
+    if (filterForm) {
+      filterForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const type = document.getElementById("type").value;
+        const from = document.getElementById("from").value;
+        const to = document.getElementById("to").value;
+        if (!currentUserId) return;
+
+        let url = `/api/transaction/user/${currentUserId}`;
+        if (type && from && to) {
+          url = `/api/transaction/filter?userId=${currentUserId}&type=${type}&from=${from}T00:00:00&to=${to}T23:59:59`;
+        } else if (type) {
+          url = `/api/transaction/type?userId=${currentUserId}&type=${type}`;
+        } else if (from && to) {
+          url = `/api/transaction/date?userId=${currentUserId}&from=${from}T00:00:00&to=${to}T23:59:59`;
+        }
+
+        fetchAndRenderTransactions(url);
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", loadUser);
+</script>
 </body>
 </html>

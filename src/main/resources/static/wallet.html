@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Wallet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+
+<main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <a href="/management.html" class="inline-block text-sm text-blue-600 hover:underline">
+        ← Back to My Houses
+    </a>
+
+    <section class="bg-white p-6 rounded-xl shadow">
+        <h2 class="text-2xl font-bold mb-4">My Wallet</h2>
+
+        <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
+            <div>
+                👋 Welcome, <span id="welcome-email" class="font-semibold"></span>
+                <br>
+                <span class="ml-4">💰 Balance: <span id="wallet-balance" class="text-green-700 font-bold">...</span></span>
+            </div>
+        </div>
+
+        <!-- Top Up Section -->
+        <div class="mb-8 mt-6">
+            <h3 class="text-lg font-semibold mb-2">Top Up</h3>
+            <form id="topup-form" class="flex flex-col gap-3">
+                <input type="number" id="topup-amount" placeholder="Amount" min="1" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
+                <select id="topup-method" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48">
+                    <option value="bank">Bank Transfer</option>
+                    <option value="virtual">Virtual Account</option>
+                </select>
+                <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY_HERE"></div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Top Up</button>
+                <p id="topup-msg" class="mt-2 text-sm"></p>
+            </form>
+        </div>
+
+        <!-- Pay Rent Section -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-2">Pay Rent</h3>
+            <form id="payrent-form" class="flex flex-col md:flex-row md:items-center gap-2">
+                <input type="text" id="pay-landlord" placeholder="Landlord ID" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
+                <input type="number" id="pay-amount" placeholder="Amount" min="1" class="border border-gray-300 px-3 py-2 rounded w-full md:w-48" required>
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Pay Rent</button>
+            </form>
+            <p id="payrent-msg" class="mt-2 text-sm"></p>
+        </div>
+    </section>
+
+    <section class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-semibold mb-4">Transaction History</h3>
+        <a href="/wallet-history.html" class="inline-block text-blue-600 hover:underline text-sm">
+            → View Full Transaction History
+        </a>
+    </section>
+</main>
+
+<script>
+    let currentUserId = null;
+    let token = localStorage.getItem("token");
+
+    async function loadUserInfoAndBalance() {
+        if (!token) {
+            alert("Please login to use wallet features.");
+            window.location.href = "/login.html";
+            return;
+        }
+        try {
+            const res = await fetch("/api/auth/users/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
+            if (!res.ok) throw new Error("Invalid session");
+            const user = await res.json();
+            currentUserId = user.id;
+            document.getElementById("welcome-email").textContent = `${user.email || user.username} (ID: ${user.id})`;
+            updateBalance(user.balance);
+        } catch {
+            alert("Session expired. Please log in again.");
+            localStorage.removeItem("token");
+            window.location.href = "/login.html";
+        }
+    }
+
+    function updateBalance(balance) {
+        document.getElementById("wallet-balance").textContent =
+            typeof balance === "number" && !isNaN(balance) ? "Rp " + balance.toLocaleString("id-ID") : "...";
+    }
+
+    function refreshBalance() {
+        if (!currentUserId || !token) return;
+        fetch(`/api/wallet/balance?userId=${currentUserId}`, {
+            headers: { Authorization: "Bearer " + token }
+        })
+        .then(res => res.text())
+        .then(balance => updateBalance(Number(balance)))
+        .catch(() => {
+            alert("Session expired. Please log in again.");
+            localStorage.removeItem("token");
+            window.location.href = "/login.html";
+        });
+    }
+
+    const topupForm = document.getElementById("topup-form");
+    if (topupForm) {
+        topupForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById("topup-amount").value);
+            const method = document.getElementById("topup-method").value;
+            const msgEl = document.getElementById("topup-msg");
+            const captchaToken = grecaptcha.getResponse();
+            msgEl.textContent = "";
+
+            if (!captchaToken) {
+                msgEl.textContent = "Please complete the CAPTCHA.";
+                msgEl.className = "text-red-600 mt-2 font-semibold";
+                return;
+            }
+
+            if (!currentUserId || isNaN(amount) || amount <= 0) {
+                msgEl.textContent = "Please enter a valid amount.";
+                msgEl.className = "text-red-600 mt-2 font-semibold";
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/wallet/topup", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        amount: amount,
+                        method: method,
+                        captchaToken: captchaToken
+                    })
+                });
+
+                if (res.status === 401) throw new Error("Unauthorized");
+
+                const data = await res.json();
+                msgEl.textContent = data.message || "Unknown response";
+                msgEl.className = data.status === "SUCCESS"
+                    ? "text-green-600 mt-2 font-semibold"
+                    : "text-red-600 mt-2 font-semibold";
+                if (data.status === "SUCCESS") {
+                    alert("Top up successful!");
+                    refreshBalance();
+                    topupForm.reset();
+                    grecaptcha.reset(); // reset CAPTCHA after successful topup
+                }
+            } catch (err) {
+                if (err.message === "Unauthorized") {
+                    alert("Session expired. Please log in again.");
+                    localStorage.removeItem("token");
+                    window.location.href = "/login.html";
+                } else {
+                    msgEl.textContent = "Top up failed. Please try again.";
+                    msgEl.className = "text-red-600 mt-2 font-semibold";
+                }
+            }
+        });
+    }
+
+    window.addEventListener("DOMContentLoaded", loadUserInfoAndBalance);
+</script>
+</body>
+</html>
