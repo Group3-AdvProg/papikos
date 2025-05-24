@@ -10,12 +10,9 @@ import id.ac.ui.cs.advprog.papikos.wishlist.repository.NotificationRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -98,7 +95,7 @@ class WishlistServiceImplTest {
     }
 
     @Test
-    void testGetWishlistByUser() {
+    void testGetWishlistByTenant() {
         WishlistItem item1 = WishlistItem.builder().tenantId(tenantId).houseId(1L).build();
         WishlistItem item2 = WishlistItem.builder().tenantId(tenantId).houseId(2L).build();
         when(wishlistItemRepo.findByTenantId(tenantId)).thenReturn(List.of(item1, item2));
@@ -108,7 +105,7 @@ class WishlistServiceImplTest {
     }
 
     @Test
-    void testGetNotificationsByUser() {
+    void testGetNotificationsByTenant() {
         Notification n1 = Notification.builder().tenantId(tenantId).message("Hello").build();
         Notification n2 = Notification.builder().tenantId(tenantId).message("World").build();
         when(notificationRepo.findByTenantId(tenantId)).thenReturn(List.of(n1, n2));

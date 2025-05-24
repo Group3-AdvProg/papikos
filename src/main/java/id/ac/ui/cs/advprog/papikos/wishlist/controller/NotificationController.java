@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.controller;
 
-import id.ac.ui.cs.advprog.papikos.wishlist.service.WishlistService;
+import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +13,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationController {
 
-    private final WishlistService wishlistService;
+    private final NotificationService notificationService;
 
-    @GetMapping("/notifications/user/{userId}")
-    public ResponseEntity<List<String>> getNotificationsByUser(@PathVariable Long userId) {
-        List<String> notifications = wishlistService.getNotificationsByTenant(userId);
+    @GetMapping("/tenant/{tenantId}")
+    public ResponseEntity<List<String>> getNotificationsByTenant(@PathVariable Long tenantId) {
+        List<String> notifications = notificationService.getNotificationsByTenant(tenantId);
         if (notifications == null || notifications.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
