@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.controller;
 
+import id.ac.ui.cs.advprog.papikos.wishlist.entity.Notification;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,14 +17,14 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping("/receiver/{receiverId}")
-    public ResponseEntity<List<String>> getNotificationsByReceiver(@PathVariable Long receiverId) {
+    public ResponseEntity<List<Notification>> getNotificationsByReceiver(@PathVariable Long receiverId) {
         var notifications = notificationService.getNotificationsByReceiver(receiverId);
         if (notifications.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(notifications);
     }
 
     @GetMapping("/sender/{senderId}")
-    public ResponseEntity<List<String>> getNotificationsBySender(@PathVariable Long senderId) {
+    public ResponseEntity<List<Notification>> getNotificationsBySender(@PathVariable Long senderId) {
         var notifications = notificationService.getNotificationsBySender(senderId);
         if (notifications.isEmpty()) return ResponseEntity.noContent().build();
         return ResponseEntity.ok(notifications);
