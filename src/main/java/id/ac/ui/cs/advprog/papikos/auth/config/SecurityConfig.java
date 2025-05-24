@@ -8,8 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -25,67 +25,51 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
-                // Disable CSRF for stateless session (JWT based)
                 .csrf(csrf -> csrf.disable())
-
-                // Setup authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/",
-                                "/index.html",
-                                "/login.html",
-                                "/register.html",
-                                "/management.html",
-                                "/houseDetails.html",
-                                "/rentalRequests.html",
-                                "/inbox.html",
-                                "/admin.html",
-                                "/rental.html",
-                                "/RentalHouseDetails.html",
-                                // <-- allow SockJS handshake & WS connect
-                                "/ws/**",
-                                // <-- allow topic subscriptions over HTTP fallback if used
-                                "/topic/**",
-                                "/houseDetails.html",
-                                "/dashboard.html",
-                                "/wallet-topup.html",
-                                "/wallet-pay.html",
-                                "/transaction-history.html",
-                                "/wallet-history.html",
-                                "/js/**",
-                                "/api/auth/**",
-                                "/api/payment/**",
-                                "/api/wallet/**",
-                                "/api/transaction/**",
-                                "/css/papikos.css"
-                                ).permitAll()  // Public endpoints (e.g., registration, login)
+                                /* ---------- completely public ---------- */
+                                .requestMatchers(
+                                        "/actuator/**",
+                                        "/actuator/prometheus",
+                                        "/api/auth/**",          // login / register / refresh
+                                        "/ws/**",                // WebSocket handshake
+                                        "/topic/**",             // SockJS fallback
+                                        "/css/**", "/js/**", "/images/**",
+                                        "/*.html",               // SPA entry points
+                                        "/chat.html",
+                                        "/", "/index.html", "/login.html", "/register.html",
+                                        "/management.html", "/houseDetails.html", "/rentalRequests.html",
+                                        "/inbox.html", "/admin.html", "/rental.html", "/dashboard.html",
+                                        "/wallet-topup.html", "/wallet-pay.html",
+                                        "/wallet-history.html", "/transaction-history.html"
+                                ).permitAll()
 
-                        // Landlord-only
-                        .requestMatchers("/api/management/**").hasRole("LANDLORD")
+                                /* ---------- role-restricted APIs ---------- */
+                                .requestMatchers("/api/management/**").hasRole("LANDLORD")
+                                .requestMatchers("/api/auth/users/**").hasRole("ADMIN")
+                                .requestMatchers("/api/boarding-houses/**").hasRole("TENANT")
 
-                        // Admin-only
-                        .requestMatchers("/api/auth/users/**").hasRole("ADMIN")
+                                /* ---------- chat API ---------- */
+                                // OPTION A – any authenticated user can hit /api/chat/**
+                                .requestMatchers("/api/chat/**").authenticated()
 
-                        // Tenant-only
-                        .requestMatchers("/api/boarding-houses/**").hasRole("TENANT")
+                                // OPTION B – restrict to specific roles
+//              .requestMatchers("/api/chat/**")
+//                  .hasAnyRole("TENANT", "LANDLORD", "ADMIN")
 
-                        // everything else needs a valid JWT
-                        .anyRequest().authenticated()
+                                /* ---------- everything else ---------- */
+                                .anyRequest().authenticated()
                 )
-
-                // Stateless sessions
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionManagement(sess ->
+                        sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // Send 401 on auth failures
                 .exceptionHandling(ex ->
                         ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 );
 
-        // Add your JWT filter
+        /* insert JWT filter before UsernamePasswordAuthenticationFilter */
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -97,9 +81,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authConfig
-    ) throws Exception {
-        return authConfig.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg)
+            throws Exception {
+        return cfg.getAuthenticationManager();
     }
 }

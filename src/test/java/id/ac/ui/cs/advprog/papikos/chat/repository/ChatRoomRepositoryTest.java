@@ -1,4 +1,3 @@
-// src/test/java/id/ac/ui/cs/advprog/papikos/chat/repository/ChatRoomRepositoryTest.java
 package id.ac.ui.cs.advprog.papikos.chat.repository;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
@@ -41,6 +40,7 @@ class ChatRoomRepositoryTest {
         entityManager.persistAndFlush(landlord1);
 
         repository.save(ChatRoom.builder()
+                .name("Room A")
                 .tenant(tenant1)
                 .landlord(landlord1)
                 .build());
@@ -63,6 +63,7 @@ class ChatRoomRepositoryTest {
         entityManager.persistAndFlush(landlord2);
 
         repository.save(ChatRoom.builder()
+                .name("Room B")
                 .tenant(tenant2)
                 .landlord(landlord2)
                 .build());

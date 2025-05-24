@@ -1,4 +1,3 @@
-// src/test/java/id/ac/ui/cs/advprog/papikos/chat/controller/ChatRoomRestControllerTest.java
 package id.ac.ui.cs.advprog.papikos.chat.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;  // <-- added import
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
@@ -31,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ChatRoomRestController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class ChatRoomRestControllerTest {
+
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper objectMapper;
 
@@ -103,11 +103,15 @@ class ChatRoomRestControllerTest {
     @Test
     void postMessage_createsMessage() throws Exception {
         CreateMessageRequest req = new CreateMessageRequest();
-        req.setSenderId(5L);
+        req.setSenderEmail("user@example.com"); // ✅ updated field
         req.setType(ChatMessage.MessageType.CHAT);
         req.setContent("hi");
 
         User sender = new User(); sender.setId(5L);
+        sender.setEmail("user@example.com");
+        sender.setPassword("pass");
+        sender.setRole("TENANT");
+
         ChatMessage m = ChatMessage.builder()
                 .id(15L)
                 .type(req.getType())
@@ -116,8 +120,7 @@ class ChatRoomRestControllerTest {
                 .timestamp(Instant.now())
                 .build();
 
-        // wrap the ChatMessage in a completed future
-        when(service.saveMessage(eq(1L), eq(5L), any(ChatMessage.class)))
+        when(service.saveMessage(eq(1L), eq("user@example.com"), any(ChatMessage.class)))
                 .thenReturn(CompletableFuture.completedFuture(m));
 
         mvc.perform(post("/api/chat/rooms/1/messages")

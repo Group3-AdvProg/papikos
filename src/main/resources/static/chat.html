@@ -1,88 +1,215 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Papikos Chat</title>
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <title>Papikos • Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        #messages { list-style-type: none; padding: 0; }
-        #messages li { padding: 5px 10px; border-bottom: 1px solid #ddd; }
+        :root { --bs-primary:#7065F0; }
+        .btn-primary{background:var(--bs-primary)!important;border-color:var(--bs-primary)!important;color:#fff!important}
+        .btn-primary:hover{background:#5e54d8!important;border-color:#5e54d8!important}
+        body{font-family:'Segoe UI',sans-serif;background:#f9f9ff}
+
+        #rooms{max-height:70vh;overflow:auto}
+        #messages{height:60vh;overflow-y:auto;background:#fff;border-radius:.5rem}
+        #messages .me{text-align:right}
+        #messages .me .bubble{background:var(--bs-primary);color:#fff}
+        #messages .other .bubble{background:#eef0ff}
+        .bubble{display:inline-block;padding:.5rem .8rem;border-radius:1rem;max-width:80%}
+        .meta{font-size:.75rem;color:#6c757d}
+        .actions{font-size:.8rem;margin-left:.25rem;cursor:pointer;opacity:.7}
+        .actions:hover{opacity:1}
     </style>
 </head>
 <body>
-<h1>Papikos Chat</h1>
-<div>
-    <label>User ID: <input type="text" id="senderId" /></label>
-    <label>Room ID (leave blank for public): <input type="text" id="roomId" /></label>
-    <button id="connect">Connect</button>
-    <button id="disconnect" disabled>Disconnect</button>
+
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="/">Papikos</a>
+        <div class="ms-auto">
+            <a class="btn btn-outline-primary me-2" href="/management.html">My Houses</a>
+            <a class="btn btn-primary" href="/login.html" id="loginBtn">Login</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Room list -->
+        <div class="col-md-4">
+            <h5 class="fw-bold mb-3">Rooms</h5>
+            <div class="d-grid gap-2 mb-3">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal"
+                        data-bs-target="#newRoomModal">➕ New Room</button>
+            </div>
+            <ul class="list-group" id="rooms"></ul>
+        </div>
+
+        <!-- Chat column -->
+        <div class="col-md-8 d-flex flex-column">
+            <div id="messages" class="p-3 flex-grow-1 border mb-2"></div>
+
+            <form id="msgForm" class="input-group">
+                <input id="msgInput" class="form-control" placeholder="Type a message…" required>
+                <button class="btn btn-primary" type="submit"><i class="bi bi-send-fill"></i></button>
+            </form>
+        </div>
+    </div>
 </div>
-<div id="chat" style="display:none; margin-top:20px;">
-    <ul id="messages"></ul>
-    <input type="text" id="message" placeholder="Type a message..." />
-    <button id="send">Send</button>
+
+<!-- New room modal -->
+<div class="modal fade" id="newRoomModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" id="newRoomForm">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Room</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label class="form-label">Tenant&nbsp;ID</label>
+                    <input class="form-control" name="tenantId" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Landlord&nbsp;ID</label>
+                    <input class="form-control" name="landlordId" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create</button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
 <script>
-    var stompClient = null;
-    function connect() {
-        var senderId = document.getElementById('senderId').value.trim();
-        if (!senderId) {
-            alert("Enter your user ID!");
-            return;
-        }
-        var socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
-        stompClient.connect({}, function(frame) {
-            console.log('Connected: ' + frame);
-            document.getElementById('connect').disabled = true;
-            document.getElementById('disconnect').disabled = false;
-            document.getElementById('chat').style.display = 'block';
-            var roomId = document.getElementById('roomId').value.trim();
-            var subscribeDest, addUserDest;
-            if (roomId) {
-                subscribeDest = '/topic/room/' + roomId;
-                addUserDest = '/app/chat/' + roomId + '/addUser';
-            } else {
-                subscribeDest = '/topic/public';
-                addUserDest = '/app/chat.addUser';
-            }
-            stompClient.subscribe(subscribeDest, function(msg) {
-                showMessage(JSON.parse(msg.body));
-            });
-            stompClient.send(addUserDest, {}, JSON.stringify({ senderId: parseInt(senderId), content: 'joined!', type: 'JOIN' }));
+    /* ------------- JWT helpers ------------- */
+    function token(){ return localStorage.getItem("token"); }
+    function parse(tok){ try{ return JSON.parse(atob(tok.split('.')[1])); }catch{ return {}; } }
+    function currentEmail(){ return parse(token()).sub ?? null; }
+
+    /* ------------- fetch helper ------------- */
+    async function api(url,init){
+        init = init || {}; init.headers = {...init.headers, Authorization:"Bearer "+token()};
+        const res = await fetch(url,init);
+        if(res.status===401){ location.href="/login.html"; return null; }
+        return res;
+    }
+
+    /* ------------- room list ------------- */
+    async function loadRooms(){
+        const res = await api("/api/chat/rooms"); if(!res) return;
+        const rooms = await res.json(), ul=document.getElementById("rooms");
+        ul.innerHTML = rooms.length?"" : '<li class="list-group-item">No rooms yet</li>';
+        const cur = new URLSearchParams(location.search).get("roomId");
+        rooms.forEach(r=>{
+            ul.insertAdjacentHTML("beforeend",
+                `<li class="list-group-item ${r.id==cur?'active':''}">
+         <a class="${r.id==cur?'text-white':'text-primary fw-semibold'} text-decoration-none"
+            href="?roomId=${r.id}">
+            ${r.name}
+         </a>
+       </li>`);
         });
     }
-    function disconnect() {
-        if (stompClient !== null) {
-            stompClient.disconnect();
-        }
-        console.log('Disconnected');
-        document.getElementById('connect').disabled = false;
-        document.getElementById('disconnect').disabled = true;
-        document.getElementById('chat').style.display = 'none';
+
+    /* ------------- STOMP ------------- */
+    let stomp, roomId;
+    function connectWS(){
+        stomp = Stomp.over(new SockJS("/ws"));
+        stomp.connect({Authorization:"Bearer "+token()}, ()=>{
+            const topic = roomId ? `/topic/room/${roomId}` : "/topic/public";
+            stomp.subscribe(topic, msg=>show(JSON.parse(msg.body)));
+            loadHistory();
+        });
     }
-    function sendMessage() {
-        var senderId = document.getElementById('senderId').value.trim();
-        var content = document.getElementById('message').value.trim();
-        if (content && stompClient) {
-            var roomId = document.getElementById('roomId').value.trim();
-            var dest = roomId ? '/app/chat/' + roomId + '/sendMessage' : '/app/chat.sendMessage';
-            stompClient.send(dest, {}, JSON.stringify({ senderId: parseInt(senderId), content: content, type: 'CHAT' }));
-            document.getElementById('message').value = '';
-        }
+    async function loadHistory(){
+        const url = roomId ? `/api/chat/rooms/${roomId}/messages` : "/api/chat/messages";
+        const res = await api(url); if(!res) return;
+        const msgs = await res.json(); msgs.forEach(show); bottom();
     }
-    function showMessage(message) {
-        var messages = document.getElementById('messages');
-        var el = document.createElement('li');
-        var sender = message.sender ? (message.sender.email || message.sender.id) : 'System';
-        el.textContent = '[' + new Date(message.timestamp).toLocaleTimeString() + '] ' + sender + ': ' + message.content;
-        messages.appendChild(el);
+
+    /* ------------- UI helpers ------------- */
+    function show(m){
+        const mine = m.sender && m.sender.email === currentEmail(),
+            div  = document.getElementById("messages"),
+            t    = new Date(m.timestamp||Date.now()).toLocaleTimeString("id-ID",{hour:'2-digit',minute:'2-digit'});
+
+        div.insertAdjacentHTML("beforeend",
+            `<div data-id="${m.id||''}" class="${mine?'me':'other'} mb-2">
+       <span class="bubble">${m.content}</span>
+       ${mine && roomId ? actionsHTML(m.id) : ''}
+       <br><span class="meta">${mine?'You':m.sender?.email||'Anon'} • ${t}</span>
+     </div>`);
+        bottom();
     }
-    document.getElementById('connect').addEventListener('click', connect);
-    document.getElementById('disconnect').addEventListener('click', disconnect);
-    document.getElementById('send').addEventListener('click', sendMessage);
+    function actionsHTML(id){
+        return `<i class="bi bi-pencil-square actions" title="Edit" onclick="editMsg(${id})"></i>
+          <i class="bi bi-trash-fill actions text-danger" title="Delete" onclick="deleteMsg(${id})"></i>`;
+    }
+    function bottom(){ const el=document.getElementById("messages"); el.scrollTop=el.scrollHeight; }
+
+    /* ------------- send ------------- */
+    document.getElementById("msgForm").addEventListener("submit",e=>{
+        e.preventDefault(); if(!stomp?.connected) return;
+        const content=document.getElementById("msgInput").value.trim(); if(!content) return;
+        const dest = roomId ? `/app/chat/${roomId}/sendMessage` : "/app/chat.sendMessage";
+        stomp.send(dest, {}, JSON.stringify({ senderEmail: currentEmail(), type:"CHAT", content }));
+        document.getElementById("msgInput").value="";
+    });
+
+    /* ------------- edit message ------------- */
+    window.editMsg = async function(id){
+        const div = document.querySelector(`[data-id='${id}']`),
+            bubble = div.querySelector('.bubble'),
+            old = bubble.textContent,
+            fresh = prompt("Edit message:", old);
+        if(fresh===null || fresh.trim()===old) return;
+
+        const res = await api(`/api/chat/rooms/${roomId}/messages/${id}`,{
+            method:"PUT",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ content:fresh.trim() })
+        });
+        if(res && res.ok){ bubble.textContent=fresh.trim(); }
+        else alert("Failed to update message");
+    };
+
+    /* ------------- delete message ------------- */
+    window.deleteMsg = async function(id){
+        if(!confirm("Delete this message?")) return;
+        const res = await api(`/api/chat/rooms/${roomId}/messages/${id}`,{method:"DELETE"});
+        if(res && res.ok){
+            document.querySelector(`[data-id='${id}']`).remove();
+        }else alert("Failed to delete message");
+    };
+
+    /* ------------- create room ------------- */
+    document.getElementById("newRoomForm").addEventListener("submit", async e=>{
+        e.preventDefault();
+        const data=Object.fromEntries(new FormData(e.target));
+        data.tenantId=Number(data.tenantId); data.landlordId=Number(data.landlordId);
+        const res = await api("/api/chat/rooms",{
+            method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(data)});
+        if(res && res.ok){
+            bootstrap.Modal.getInstance(document.getElementById("newRoomModal")).hide();
+            loadRooms();
+        }else alert("Room creation failed");
+    });
+
+    /* ------------- boot ------------- */
+    window.addEventListener("DOMContentLoaded", ()=>{
+        if(!token()){ location.href="/login.html"; return; }
+        roomId = new URLSearchParams(location.search).get("roomId");
+        loadRooms(); connectWS();
+    });
 </script>
 </body>
 </html>

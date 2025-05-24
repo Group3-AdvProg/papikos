@@ -35,9 +35,9 @@ class ChatRoomServiceTest {
 
     @BeforeEach
     void setUp() {
-        tenant   = new User(); tenant.setId(10L);
-        landlord = new User(); landlord.setId(20L);
-        sender   = new User(); sender.setId(30L);
+        tenant = new User(); tenant.setId(10L); tenant.setEmail("tenant@example.com");
+        landlord = new User(); landlord.setId(20L); landlord.setEmail("landlord@example.com");
+        sender = new User(); sender.setId(30L); sender.setEmail("sender@example.com");
 
         room = ChatRoom.builder()
                 .id(100L)
@@ -53,7 +53,7 @@ class ChatRoomServiceTest {
         when(roomRepo.save(any(ChatRoom.class))).thenAnswer(i -> i.getArgument(0));
 
         ChatRoom created = service.createRoom(tenant.getId(), landlord.getId());
-        assertEquals(tenant,   created.getTenant());
+        assertEquals(tenant, created.getTenant());
         assertEquals(landlord, created.getLandlord());
         verify(roomRepo).save(any(ChatRoom.class));
     }
@@ -82,19 +82,19 @@ class ChatRoomServiceTest {
     }
 
     @Test
-    void saveMessage_existingRoomAndSender_savesWithRoomAndSender() {
+    void saveMessage_existingRoomAndSenderEmail_savesWithRoomAndSender() {
         ChatMessage msg = ChatMessage.builder()
                 .type(ChatMessage.MessageType.CHAT)
                 .content("hi")
                 .build();
         when(roomRepo.findById(room.getId())).thenReturn(Optional.of(room));
-        when(userRepo.findById(sender.getId())).thenReturn(Optional.of(sender));
+        when(userRepo.findByEmail(sender.getEmail())).thenReturn(Optional.of(sender));
         when(msgRepo.save(any(ChatMessage.class))).thenAnswer(i -> i.getArgument(0));
 
-        CompletableFuture<ChatMessage> future = service.saveMessage(room.getId(), sender.getId(), msg);
+        CompletableFuture<ChatMessage> future = service.saveMessage(room.getId(), sender.getEmail(), msg);
         ChatMessage saved = future.join();
 
-        assertEquals(room,  saved.getRoom());
+        assertEquals(room, saved.getRoom());
         assertEquals(sender, saved.getSender());
         verify(msgRepo).save(msg);
     }
@@ -103,15 +103,15 @@ class ChatRoomServiceTest {
     void saveMessage_unknownRoom_throws() {
         when(roomRepo.findById(room.getId())).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
-                () -> service.saveMessage(room.getId(), sender.getId(), new ChatMessage()));
+                () -> service.saveMessage(room.getId(), sender.getEmail(), new ChatMessage()));
     }
 
     @Test
     void saveMessage_unknownSender_throws() {
         when(roomRepo.findById(room.getId())).thenReturn(Optional.of(room));
-        when(userRepo.findById(sender.getId())).thenReturn(Optional.empty());
+        when(userRepo.findByEmail(sender.getEmail())).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
-                () -> service.saveMessage(room.getId(), sender.getId(), new ChatMessage()));
+                () -> service.saveMessage(room.getId(), sender.getEmail(), new ChatMessage()));
     }
 
     @Test

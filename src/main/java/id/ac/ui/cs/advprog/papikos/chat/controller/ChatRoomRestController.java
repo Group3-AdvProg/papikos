@@ -1,4 +1,3 @@
-// src/main/java/id/ac/ui/cs/advprog/papikos/chat/controller/ChatRoomRestController.java
 package id.ac.ui.cs.advprog.papikos.chat.controller;
 
 import id.ac.ui.cs.advprog.papikos.chat.dto.CreateRoomRequest;
@@ -21,26 +20,22 @@ public class ChatRoomRestController {
         this.service = service;
     }
 
-    // C: create a new room between a tenant and landlord
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ChatRoom createRoom(@RequestBody CreateRoomRequest req) {
         return service.createRoom(req.getTenantId(), req.getLandlordId());
     }
 
-    // R: list rooms
     @GetMapping
     public List<ChatRoom> listRooms() {
         return service.listRooms();
     }
 
-    // R: list messages in a room
     @GetMapping("/{roomId}/messages")
     public List<ChatMessage> listMessages(@PathVariable Long roomId) {
         return service.listMessages(roomId);
     }
 
-    // C: post a message to a room, authored by a real user (blocks on the async future)
     @PostMapping("/{roomId}/messages")
     @ResponseStatus(HttpStatus.CREATED)
     public ChatMessage postMessage(
@@ -51,11 +46,9 @@ public class ChatRoomRestController {
                 .type(req.getType())
                 .content(req.getContent())
                 .build();
-        // block until the @Async saveMessage completes
-        return service.saveMessage(roomId, req.getSenderId(), msg).join();
+        return service.saveMessage(roomId, req.getSenderEmail(), msg).join(); // ✅ changed here
     }
 
-    // U: edit/update a message in a room
     @PutMapping("/{roomId}/messages/{messageId}")
     public ChatMessage updateMessage(
             @PathVariable Long roomId,
@@ -67,7 +60,6 @@ public class ChatRoomRestController {
         return service.updateMessage(roomId, messageId, updated);
     }
 
-    // D: delete a message from a room
     @DeleteMapping("/{roomId}/messages/{messageId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMessage(
