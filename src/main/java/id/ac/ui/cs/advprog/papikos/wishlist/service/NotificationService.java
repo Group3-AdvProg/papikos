@@ -9,5 +9,6 @@ public interface NotificationService {
     List<Notification> getNotificationsBySender(Long senderId);
     CompletableFuture<Void> notifyAvailability(Long houseId);
     void sendToAllUsers(Long senderId, String message);
-    void notifyTenantRentalApproved(Long senderId, Long receiverId, Long houseId);
+    CompletableFuture<Void> notifyTenantRentalApproved(Long senderId, Long receiverId, Long houseId);
+    CompletableFuture<Void> notifyTenantRentalRejected(Long senderId, Long receiverId, Long houseId);
 }
