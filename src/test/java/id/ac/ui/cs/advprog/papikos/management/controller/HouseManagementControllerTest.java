@@ -2,9 +2,9 @@ package id.ac.ui.cs.advprog.papikos.management.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
-import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
@@ -259,7 +259,7 @@ class HouseManagementControllerTest {
         mockMvc.perform(post("/api/management/rentals/10/approve")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Rental approved."));
+                .andExpect(content().string("rental approved."));
 
         verify(rentalService, times(1)).updateRental(eq(10L), any(Rental.class));
         verify(houseManagementService, times(1)).updateHouse(eq(1L), any(House.class));
@@ -325,7 +325,7 @@ class HouseManagementControllerTest {
         mockMvc.perform(post("/api/management/rentals/11/approve")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Rental approved."));
+                .andExpect(content().string("rental approved."));
 
         verify(rentalService, never()).updateRental(anyLong(), any());
         verify(houseManagementService, never()).updateHouse(anyLong(), any());
@@ -352,7 +352,7 @@ class HouseManagementControllerTest {
         mockMvc.perform(post("/api/management/rentals/12/approve")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Rental approved."));
+                .andExpect(content().string("rental approved."));
 
         verify(rentalService, times(1)).updateRental(eq(12L), any());
         verify(houseManagementService, never()).updateHouse(anyLong(), any());
@@ -377,7 +377,7 @@ class HouseManagementControllerTest {
         mockMvc.perform(post("/api/management/rentals/20/reject")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Rental rejected."));
+                .andExpect(content().string("rental rejected."));
 
         verify(rentalService, times(1)).deleteRental(20L);
         verify(notificationService, times(1)).notifyTenantRentalRejected(1L, 3L, 2L);

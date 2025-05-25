@@ -32,7 +32,7 @@ public class JwtUtil {
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
-        long expirationTime = 1000L * 60 * 60 * 10; // 10 hours
+        long expirationTime = 1000L * 60 * 60 * 10L; // 10 hours
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)

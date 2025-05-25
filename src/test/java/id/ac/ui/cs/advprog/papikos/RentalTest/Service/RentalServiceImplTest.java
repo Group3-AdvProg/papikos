@@ -1,9 +1,9 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.house.Rental.repository.RentalRepository;
-import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalServiceImpl;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalServiceImpl;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,6 @@ import org.mockito.*;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -121,7 +120,7 @@ public class RentalServiceImplTest {
             service.updateRental(id, baseRental("FailKos", 999L));
         });
 
-        assertTrue(ex.getMessage().contains("Rental not found"));
+        assertTrue(ex.getMessage().contains("rental not found"));
         verify(repo).findById(id);
         verify(repo, never()).save(any());
     }
@@ -256,7 +255,7 @@ public class RentalServiceImplTest {
             service.updateRentalAsync(id, baseRental("FailAsyncKos", 55L));
         });
 
-        assertTrue(ex.getMessage().contains("Rental not found"));
+        assertTrue(ex.getMessage().contains("rental not found"));
     }
 
     @Test

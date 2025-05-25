@@ -1,8 +1,8 @@
 package id.ac.ui.cs.advprog.papikos.house.management.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.model.House;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
@@ -159,7 +159,7 @@ public class HouseManagementController {
             );
         }
 
-        return ResponseEntity.ok("Rental approved.");
+        return ResponseEntity.ok("rental approved.");
     }
 
     @PostMapping("/rentals/{rentalId}/reject")
@@ -182,7 +182,7 @@ public class HouseManagementController {
                 house.getId()
         );
 
-        return ResponseEntity.ok("Rental rejected.");
+        return ResponseEntity.ok("rental rejected.");
     }
 
 }

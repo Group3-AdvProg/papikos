@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.papikos.house.rental.service;
 
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.house.Rental.repository.RentalRepository;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -67,7 +67,7 @@ public class RentalServiceImpl implements RentalService {
                     }
                     return repo.save(r);
                 })
-                .orElseThrow(() -> new RuntimeException("Rental not found: " + id));
+                .orElseThrow(() -> new RuntimeException("rental not found: " + id));
     }
 
     @Override
@@ -86,7 +86,7 @@ public class RentalServiceImpl implements RentalService {
                     }
                     return repo.save(r);
                 })
-                .orElseThrow(() -> new RuntimeException("Rental not found: " + id));
+                .orElseThrow(() -> new RuntimeException("rental not found: " + id));
 
         return CompletableFuture.completedFuture(updated);
     }

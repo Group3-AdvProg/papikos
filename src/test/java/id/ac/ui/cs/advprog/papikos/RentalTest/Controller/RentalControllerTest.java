@@ -5,12 +5,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
-import id.ac.ui.cs.advprog.papikos.house.Rental.controller.RentalController;
-import id.ac.ui.cs.advprog.papikos.house.Rental.dto.RentalDTO;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.controller.RentalController;
+import id.ac.ui.cs.advprog.papikos.house.rental.dto.RentalDTO;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
-import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -197,7 +196,7 @@ class RentalControllerTest {
 
         mockMvc.perform(delete("/api/rentals/12"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Rental deleted and availability updated")));
+                .andExpect(content().string(containsString("rental deleted and availability updated")));
     }
 
     @Test void testUpdateSyncRental() throws Exception {
@@ -348,7 +347,7 @@ class RentalControllerTest {
 
         mockMvc.perform(asyncDispatch(result))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Rental deleted and availability updated")));
+                .andExpect(content().string(containsString("rental deleted and availability updated")));
 
         verify(houseRepository).save(house);
         verify(notificationService).notifyAvailability(house.getId());

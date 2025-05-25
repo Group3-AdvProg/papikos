@@ -64,7 +64,7 @@ public class RentalController {
         Rental created = service.createRental(rental);
         notificationService.notifyAvailability(house.getId());
 
-        logger.info("Rental [{}] created successfully for tenant [{}]",
+        logger.info("rental [{}] created successfully for tenant [{}]",
                 created.getId(), tenant.getId());
         return ResponseEntity.ok(created);
     }
@@ -80,11 +80,11 @@ public class RentalController {
         logger.info("GET /api/rentals/{} – fetch by id", id);
         return service.getRentalById(id)
                 .map(rental -> {
-                    logger.info("Rental [{}] found", id);
+                    logger.info("rental [{}] found", id);
                     return ResponseEntity.ok(rental);
                 })
                 .orElseGet(() -> {
-                    logger.warn("Rental [{}] not found", id);
+                    logger.warn("rental [{}] not found", id);
                     return ResponseEntity.notFound().build();
                 });
     }
@@ -101,7 +101,7 @@ public class RentalController {
         logger.info("DELETE /api/rentals/{} – deleting", id);
 
         Rental existing = service.getRentalById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Rental not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("rental not found"));
         House house = existing.getHouse();
 
         service.deleteRental(id);
@@ -109,8 +109,8 @@ public class RentalController {
         houseRepository.save(house);
         notificationService.notifyAvailability(house.getId());
 
-        logger.info("Rental [{}] deleted and room restored for house [{}]", id, house.getId());
-        return ResponseEntity.ok("Rental deleted and availability updated");
+        logger.info("rental [{}] deleted and room restored for house [{}]", id, house.getId());
+        return ResponseEntity.ok("rental deleted and availability updated");
     }
 
     // --- asynchronous endpoints ----------------------------------------------
@@ -199,7 +199,7 @@ public class RentalController {
                     return service.deleteRentalAsync(id)
                             .thenApply(v -> {
                                 logger.info("ASYNC rental [{}] deleted and availability updated", id);
-                                return ResponseEntity.ok("Rental deleted and availability updated");
+                                return ResponseEntity.ok("rental deleted and availability updated");
                             });
                 });
     }

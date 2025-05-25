@@ -15,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,12 +37,18 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
         logger.info("Login attempt for {}", authRequest.getEmail());
         try {
+            // we don't need to capture the Authentication return value here
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
+                    new UsernamePasswordAuthenticationToken(
+                            authRequest.getEmail(),
+                            authRequest.getPassword()
+                    )
             );
         } catch (AuthenticationException ex) {
             logger.warn("Invalid login for {}: {}", authRequest.getEmail(), ex.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid Credentials");
         }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getEmail());
@@ -66,6 +71,7 @@ public class AuthController {
         newUser.setRole(registerRequest.getRole());
         newUser.setFullName(registerRequest.getFullName());
         newUser.setPhoneNumber(registerRequest.getPhoneNumber());
+        // no unnecessary boolean literals: approved is false only for landlords
         newUser.setApproved(!"ROLE_LANDLORD".equals(newUser.getRole()));
 
         userRepository.save(newUser);
@@ -80,7 +86,9 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<?> getCurrentUser(
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             logger.warn("Access denied to /me: missing or malformed Authorization header");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid token");
@@ -95,6 +103,13 @@ public class AuthController {
         }
 
         logger.info("Returning profile for {}", email);
-        return ResponseEntity.ok(new UserProfileDTO(user.getId(), user.getEmail(), user.getBalance(), user.getRole()));
+        return ResponseEntity.ok(
+                new UserProfileDTO(
+                        user.getId(),
+                        user.getEmail(),
+                        user.getBalance(),
+                        user.getRole()
+                )
+        );
     }
 }
