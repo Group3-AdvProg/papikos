@@ -10,6 +10,7 @@ import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/management")
@@ -35,6 +37,7 @@ public class HouseManagementController {
     private UserRepository userRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(HouseManagementController.class);
+    private static final String FORBIDDEN_NOT_OWNER = "Forbidden: You do not own this house.";
 
     @GetMapping("/houses")
     public ResponseEntity<List<House>> getAllHouses(Principal principal) {
@@ -44,18 +47,24 @@ public class HouseManagementController {
         return ResponseEntity.ok(allHouses);
     }
 
+    @Async
     @PostMapping("/houses")
-    public ResponseEntity<?> createHouse(@RequestBody House house, Principal principal) {
+    public CompletableFuture<ResponseEntity<?>> createHouse(@RequestBody House house, Principal principal) {
         User owner = userRepository.findByEmail(principal.getName()).orElseThrow();
 
         if (!owner.isApproved()) {
             logger.warn("User [{}] is not approved to create houses", owner.getEmail());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account not approved by admin yet");
+            return CompletableFuture.completedFuture(
+                    ResponseEntity.status(HttpStatus.FORBIDDEN).body("Account not approved by admin yet")
+            );
         }
+
         house.setOwner(owner);
-        houseManagementService.addHouse(house).join();
-        logger.info("User [{}] successfully created house [{}]", owner.getEmail(), house.getName());
-        return ResponseEntity.ok(house);
+        return houseManagementService.addHouse(house)
+                .thenApply(v -> {
+                    logger.info("User [{}] successfully created house [{}]", owner.getEmail(), house.getName());
+                    return ResponseEntity.ok(house);
+                });
     }
 
     @GetMapping("/houses/{id}")
@@ -66,54 +75,64 @@ public class HouseManagementController {
 
         return houseOpt
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(403).body("Forbidden: You do not own this house."));
+                .orElse(ResponseEntity.status(403).body(FORBIDDEN_NOT_OWNER));
     }
 
+    @Async
     @PutMapping("/houses/{id}")
-    public ResponseEntity<?> updateHouse(@PathVariable Long id, @RequestBody House updatedHouse, Principal principal) {
+    public CompletableFuture<ResponseEntity<?>> updateHouse(@PathVariable Long id, @RequestBody House updatedHouse, Principal principal) {
         Optional<House> existingHouse = houseManagementService.findById(id);
         if (existingHouse.isEmpty()) {
             logger.warn("House ID [{}] not found for update", id);
-            return ResponseEntity.notFound().build();
+            return CompletableFuture.completedFuture(ResponseEntity.notFound().build());
         }
 
         User owner = userRepository.findByEmail(principal.getName()).orElseThrow();
         if (!existingHouse.get().getOwner().getId().equals(owner.getId())) {
             logger.warn("User [{}] attempted to update house [{}] they do not own", owner.getEmail(), id);
-            return ResponseEntity.status(403).body("Forbidden: You do not own this house.");
+            return CompletableFuture.completedFuture(
+                    ResponseEntity.status(HttpStatus.FORBIDDEN).body(FORBIDDEN_NOT_OWNER)
+            );
         }
 
         updatedHouse.setOwner(owner);
-        houseManagementService.updateHouse(id, updatedHouse).join();
-        logger.info("User [{}] updated house ID [{}]", owner.getEmail(), id);
+        return houseManagementService.updateHouse(id, updatedHouse)
+                .thenApply(v -> {
+                    logger.info("User [{}] updated house ID [{}]", owner.getEmail(), id);
 
-        if (updatedHouse.getNumberOfRooms() > existingHouse.get().getNumberOfRooms()) {
-            logger.info("User [{}] triggered wishlist notification for house [{}]", owner.getEmail(), id);
-            notificationService.notifyAvailability(id);
-        }
+                    if (updatedHouse.getNumberOfRooms() > existingHouse.get().getNumberOfRooms()) {
+                        logger.info("User [{}] triggered wishlist notification for house [{}]", owner.getEmail(), id);
+                        notificationService.notifyAvailability(id);
+                    }
 
-        return ResponseEntity.ok(updatedHouse);
+                    return ResponseEntity.ok(updatedHouse);
+                });
     }
 
-
+    @Async
     @DeleteMapping("/houses/{id}")
-    public ResponseEntity<?> deleteHouse(@PathVariable Long id, Principal principal) {
+    public CompletableFuture<ResponseEntity<?>> deleteHouse(@PathVariable Long id, Principal principal) {
         Optional<House> house = houseManagementService.findById(id);
         if (house.isEmpty()) {
             logger.warn("House ID [{}] not found for deletion", id);
-            return ResponseEntity.notFound().build();
+            return CompletableFuture.completedFuture(ResponseEntity.notFound().build());
         }
 
         User owner = userRepository.findByEmail(principal.getName()).orElseThrow();
         if (!house.get().getOwner().getId().equals(owner.getId())) {
             logger.warn("User [{}] attempted to delete house [{}] they do not own", owner.getEmail(), id);
-            return ResponseEntity.status(403).body("Forbidden: You do not own this house.");
+            return CompletableFuture.completedFuture(
+                    ResponseEntity.status(HttpStatus.FORBIDDEN).body(FORBIDDEN_NOT_OWNER)
+            );
         }
 
-        houseManagementService.deleteHouse(id).join();
-        logger.info("User [{}] deleted house ID [{}]", owner.getEmail(), id);
-        return ResponseEntity.noContent().build();
+        return houseManagementService.deleteHouse(id)
+                .thenApply(v -> {
+                    logger.info("User [{}] deleted house ID [{}]", owner.getEmail(), id);
+                    return ResponseEntity.noContent().build();
+                });
     }
+
 
     @GetMapping("/houses/search")
     public ResponseEntity<List<House>> searchHouses(
@@ -183,5 +202,4 @@ public class HouseManagementController {
 
         return ResponseEntity.ok("Rental rejected.");
     }
-
 }
