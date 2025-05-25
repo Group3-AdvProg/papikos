@@ -1,6 +1,5 @@
 package id.ac.ui.cs.advprog.papikos.wishlist.service;
 
-import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.entity.WishlistItem;
 import id.ac.ui.cs.advprog.papikos.wishlist.repository.WishlistItemRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,45 +35,52 @@ class WishlistServiceImplTest {
 
     @Test
     void testAddToWishlist_Success() {
-        when(wishlistRepo.findByTenantIdAndHouseId(1L, 100L)).thenReturn(null);
+        // given no existing entry
+        when(wishlistRepo.existsByTenantIdAndHouseId(1L, 100L)).thenReturn(false);
+
+        // when
         wishlistService.addToWishlist(1L, 100L);
 
-        verify(wishlistRepo, times(1)).save(any(WishlistItem.class));
-    }
-
-    @Test
-    void testRemoveFromWishlist() {
-        when(wishlistRepo.findByTenantIdAndHouseId(1L, 100L)).thenReturn(item);
-        wishlistService.removeFromWishlist(1L, 100L);
-
-        verify(wishlistRepo, times(1)).delete(item);
-    }
-
-    @Test
-    void testGetWishlistByTenant() {
-        WishlistItem item1 = WishlistItem.builder().houseId(101L).build();
-        WishlistItem item2 = WishlistItem.builder().houseId(102L).build();
-
-        when(wishlistRepo.findByTenantId(1L)).thenReturn(List.of(item1, item2));
-
-        List<Long> result = wishlistService.getWishlistByTenant(1L);
-        assertEquals(List.of(101L, 102L), result);
+        // then we save exactly one new WishlistItem
+        verify(wishlistRepo, times(1))
+                .save(argThat(w ->
+                        w.getTenantId().equals(1L) &&
+                                w.getHouseId().equals(100L)
+                ));
     }
 
     @Test
     void testAddToWishlist_ItemAlreadyExists() {
-        when(wishlistRepo.findByTenantIdAndHouseId(1L, 100L)).thenReturn(item);
+        // given an existing entry
+        when(wishlistRepo.existsByTenantIdAndHouseId(1L, 100L)).thenReturn(true);
+
+        // when
         wishlistService.addToWishlist(1L, 100L);
 
-        verify(wishlistRepo, never()).save(any(WishlistItem.class)); // nothing should be saved
+        // then we never call save()
+        verify(wishlistRepo, never()).save(any());
     }
 
     @Test
-    void testRemoveFromWishlist_ItemDoesNotExist() {
-        when(wishlistRepo.findByTenantIdAndHouseId(1L, 100L)).thenReturn(null);
+    void testRemoveFromWishlist() {
+        // when
         wishlistService.removeFromWishlist(1L, 100L);
 
-        verify(wishlistRepo, never()).delete(any());
+        // then we delete by tenant+house in one SQL call
+        verify(wishlistRepo, times(1))
+                .deleteByTenantIdAndHouseId(1L, 100L);
     }
 
+    @Test
+    void testGetWishlistByTenant() {
+        // given two saved house IDs
+        List<Long> expected = List.of(101L, 102L);
+        when(wishlistRepo.findHouseIdsByTenantId(1L)).thenReturn(expected);
+
+        // when
+        List<Long> actual = wishlistService.getWishlistByTenant(1L);
+
+        // then
+        assertEquals(expected, actual);
+    }
 }

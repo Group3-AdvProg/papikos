@@ -24,23 +24,16 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceImplTest {
 
-    @Mock
-    private NotificationRepository notificationRepo;
-
-    @Mock
-    private HouseRepository houseRepo;
-
-    @Mock
-    private WishlistItemRepository wishlistRepo;
-
-    @Mock
-    private UserRepository userRepo;
+    @Mock private NotificationRepository notificationRepo;
+    @Mock private HouseRepository      houseRepo;
+    @Mock private WishlistItemRepository wishlistRepo;
+    @Mock private UserRepository      userRepo;
 
     @InjectMocks
     private NotificationServiceImpl notificationService;
 
     private House house;
-    private User owner;
+    private User  owner;
     private WishlistItem wishlistItem;
 
     @BeforeEach
@@ -95,7 +88,9 @@ class NotificationServiceImplTest {
     @Test
     void testNotifyAvailability() {
         when(houseRepo.findById(10L)).thenReturn(Optional.of(house));
-        when(wishlistRepo.findByHouseId(10L)).thenReturn(List.of(wishlistItem));
+        // <- changed here: stub distinct tenant IDs, not WishlistItems ->
+        when(wishlistRepo.findDistinctTenantIdsByHouseId(10L))
+                .thenReturn(List.of(wishlistItem.getTenantId()));
 
         notificationService.notifyAvailability(10L).join();
 
@@ -111,7 +106,8 @@ class NotificationServiceImplTest {
     void testNotifyAvailability_HouseWithoutOwner() {
         house.setOwner(null);
         when(houseRepo.findById(10L)).thenReturn(Optional.of(house));
-        when(wishlistRepo.findByHouseId(10L)).thenReturn(List.of(wishlistItem));
+        when(wishlistRepo.findDistinctTenantIdsByHouseId(10L))
+                .thenReturn(List.of(wishlistItem.getTenantId()));
 
         notificationService.notifyAvailability(10L).join();
 
@@ -142,9 +138,6 @@ class NotificationServiceImplTest {
 
     @Test
     void testNotifyTenantRentalApproved_savesNotification() {
-        User tenant = new User();
-        tenant.setId(2L);
-
         House approvedHouse = new House();
         approvedHouse.setId(1L);
         approvedHouse.setName("Kos UI");
@@ -164,9 +157,6 @@ class NotificationServiceImplTest {
 
     @Test
     void testNotifyTenantRentalRejected_savesNotification() {
-        User tenant = new User();
-        tenant.setId(2L);
-
         House rejectedHouse = new House();
         rejectedHouse.setId(1L);
         rejectedHouse.setName("Kos UI");
