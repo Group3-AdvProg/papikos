@@ -1,9 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.paymentmain.controller;
 
-import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
-import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
 import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.PaymentRequest;
 import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.TopUpRequest;
 import id.ac.ui.cs.advprog.papikos.paymentmain.payload.response.ApiResponse;
@@ -19,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/wallet")
@@ -33,9 +29,6 @@ public class WalletController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private RentalRepository rentalRepository;
-
     private final PaymentContext context = new PaymentContext();
 
     @PostMapping("/topup")
@@ -43,12 +36,10 @@ public class WalletController {
             @RequestBody TopUpRequest request,
             Principal principal) {
 
-        // 1) Lookup user
         String email = principal.getName();
-        User user = userRepository.findByEmail(email)
+        var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        // 2) Choose strategy
         PaymentStrategy strategy = switch (request.getMethod().toLowerCase()) {
             case "bank"    -> new BankTransferPayment();
             case "virtual" -> new VirtualAccountPayment();
@@ -56,102 +47,37 @@ public class WalletController {
         };
 
         if (strategy == null) {
-            // invalid method
             return ResponseEntity.ok(
                     new ApiResponse(STATUS_FAILED, "Invalid top-up method.", "/wallet/topup")
             );
         }
 
-        // 3) Execute payment logic
         context.setStrategy(strategy);
         boolean success = context.executePayment(request.getAmount(), Double.MAX_VALUE);
 
-        // 4) Test-only failure hook
-        if (request.getAmount() == 9999) {
-            success = false;
-        }
+        if (request.getAmount() == 9999) success = false;
 
-        // 5) Build response
         if (success) {
             user.increaseBalance(request.getAmount());
             userRepository.save(user);
-
-            transactionService.recordTransaction(
-                    user, null,
-                    request.getAmount(),
-                    "TOP_UP",
-                    request.getMethod()
-            );
-
-            return ResponseEntity.ok(
-                    new ApiResponse("SUCCESS", "Top-up successful.", null)
-            );
+            transactionService.recordTransaction(user, null, request.getAmount(), "TOP_UP", request.getMethod());
+            return ResponseEntity.ok(new ApiResponse("SUCCESS", "Top-up successful.", null));
         } else {
-            return ResponseEntity.ok(
-                    new ApiResponse(STATUS_FAILED, "Top-up failed.", "/wallet/topup")
-            );
+            return ResponseEntity.ok(new ApiResponse(STATUS_FAILED, "Top-up failed.", "/wallet/topup"));
         }
     }
 
     @GetMapping("/balance")
     public ResponseEntity<Double> getBalance(Principal principal) {
         String email = principal.getName();
-        User user = userRepository.findByEmail(email)
+        var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
         return ResponseEntity.ok(user.getBalance());
     }
 
     @PostMapping("/pay-rent")
-    public ResponseEntity<ApiResponse> payRent(
-            @RequestBody PaymentRequest request,
-            Principal principal) {
-
-        // 1) Lookup tenant
-        String tenantEmail = principal.getName();
-        User tenant = userRepository.findByEmail(tenantEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
-
-        // 2) Lookup landlord
-        User landlord = userRepository.findById(request.getTargetId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Landlord not found"));
-
-        // 3) Balance check
-        if (tenant.getBalance() < request.getAmount()) {
-            return ResponseEntity.ok(
-                    new ApiResponse(STATUS_FAILED, "Insufficient balance.", null)
-            );
-        }
-
-        // 4) Transfer
-        tenant.setBalance(tenant.getBalance() - request.getAmount());
-        landlord.setBalance(landlord.getBalance() + request.getAmount());
-        userRepository.save(tenant);
-        userRepository.save(landlord);
-
-        // 5) Mark the rental as paid
-        System.out.println("Trying to mark rental as paid...");
-        Optional<Rental> rentalOpt = rentalRepository.findTopByTenantAndHouseOwnerAndIsPaidFalseOrderByIdDesc(tenant, landlord);
-        if (rentalOpt.isPresent()) {
-            Rental rental = rentalOpt.get();
-            rental.setPaid(true);
-            rentalRepository.save(rental);
-            System.out.println("Rental marked as paid: ID = " + rental.getId());
-        } else {
-            System.out.println("No unpaid rental found for this tenant-owner pair.");
-        }
-
-
-        // 6) Record transaction & respond
-        transactionService.recordTransaction(
-                tenant, landlord,
-                request.getAmount(),
-                "RENT_PAYMENT",
-                "wallet"
-        );
-
-        return ResponseEntity.ok(
-                new ApiResponse("SUCCESS", "Rent payment successful.", "/management.html")
-        );
+    public ResponseEntity<ApiResponse> payRent(@RequestBody PaymentRequest request, Principal principal) {
+        ApiResponse response = transactionService.handleRentPayment(request, principal.getName());
+        return ResponseEntity.ok(response);
     }
 }

@@ -2,17 +2,25 @@ package id.ac.ui.cs.advprog.papikos.paymentmain.service;
 
 import id.ac.ui.cs.advprog.papikos.paymentmain.model.Transaction;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
+import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.PaymentRequest;
+import id.ac.ui.cs.advprog.papikos.paymentmain.payload.response.ApiResponse;
 import id.ac.ui.cs.advprog.papikos.paymentmain.repository.TransactionRepository;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class TransactionService {
@@ -21,19 +29,47 @@ public class TransactionService {
     private TransactionRepository transactionRepository;
 
     @Autowired
-    private UserRepository userRepository; // ✅ Added this missing injection
+    private UserRepository userRepository;
+
+    @Autowired
+    private RentalRepository rentalRepository;
 
     public Transaction recordTransaction(User user, User targetUser, double amount, String type, String method) {
         Transaction transaction = Transaction.builder()
-                .user(user)                 // payer
-                .targetUser(targetUser)     // recipient, can be null
+                .user(user)
+                .targetUser(targetUser)
                 .amount(amount)
                 .type(type)
                 .method(method)
                 .timestamp(LocalDateTime.now())
                 .build();
-
         return transactionRepository.save(transaction);
+    }
+
+    public ApiResponse handleRentPayment(PaymentRequest request, String tenantEmail) {
+        User tenant = userRepository.findByEmail(tenantEmail)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Tenant not found"));
+
+        User landlord = userRepository.findById(request.getTargetId())
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Landlord not found"));
+
+        if (tenant.getBalance() < request.getAmount()) {
+            return new ApiResponse("FAILED", "Insufficient balance.", null);
+        }
+
+        tenant.setBalance(tenant.getBalance() - request.getAmount());
+        landlord.setBalance(landlord.getBalance() + request.getAmount());
+        userRepository.saveAll(List.of(tenant, landlord));
+
+        Optional<Rental> rentalOpt = rentalRepository.findTopByTenantAndHouseOwnerAndIsPaidFalseOrderByIdDesc(tenant, landlord);
+        rentalOpt.ifPresent(rental -> {
+            rental.setPaid(true);
+            rentalRepository.save(rental);
+        });
+
+        this.recordTransaction(tenant, landlord, request.getAmount(), "RENT_PAYMENT", "wallet");
+
+        return new ApiResponse("SUCCESS", "Rent payment successful.", "/management.html");
     }
 
     public List<Transaction> getTransactionsByUser(User user) {
