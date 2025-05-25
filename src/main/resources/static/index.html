@@ -1,23 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Papikos – Browse Properties</title>
+    <title>Papikos – Home</title>
 
-    <!-- Bootstrap CSS with SRI -->
+    <!-- Bootstrap & Icons -->
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
             rel="stylesheet"
             integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
             crossorigin="anonymous"
-    /> :contentReference[oaicite:0]{index=0}
-
+    />
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
             rel="stylesheet"
     />
-    <!-- Your custom overrides (e.g. colors, spacings) -->
+    <!-- Your custom styles -->
     <link href="/css/papikos.css" rel="stylesheet" />
 </head>
 <body class="bg-white text-dark">
@@ -36,9 +35,9 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="/about.html">About Us</a></li>
-                <li class="nav-item"><a class="nav-link active" href="/properties.html">Properties</a></li>
+                <li class="nav-item"><a class="nav-link" href="/properties.html">Properties</a></li>
                 <li class="nav-item"><a class="nav-link" href="/services.html">Services</a></li>
             </ul>
             <ul class="navbar-nav ms-auto" id="navbarUserArea"></ul>
@@ -46,168 +45,270 @@
     </div>
 </nav>
 
-<!-- HERO + SEARCH -->
+<!-- HERO -->
 <section class="py-5">
     <div class="container">
-        <h1 class="display-5 fw-bold">Find Your Ideal Kos</h1>
-        <p class="text-muted mb-4">
-            Welcome to Papikos—browse our curated listings to find the perfect kos for you.
-        </p>
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="display-5 fw-bold">Discover Your Ideal Kos with Papikos</h1>
+                <p class="lead text-muted mb-4">
+                    Browse thousands of listings across Indonesia—find, save, and message landlords all in one place.
+                </p>
+                <a href="/properties.html" class="btn btn-primary me-2">Browse Properties</a>
+                <a href="/about.html" class="btn btn-outline-primary">Learn More</a>
+                <div class="row text-center text-primary mt-5">
+                    <div class="col">
+                        <h3 class="mb-1">50k+</h3>
+                        <small>Happy Renters</small>
+                    </div>
+                    <div class="col">
+                        <h3 class="mb-1">10k+</h3>
+                        <small>Kos Listings</small>
+                    </div>
+                    <div class="col">
+                        <h3 class="mb-1">100%</h3>
+                        <small>Commission Free</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 text-center">
+                <img src="/images/main.png" class="img-fluid" alt="Building"/>
+            </div>
+        </div>
+    </div>
+</section>
 
-        <!-- Search input + button -->
-        <div class="input-group mb-3">
-            <input
-                    type="text"
-                    class="form-control"
-                    placeholder="Search for a property…"
-            />
-            <button
-                    class="btn btn-primary"
-                    onclick="location.href='/login.html'"
-            >
-                <i class="bi bi-search me-1"></i> Find Property
+<!-- FEATURES -->
+<section class="py-4 border-top">
+    <div class="container">
+        <div class="row g-3 text-center">
+            <div class="col-md-3">
+                <div class="p-4 border rounded">
+                    <i class="bi bi-house-door-fill fs-2 text-primary"></i>
+                    <p class="mt-2 mb-0">Find Your Dream Home</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4 border rounded">
+                    <i class="bi bi-cash-stack fs-2 text-primary"></i>
+                    <p class="mt-2 mb-0">Unlock Property Value</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4 border rounded">
+                    <i class="bi bi-building fs-2 text-primary"></i>
+                    <p class="mt-2 mb-0">Effortless Management</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4 border rounded">
+                    <i class="bi bi-graph-up fs-2 text-primary"></i>
+                    <p class="mt-2 mb-0">Smart Investments</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURED PROPERTIES CAROUSEL -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Featured Properties</h2>
+            <a href="/properties.html" class="btn btn-outline-primary">View All Properties</a>
+        </div>
+        <div id="featuredCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <!-- Slide 1 -->
+                <div class="carousel-item active">
+                    <div class="row g-4">
+                        <!-- repeat 3 cards per slide -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <img src="/images/prop-1.jpg" class="card-img-top" alt="..."/>
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">Modern Villa in Bali</h5>
+                                    <p class="text-muted flex-grow-1">4 beds • 3 baths • $1,200,000</p>
+                                    <button class="btn btn-primary" onclick="location.href='/properties.html'">
+                                        View Property Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- copy and adjust src/title/price for two more -->
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <img src="/images/prop-2.jpg" class="card-img-top" alt="..."/>
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">City Apartment in Jakarta</h5>
+                                    <p class="text-muted flex-grow-1">2 beds • 2 baths • $450,000</p>
+                                    <button class="btn btn-primary" onclick="location.href='/properties.html'">
+                                        View Property Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <img src="/images/prop-3.jpg" class="card-img-top" alt="..."/>
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">Luxury Condo in Surabaya</h5>
+                                    <p class="text-muted flex-grow-1">3 beds • 2 baths • $750,000</p>
+                                    <button class="btn btn-primary" onclick="location.href='/properties.html'">
+                                        View Property Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- additional slides… -->
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
             </button>
         </div>
+    </div>
+</section>
 
-        <!-- Filter pills -->
-        <div class="d-flex flex-wrap gap-2">
-            <select class="form-select flex-grow-1">
-                <option selected>Location</option>
-                <option>Depok</option>
-                <option>Jakarta</option>
-            </select>
-            <select class="form-select">
-                <option selected>Property Type</option>
-                <option>Room</option>
-                <option>Apartment</option>
-            </select>
-            <select class="form-select">
-                <option selected>Price Range</option>
-                <option>Rp1–2jt</option>
-                <option>Rp2–4jt</option>
-            </select>
-            <select class="form-select">
-                <option selected>Size</option>
-                <option>10–20 m²</option>
-                <option>20–30 m²</option>
-            </select>
-            <select class="form-select">
-                <option selected>Build Year</option>
-                <option>2023</option>
-                <option>2022</option>
-            </select>
+<!-- TESTIMONIALS CAROUSEL -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">What Our Clients Say</h2>
+            <a href="/testimonials.html" class="btn btn-outline-primary">View All Testimonials</a>
+        </div>
+        <div id="testimonialsCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <!-- Slide 1 -->
+                <div class="carousel-item active">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card p-4 border-0 shadow-sm">
+                                <div class="mb-2">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                </div>
+                                <h5>Exceptional Service!</h5>
+                                <p class="text-muted flex-grow-1">
+                                    Our experience with Papikos was outstanding… Highly recommended!
+                                </p>
+                                <div class="d-flex align-items-center mt-3">
+                                    <img src="/images/client1.jpg" class="rounded-circle me-2" width="40" alt="Wade"/>
+                                    <div>
+                                        <strong>Wade Warren</strong><br/>
+                                        <small class="text-muted">Jakarta, ID</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- copy for two more testimonials -->
+                        <div class="col-md-4">
+                            <div class="card p-4 border-0 shadow-sm">
+                                <div class="mb-2">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star text-warning"></i>
+                                </div>
+                                <h5>Efficient and Reliable</h5>
+                                <p class="text-muted flex-grow-1">
+                                    Papikos helped us list and rent quickly—great results!
+                                </p>
+                                <div class="d-flex align-items-center mt-3">
+                                    <img src="/images/client2.jpg" class="rounded-circle me-2" width="40" alt="Emelie"/>
+                                    <div>
+                                        <strong>Emelie Thomson</strong><br/>
+                                        <small class="text-muted">Bandung, ID</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card p-4 border-0 shadow-sm">
+                                <div class="mb-2">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-half text-warning"></i>
+                                </div>
+                                <h5>Trusted Advisors</h5>
+                                <p class="text-muted flex-grow-1">
+                                    The Papikos team guided us every step—truly professional.
+                                </p>
+                                <div class="d-flex align-items-center mt-3">
+                                    <img src="/images/client3.jpg" class="rounded-circle me-2" width="40" alt="John"/>
+                                    <div>
+                                        <strong>John Mans</strong><br/>
+                                        <small class="text-muted">Surabaya, ID</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- additional slides… -->
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
         </div>
     </div>
 </section>
 
-<!-- DISCOVER HEADER -->
-<section class="py-5 border-top">
+<!-- FAQ CAROUSEL -->
+<section class="py-5">
     <div class="container">
-        <h2 class="fw-bold mb-2">Discover a World of Possibilities</h2>
-        <p class="text-muted">
-            Explore our range of kos categories to find the one that suits your lifestyle.
-        </p>
-    </div>
-</section>
-
-<!-- PROPERTY CARDS -->
-<section class="py-4">
-    <div class="container">
-        <div class="row g-4">
-            <!-- Card 1 -->
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <img
-                            src="/images/kos-1.jpg"
-                            class="card-img-top"
-                            alt="Seaside Kos"
-                    />
-                    <div class="card-body d-flex flex-column">
-                        <small class="text-primary mb-1">Coastal Escapes</small>
-                        <h5 class="card-title">Seaside Serenity Room</h5>
-                        <p class="card-text text-muted flex-grow-1">
-                            Wake up to the melody of waves in this beachfront kos…
-                            <a href="/login.html">Read More</a>
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <span class="fw-bold">Rp1,250,000</span>
-                            <button
-                                    class="btn btn-primary"
-                                    onclick="location.href='/login.html'"
-                            >
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Card 2 -->
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <img
-                            src="/images/kos-2.jpg"
-                            class="card-img-top"
-                            alt="City Kos"
-                    />
-                    <div class="card-body d-flex flex-column">
-                        <small class="text-primary mb-1">Urban Oasis</small>
-                        <h5 class="card-title">Metropolitan Haven</h5>
-                        <p class="card-text text-muted flex-grow-1">
-                            Immerse yourself in city life with modern amenities…
-                            <a href="/login.html">Read More</a>
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <span class="fw-bold">Rp650,000</span>
-                            <button
-                                    class="btn btn-primary"
-                                    onclick="location.href='/login.html'"
-                            >
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Card 3 -->
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <img
-                            src="/images/kos-3.jpg"
-                            class="card-img-top"
-                            alt="Countryside Kos"
-                    />
-                    <div class="card-body d-flex flex-column">
-                        <small class="text-primary mb-1">Countryside Charm</small>
-                        <h5 class="card-title">Rustic Retreat Cottage</h5>
-                        <p class="card-text text-muted flex-grow-1">
-                            Find tranquility surrounded by green hills…
-                            <a href="/login.html">Read More</a>
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <span class="fw-bold">Rp350,000</span>
-                            <button
-                                    class="btn btn-primary"
-                                    onclick="location.href='/login.html'"
-                            >
-                                View Details
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Frequently Asked Questions</h2>
+            <a href="/faq.html" class="btn btn-outline-primary">View All FAQ’s</a>
         </div>
-
-        <!-- pagination footer -->
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <small>01 of 10</small>
-            <div>
-                <button class="btn btn-outline-secondary me-2">
-                    <i class="bi bi-arrow-left"></i>
-                </button>
-                <button class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-right"></i>
-                </button>
+        <div id="faqCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card p-4 border-0 shadow-sm h-100">
+                                <h6>How do I search for properties on Papikos?</h6>
+                                <p class="text-muted">Use our search bar and filters to find kos that match your criteria.</p>
+                                <a href="/faq.html" class="btn btn-sm btn-outline-primary mt-auto">Read More</a>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card p-4 border-0 shadow-sm h-100">
+                                <h6>What documents do I need to rent?</h6>
+                                <p class="text-muted">You’ll need ID, proof of enrollment/employment, and a deposit.</p>
+                                <a href="/faq.html" class="btn btn-sm btn-outline-primary mt-auto">Read More</a>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card p-4 border-0 shadow-sm h-100">
+                                <h6>How can I contact a landlord?</h6>
+                                <p class="text-muted">Log in, click “Message Landlord” on any listing, and send your inquiry.</p>
+                                <a href="/faq.html" class="btn btn-sm btn-outline-primary mt-auto">Read More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- more FAQ slides… -->
             </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#faqCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#faqCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
         </div>
     </div>
 </section>
@@ -215,16 +316,9 @@
 <!-- BOTTOM CTA -->
 <section class="py-5 bg-light text-center">
     <div class="container">
-        <h3 class="fw-bold mb-2">Start Your Kos Journey Today</h3>
-        <p class="text-muted mb-4">
-            Sign in to browse all listings, save favorites, and contact landlords directly.
-        </p>
-        <button
-                class="btn btn-lg btn-primary"
-                onclick="location.href='/login.html'"
-        >
-            Explore Properties
-        </button>
+        <h3 class="fw-bold mb-3">Ready to Find Your Kos?</h3>
+        <p class="text-muted mb-4">Sign in to browse all listings, save favorites, and contact landlords directly.</p>
+        <a href="/properties.html" class="btn btn-lg btn-primary">Explore Properties</a>
     </div>
 </section>
 
@@ -239,23 +333,21 @@
     </div>
 </footer>
 
-<!-- Bootstrap JS with SRI -->
+<!-- Bootstrap JS -->
 <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"
-></script> :contentReference[oaicite:1]{index=1}
-
+></script>
 <script>
-    // Navbar auth state (login/signup vs logout)
+    // Navbar auth state
     function logout() {
         sessionStorage.removeItem("token");
         window.location.href = "/";
     }
     function renderNavbarAuthState() {
         const token = sessionStorage.getItem("token");
-        const nav = document.getElementById("navbarUserArea");
-        nav.innerHTML = token
+        document.getElementById("navbarUserArea").innerHTML = token
             ? `<li class="nav-item"><button class="btn btn-outline-danger" onclick="logout()">Logout</button></li>`
             : `<li class="nav-item"><a class="btn btn-outline-primary me-2" href="/login.html">Login</a></li>
            <li class="nav-item"><a class="btn btn-primary" href="/register.html">Sign Up</a></li>`;
