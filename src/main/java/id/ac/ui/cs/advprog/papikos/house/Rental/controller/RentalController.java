@@ -9,6 +9,8 @@ import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,20 +23,27 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/api/rentals")
 public class RentalController {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(RentalController.class);
+
     private final RentalService service;
     private final HouseRepository houseRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    // --- synchronous endpoints ---
+    // --- synchronous endpoints ------------------------------------------------
 
     @PostMapping
     public ResponseEntity<Rental> create(@RequestBody RentalDTO dto) {
+        logger.info("POST /api/rentals – tenant={} house={}",
+                dto.getTenantId(), dto.getHouseId());
+
         House house = houseRepository.findById(dto.getHouseId())
                 .orElseThrow(() -> new RuntimeException("House not found"));
         User tenant = userRepository.findById(dto.getTenantId())
                 .orElseThrow(() -> new RuntimeException("Tenant not found"));
         if (!"ROLE_TENANT".equals(tenant.getRole())) {
+            logger.warn("User [{}] is not a tenant – blocking rental creation", tenant.getId());
             throw new RuntimeException("User is not a tenant");
         }
 
@@ -54,31 +63,43 @@ public class RentalController {
 
         Rental created = service.createRental(rental);
         notificationService.notifyAvailability(house.getId());
+
+        logger.info("Rental [{}] created successfully for tenant [{}]",
+                created.getId(), tenant.getId());
         return ResponseEntity.ok(created);
     }
 
     @GetMapping
     public ResponseEntity<List<Rental>> findAll() {
+        logger.info("GET /api/rentals – fetching all rentals");
         return ResponseEntity.ok(service.getAllRentals());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Rental> findById(@PathVariable Long id) {
+        logger.info("GET /api/rentals/{} – fetch by id", id);
         return service.getRentalById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(rental -> {
+                    logger.info("Rental [{}] found", id);
+                    return ResponseEntity.ok(rental);
+                })
+                .orElseGet(() -> {
+                    logger.warn("Rental [{}] not found", id);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Rental> update(
-            @PathVariable Long id,
-            @RequestBody Rental rental
-    ) {
+    public ResponseEntity<Rental> update(@PathVariable Long id,
+                                         @RequestBody Rental rental) {
+        logger.info("PUT /api/rentals/{} – updating", id);
         return ResponseEntity.ok(service.updateRental(id, rental));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
+        logger.info("DELETE /api/rentals/{} – deleting", id);
+
         Rental existing = service.getRentalById(id)
                 .orElseThrow(() -> new RuntimeException("Rental not found"));
         House house = existing.getHouse();
@@ -88,20 +109,21 @@ public class RentalController {
         houseRepository.save(house);
         notificationService.notifyAvailability(house.getId());
 
+        logger.info("Rental [{}] deleted and room restored for house [{}]", id, house.getId());
         return ResponseEntity.ok("Rental deleted and availability updated");
     }
 
-    // --- asynchronous endpoints ---
+    // --- asynchronous endpoints ----------------------------------------------
 
     @PostMapping("/async")
     public CompletableFuture<ResponseEntity<Rental>> createAsync(@RequestBody RentalDTO dto) {
+        logger.info("ASYNC POST /api/rentals – tenant={} house={}",
+                dto.getTenantId(), dto.getHouseId());
+
         House house = houseRepository.findById(dto.getHouseId())
                 .orElseThrow(() -> new RuntimeException("House not found"));
         User tenant = userRepository.findById(dto.getTenantId())
                 .orElseThrow(() -> new RuntimeException("Tenant not found"));
-        if (!"ROLE_TENANT".equals(tenant.getRole())) {
-            throw new RuntimeException("User is not a tenant");
-        }
 
         Rental rental = new Rental();
         rental.setHouse(house);
@@ -118,40 +140,53 @@ public class RentalController {
         rental.setPaid(false);
 
         return service.createRentalAsync(rental)
-                .thenApply(saved -> {
-                    notificationService.notifyAvailability(house.getId());
-                    return ResponseEntity.ok(saved);
+                .thenApply(created -> {
+                    logger.info("ASYNC rental [{}] created", created.getId());
+                    return ResponseEntity.ok(created);
                 });
     }
 
     @GetMapping("/async")
     public CompletableFuture<ResponseEntity<List<Rental>>> findAllAsync() {
+        logger.info("ASYNC GET /api/rentals – fetching all rentals");
         return service.getAllRentalsAsync()
                 .thenApply(ResponseEntity::ok);
     }
 
     @GetMapping("/async/{id}")
     public CompletableFuture<ResponseEntity<Rental>> findByIdAsync(@PathVariable Long id) {
+        logger.info("ASYNC GET /api/rentals/{} – fetch by id", id);
         return service.getRentalByIdAsync(id)
                 .thenApply(opt -> opt
-                        .map(ResponseEntity::ok)
-                        .orElseGet(() -> ResponseEntity.notFound().build()));
+                        .map(r -> {
+                            logger.info("ASYNC rental [{}] found", id);
+                            return ResponseEntity.ok(r);
+                        })
+                        .orElseGet(() -> {
+                            logger.warn("ASYNC rental [{}] not found", id);
+                            return ResponseEntity.notFound().build();
+                        }));
     }
 
     @PutMapping("/async/{id}")
-    public CompletableFuture<ResponseEntity<Rental>> updateAsync(
-            @PathVariable Long id,
-            @RequestBody Rental rental
-    ) {
+    public CompletableFuture<ResponseEntity<Rental>> updateAsync(@PathVariable Long id,
+                                                                 @RequestBody Rental rental) {
+        logger.info("ASYNC PUT /api/rentals/{} – updating", id);
         return service.updateRentalAsync(id, rental)
-                .thenApply(ResponseEntity::ok);
+                .thenApply(r -> {
+                    logger.info("ASYNC rental [{}] updated", id);
+                    return ResponseEntity.ok(r);
+                });
     }
 
     @DeleteMapping("/async/{id}")
     public CompletableFuture<ResponseEntity<String>> deleteAsync(@PathVariable Long id) {
+        logger.info("ASYNC DELETE /api/rentals/{} – deleting", id);
+
         return service.getRentalByIdAsync(id)
                 .thenCompose(opt -> {
                     if (opt.isEmpty()) {
+                        logger.warn("ASYNC rental [{}] not found", id);
                         return CompletableFuture.completedFuture(
                                 ResponseEntity.notFound().build()
                         );
@@ -163,9 +198,10 @@ public class RentalController {
                     notificationService.notifyAvailability(house.getId());
 
                     return service.deleteRentalAsync(id)
-                            .thenApply(v ->
-                                    ResponseEntity.ok("Rental deleted and availability updated")
-                            );
+                            .thenApply(v -> {
+                                logger.info("ASYNC rental [{}] deleted and availability updated", id);
+                                return ResponseEntity.ok("Rental deleted and availability updated");
+                            });
                 });
     }
 }
