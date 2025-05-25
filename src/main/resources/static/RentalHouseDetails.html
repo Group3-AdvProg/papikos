@@ -174,7 +174,7 @@
             });
             if (res.ok) {
                 alert("Booking berhasil!");
-                location.href = `/rentalRequests.html?houseId=${currentHouse.id}`;
+                location.href = `/rental.html?houseId=${currentHouse.id}`;
             } else {
                 const err = await res.text();
                 alert("Gagal booking: " + err);
