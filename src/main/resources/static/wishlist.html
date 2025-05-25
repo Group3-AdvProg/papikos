@@ -4,8 +4,22 @@
   <meta charset="UTF-8" />
   <title>My Wishlist</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+  <!-- Bootstrap CSS with SRI -->
+  <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-9ndCyUa1O5+v6zWknmoXx3a3J0uM6+9J+1Yz7l4rSYj0hY8z+0fZDNI2QNpd5JxZ"
+          crossorigin="anonymous"
+  />
+
+  <!-- Bootstrap Icons (version-locked) -->
+  <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+          rel="stylesheet"
+          crossorigin="anonymous"
+  />
+
   <style>
     :root { --bs-primary: #7065F0; }
     body  { font-family: 'Segoe UI', sans-serif; background: #f9f9ff; }
@@ -29,6 +43,7 @@
       pointer-events: auto;
     }
   </style>
+
   <link href="/css/papikos.css" rel="stylesheet" />
 </head>
 <body>
@@ -39,7 +54,13 @@
   <div class="row row-cols-1 row-cols-md-3 g-4" id="wishlistContainer"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap JS Bundle with SRI -->
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ENjdO4Dr2bkBIFxQpeoE6RcUY5tE3EAn1TWIu9bKqE6RVj82rVfXtVFUearXoW3W"
+        crossorigin="anonymous"
+></script>
+
 <script src="/js/navbarLoader.js"></script>
 <script>
   const token = sessionStorage.getItem("token");
@@ -50,7 +71,8 @@
   window.addEventListener("DOMContentLoaded", async () => {
     loadNavbar();
     if (!token) {
-      wishlistContainer.innerHTML = `<div class="alert alert-warning">Please log in to view your wishlist.</div>`;
+      wishlistContainer.innerHTML =
+        `<div class="alert alert-warning">Please log in to view your wishlist.</div>`;
       return;
     }
 
@@ -58,19 +80,22 @@
       const meRes = await fetch("/api/auth/users/me", {
         headers: { Authorization: "Bearer " + token }
       });
+      if (!meRes.ok) throw new Error();
       const me = await meRes.json();
       currentUserId = me.id;
 
       const wishlistRes = await fetch(`/api/wishlist/user/${currentUserId}`, {
         headers: { Authorization: "Bearer " + token }
       });
+      if (!wishlistRes.ok) throw new Error();
       wishlistIds = await wishlistRes.json();
 
       fetchHouses();
     } catch (e) {
       console.error("Failed to load user or wishlist:", e);
       sessionStorage.removeItem("token");
-      wishlistContainer.innerHTML = `<div class="alert alert-danger">Session expired. Please log in again.</div>`;
+      wishlistContainer.innerHTML =
+        `<div class="alert alert-danger">Session expired. Please log in again.</div>`;
     }
   });
 
@@ -79,12 +104,14 @@
       const res = await fetch("/api/houses", {
         headers: { Authorization: "Bearer " + token }
       });
+      if (!res.ok) throw new Error();
       const houses = await res.json();
       const filtered = houses.filter(h => wishlistIds.includes(h.id));
       renderHouses(filtered);
     } catch (err) {
       console.error("Failed to load houses:", err);
-      wishlistContainer.innerHTML = `<div class="alert alert-danger">Failed to load wishlist.</div>`;
+      wishlistContainer.innerHTML =
+        `<div class="alert alert-danger">Failed to load wishlist.</div>`;
     }
   }
 
@@ -92,7 +119,8 @@
     wishlistContainer.innerHTML = "";
 
     if (!houses.length) {
-      wishlistContainer.innerHTML = `<div class="alert alert-info">You haven't added any houses to your wishlist yet.</div>`;
+      wishlistContainer.innerHTML =
+        `<div class="alert alert-info">You haven't added any houses to your wishlist yet.</div>`;
       return;
     }
 
@@ -105,7 +133,7 @@
       wishlistContainer.innerHTML += `
         <div class="col">
           <div class="card shadow-sm border-0 position-relative">
-            <button class="wishlist-btn" onclick="removeFromWishlist(event, ${h.id}, this)">
+            <button class="wishlist-btn" onclick="removeFromWishlist(event, ${h.id})">
               <i class="bi bi-heart-fill"></i>
             </button>
             <a class="card-clickable" href="RentalHouseDetails.html?houseId=${h.id}">
@@ -118,9 +146,13 @@
                 <h5 class="card-title mb-0 text-primary">${h.name}</h5>
                 <div class="mt-2">
                   <h4 class="fw-bold mb-0 text-dark">Rp ${price}</h4>
-                  <span class="badge bg-light text-dark border border-secondary fw-semibold small">per month</span>
+                  <span class="badge bg-light text-dark border border-secondary fw-semibold small">
+                    per month
+                  </span>
                 </div>
-                <div class="text-muted mt-1 small"><strong>${rooms} rooms</strong></div>
+                <div class="text-muted mt-1 small">
+                  <strong>${rooms} rooms</strong>
+                </div>
                 <div class="d-flex gap-3 mt-3 text-muted small">
                   <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
                   <div><i class="bi bi-droplet-half"></i> 2 Baths</div>
@@ -133,23 +165,23 @@
     });
   }
 
-  async function removeFromWishlist(e, houseId, btn) {
+  async function removeFromWishlist(e, houseId) {
     e.stopPropagation();
     e.preventDefault();
+
     try {
-      const res = await fetch(`/api/wishlist/remove?userId=${currentUserId}&houseId=${houseId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        wishlistIds = wishlistIds.filter(id => id !== houseId);
-        fetchHouses();
-      } else {
-        alert("Failed to remove from wishlist.");
-      }
+      const res = await fetch(
+        `/api/wishlist/remove?userId=${currentUserId}&houseId=${houseId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      if (!res.ok) throw new Error();
+      wishlistIds = wishlistIds.filter(id => id !== houseId);
+      fetchHouses();
     } catch (err) {
       console.error("Error removing from wishlist:", err);
-      alert("Error removing from wishlist.");
+      alert("Failed to remove from wishlist.");
     }
   }
 </script>

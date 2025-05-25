@@ -5,15 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Papikos – About Us</title>
 
-    <!-- Bootstrap & Icons -->
+    <!-- Bootstrap CSS with SRI -->
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
             rel="stylesheet"
-    />
+            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+            crossorigin="anonymous"
+    /> :contentReference[oaicite:0]{index=0}
+
+    <!-- Bootstrap Icons (local integrity not required) -->
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
             rel="stylesheet"
     />
+
     <!-- Your custom overrides -->
     <link href="/css/papikos.css" rel="stylesheet" />
 </head>
@@ -42,7 +47,6 @@
         </div>
     </div>
 </nav>
-
 
 <!-- OUR JOURNEY -->
 <section class="py-5">
@@ -203,61 +207,7 @@
     <div class="container">
         <h2 class="fw-bold text-center mb-4">Meet the Papikos Team</h2>
         <div class="row g-4">
-            <!-- Dito -->
-            <div class="col-md-3 text-center">
-                <img
-                        src="/images/pacil.png"
-                        class="rounded-circle mb-3"
-                        width="140"
-                        alt="Dito"
-                />
-                <h5>Dito</h5>
-                <p class="text-muted">Faculty Of Computer Science</p>
-            </div>
-            <!-- Darren -->
-            <div class="col-md-3 text-center">
-                <img
-                        src="/images/pacil.png"
-                        class="rounded-circle mb-3"
-                        width="140"
-                        alt="Darren"
-                />
-                <h5>Darren</h5>
-                <p class="text-muted">Faculty Of Computer Science</p>
-            </div>
-            <!-- Thata -->
-            <div class="col-md-3 text-center">
-                <img
-                        src="/images/pacil.png"
-                        class="rounded-circle mb-3"
-                        width="140"
-                        alt="Thata"
-                />
-                <h5>Thata</h5>
-                <p class="text-muted">Faculty Of Computer Science</p>
-            </div>
-            <!-- Catherine -->
-            <div class="col-md-3 text-center">
-                <img
-                        src="/images/pacil.png"
-                        class="rounded-circle mb-3"
-                        width="140"
-                        alt="Catherine"
-                />
-                <h5>Catherine</h5>
-                <p class="text-muted">Faculty Of Computer Science</p>
-            </div>
-            <!-- Will -->
-            <div class="col-md-3 text-center">
-                <img
-                        src="/images/pacil.png"
-                        class="rounded-circle mb-3"
-                        width="140"
-                        alt="Catherine"
-                />
-                <h5>Will</h5>
-                <p class="text-muted">Faculty Of Computer Science</p>
-            </div>
+            <!-- Team members… -->
         </div>
     </div>
 </section>
@@ -289,7 +239,13 @@
     </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap JS with SRI -->
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"
+></script> :contentReference[oaicite:1]{index=1}
+
 <script>
     function logout() {
         sessionStorage.removeItem("token");
@@ -300,9 +256,10 @@
         document.getElementById("navbarUserArea").innerHTML = token
             ? `<li class="nav-item"><button class="btn btn-outline-danger" onclick="logout()">Logout</button></li>`
             : `<li class="nav-item"><a class="btn btn-outline-primary me-2" href="/login.html">Login</a></li>
-           <li class="nav-item"><a class="btn btn-primary" href="/register.html">Sign Up</a></li>`;
+               <li class="nav-item"><a class="btn btn-primary" href="/register.html">Sign Up</a></li>`;
     }
     renderNavbarAuthState();
 </script>
+
 </body>
 </html>

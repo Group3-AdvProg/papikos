@@ -2,29 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>My Rental Requests</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+    <!-- Bootstrap CSS with SRI -->
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-            rel="stylesheet"/>
+            rel="stylesheet"
+            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+            crossorigin="anonymous"
+    />
+
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-            rel="stylesheet"/>
+            rel="stylesheet"
+    />
+
     <style>
-        :root { --bs-primary:#7065F0; }
-        body { font-family:'Segoe UI',sans-serif; background:#f9f9ff; }
-        .card-clickable { text-decoration:none; color:inherit; }
-        .card-clickable:hover { opacity:.95; }
+        :root { --bs-primary: #7065F0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f9f9ff; }
+        .card-clickable { text-decoration: none; color: inherit; }
+        .card-clickable:hover { opacity: .95; }
     </style>
 </head>
 <body>
 <div id="navbar-placeholder"></div>
+
 <div class="container py-4">
     <h2 class="fw-bold text-primary mb-4">My Rental Requests</h2>
     <div class="row row-cols-1 row-cols-md-3 g-4" id="requestsContainer"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap JS with SRI -->
+<script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"
+></script>
+
 <script src="/js/navbarLoader.js"></script>
 <script>
     const container = document.getElementById("requestsContainer");
@@ -38,24 +53,24 @@
         }
 
         try {
-            // 1) ambil data user
+            // 1) get current user
             const meRes = await fetch("/api/auth/users/me", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!meRes.ok) throw new Error("Not authenticated");
             const me = await meRes.json();
 
-            // 2) ambil semua rental
+            // 2) fetch all rentals
             const rentRes = await fetch("/api/rentals", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!rentRes.ok) throw new Error("Couldn’t fetch rentals");
             const rentals = await rentRes.json();
 
-            // 3) filter yang tenant.id === me.id
+            // 3) filter where tenant.id === me.id
             const myRentals = rentals.filter(r => r.tenant?.id === me.id);
 
-            // 4) render tiap rental dengan tombol Cancel (no View Detail)
+            // 4) render each rental with Cancel button
             if (!myRentals.length) {
                 container.innerHTML = `<div class="alert alert-info">No rental requests yet.</div>`;
             } else {
@@ -90,7 +105,7 @@
         }
     });
 
-    // fungsi cancel
+    // cancel function
     async function cancelRequest(rentalId) {
         if (!confirm("Yakin mau cancel request ini?")) return;
         try {
@@ -100,7 +115,7 @@
             });
             if (!res.ok) throw new Error(`Cancel failed (${res.status})`);
 
-            // hapus elemen kartu dari DOM
+            // remove card from DOM
             document.getElementById(`rental-${rentalId}`).remove();
             alert("Request berhasil dibatalkan!");
         } catch (e) {
