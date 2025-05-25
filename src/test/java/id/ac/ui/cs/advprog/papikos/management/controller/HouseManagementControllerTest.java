@@ -277,7 +277,7 @@ class HouseManagementControllerTest {
         mockMvc.perform(post("/api/management/rentals/10/approve")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("rental approved."));
+                .andExpect(content().string("Rental approved."));
 
         verify(rentalService, times(1)).updateRental(eq(10L), any(Rental.class));
         verify(houseManagementService, times(1)).updateHouse(eq(1L), any(House.class));
@@ -343,7 +343,7 @@ class HouseManagementControllerTest {
         mockMvc.perform(post("/api/management/rentals/11/approve")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("rental approved."));
+                .andExpect(content().string("Rental approved."));
 
         verify(rentalService, never()).updateRental(anyLong(), any());
         verify(houseManagementService, never()).updateHouse(anyLong(), any());
@@ -370,7 +370,7 @@ class HouseManagementControllerTest {
         mockMvc.perform(post("/api/management/rentals/12/approve")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("rental approved."));
+                .andExpect(content().string("Rental approved."));
 
         verify(rentalService, times(1)).updateRental(eq(12L), any());
         verify(houseManagementService, never()).updateHouse(anyLong(), any());
@@ -395,7 +395,7 @@ class HouseManagementControllerTest {
         mockMvc.perform(post("/api/management/rentals/20/reject")
                         .principal(() -> "owner@example.com"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("rental rejected."));
+                .andExpect(content().string("Rental rejected."));
 
         verify(rentalService, times(1)).deleteRental(20L);
         verify(notificationService, times(1)).notifyTenantRentalRejected(1L, 3L, 2L);

@@ -1,8 +1,8 @@
 package id.ac.ui.cs.advprog.papikos.house.management.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.model.House;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
-import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.house.management.service.HouseManagementService;
@@ -148,7 +148,7 @@ public class HouseManagementController {
     }
 
     @PostMapping("/rentals/{rentalId}/approve")
-    public ResponseEntity<?> approveRental(@PathVariable Long rentalId, Principal principal) {
+    public ResponseEntity<?> approverental(@PathVariable Long rentalId, Principal principal) {
         User landlord = userRepository.findByEmail(principal.getName()).orElseThrow();
         Rental rental = rentalService.getRentalById(rentalId).orElseThrow();
 
@@ -181,7 +181,7 @@ public class HouseManagementController {
     }
 
     @PostMapping("/rentals/{rentalId}/reject")
-    public ResponseEntity<?> rejectRental(@PathVariable Long rentalId, Principal principal) {
+    public ResponseEntity<?> rejectrental(@PathVariable Long rentalId, Principal principal) {
         User landlord = userRepository.findByEmail(principal.getName()).orElseThrow();
         Rental rental = rentalService.getRentalById(rentalId).orElseThrow();
         House house = rental.getHouse();

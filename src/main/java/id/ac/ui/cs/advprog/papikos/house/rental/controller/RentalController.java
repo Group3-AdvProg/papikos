@@ -1,19 +1,20 @@
 package id.ac.ui.cs.advprog.papikos.house.rental.controller;
 
-import id.ac.ui.cs.advprog.papikos.exception.ResourceNotFoundException;
 import id.ac.ui.cs.advprog.papikos.house.rental.dto.RentalDTO;
 import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
-import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,8 +25,7 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/api/rentals")
 public class RentalController {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(RentalController.class);
+    private static final Logger logger = LoggerFactory.getLogger(RentalController.class);
 
     private final RentalService service;
     private final HouseRepository houseRepository;
@@ -39,12 +39,14 @@ public class RentalController {
         logger.info("POST /api/rentals – tenant={} house={}", dto.getTenantId(), dto.getHouseId());
 
         House house = houseRepository.findById(dto.getHouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("House not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "House not found"));
+
         User tenant = userRepository.findById(dto.getTenantId())
-                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
+
         if (!"ROLE_TENANT".equals(tenant.getRole())) {
             logger.warn("User [{}] is not a tenant – blocking rental creation", tenant.getId());
-            throw new ResourceNotFoundException("User is not a tenant");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not a tenant");
         }
 
         Rental rental = new Rental();
@@ -64,7 +66,7 @@ public class RentalController {
         Rental created = service.createRental(rental);
         notificationService.notifyAvailability(house.getId());
 
-        logger.info("rental [{}] created successfully for tenant [{}]",
+        logger.info("Rental [{}] created successfully for tenant [{}]",
                 created.getId(), tenant.getId());
         return ResponseEntity.ok(created);
     }
@@ -80,11 +82,11 @@ public class RentalController {
         logger.info("GET /api/rentals/{} – fetch by id", id);
         return service.getRentalById(id)
                 .map(rental -> {
-                    logger.info("rental [{}] found", id);
+                    logger.info("Rental [{}] found", id);
                     return ResponseEntity.ok(rental);
                 })
                 .orElseGet(() -> {
-                    logger.warn("rental [{}] not found", id);
+                    logger.warn("Rental [{}] not found", id);
                     return ResponseEntity.notFound().build();
                 });
     }
@@ -101,16 +103,17 @@ public class RentalController {
         logger.info("DELETE /api/rentals/{} – deleting", id);
 
         Rental existing = service.getRentalById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("rental not found"));
-        House house = existing.getHouse();
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Rental not found"));
 
+        House house = existing.getHouse();
         service.deleteRental(id);
+
         house.setNumberOfRooms(house.getNumberOfRooms() + 1);
         houseRepository.save(house);
         notificationService.notifyAvailability(house.getId());
 
-        logger.info("rental [{}] deleted and room restored for house [{}]", id, house.getId());
-        return ResponseEntity.ok("rental deleted and availability updated");
+        logger.info("Rental [{}] deleted and room restored for house [{}]", id, house.getId());
+        return ResponseEntity.ok("Rental deleted and availability updated");
     }
 
     // --- asynchronous endpoints ----------------------------------------------
@@ -120,9 +123,15 @@ public class RentalController {
         logger.info("ASYNC POST /api/rentals – tenant={} house={}", dto.getTenantId(), dto.getHouseId());
 
         House house = houseRepository.findById(dto.getHouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("House not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "House not found"));
+
         User tenant = userRepository.findById(dto.getTenantId())
-                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found"));
+
+        if (!"ROLE_TENANT".equals(tenant.getRole())) {
+            logger.warn("User [{}] is not a tenant – blocking rental creation", tenant.getId());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not a tenant");
+        }
 
         Rental rental = new Rental();
         rental.setHouse(house);
@@ -164,7 +173,8 @@ public class RentalController {
                         .orElseGet(() -> {
                             logger.warn("ASYNC rental [{}] not found", id);
                             return ResponseEntity.notFound().build();
-                        }));
+                        })
+                );
     }
 
     @PutMapping("/async/{id}")
@@ -199,7 +209,7 @@ public class RentalController {
                     return service.deleteRentalAsync(id)
                             .thenApply(v -> {
                                 logger.info("ASYNC rental [{}] deleted and availability updated", id);
-                                return ResponseEntity.ok("rental deleted and availability updated");
+                                return ResponseEntity.ok("Rental deleted and availability updated");
                             });
                 });
     }
