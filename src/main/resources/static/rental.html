@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="/css/papikos.css" rel="stylesheet" />
     <style>
         :root { --bs-primary:#7065F0; }
-        body  { font-family:'Segoe UI',sans-serif;background:#f9f9ff; }
+        body { font-family:'Segoe UI',sans-serif;background:#f9f9ff; }
 
         .card-clickable{ text-decoration:none;color:inherit; }
         .card-clickable:hover{ opacity:.95; }
@@ -31,7 +32,6 @@
             pointer-events: auto;
         }
     </style>
-    <link href="/css/papikos.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -39,6 +39,26 @@
 
 <div class="container py-4">
     <h2 class="fw-bold mb-4 text-primary">Available Houses</h2>
+
+    <!-- Search & Filter Form -->
+    <form id="searchForm" class="row g-2 mb-4">
+        <div class="col-md-4">
+            <input type="text" id="keyword" class="form-control" placeholder="Search by name or location..." />
+        </div>
+        <div class="col-md-3">
+            <input type="number" id="minRent" class="form-control" placeholder="Min Rent" />
+        </div>
+        <div class="col-md-3">
+            <input type="number" id="maxRent" class="form-control" placeholder="Max Rent" />
+        </div>
+        <div class="col-md-1">
+            <button class="btn btn-primary w-100" type="submit">Search</button>
+        </div>
+        <div class="col-md-1">
+            <button class="btn btn-outline-secondary w-100" type="button" onclick="resetFilters()">Reset</button>
+        </div>
+    </form>
+
     <div class="row row-cols-1 row-cols-md-3 g-4" id="houseContainer"></div>
 </div>
 
@@ -49,6 +69,7 @@
     const houseContainer = document.getElementById("houseContainer");
     let currentUserId = null;
     let wishlist = [];
+    let allHouses = [];
 
     window.addEventListener("DOMContentLoaded", async () => {
         loadNavbar();
@@ -69,8 +90,9 @@
             });
             wishlist = await wishlistRes.json();
 
-            fetchHouses();
+            await fetchHouses();
         } catch (e) {
+            console.error("Failed to load user or wishlist:", e);
             wishlist = []; // fallback if /me or /wishlist fails
             fetchHouses();
         }
@@ -81,9 +103,10 @@
             const res = await fetch("/api/houses", {
                 headers: { Authorization: "Bearer " + token }
             });
-            const houses = await res.json();
-            renderHouses(houses);
+            allHouses = await res.json();
+            renderHouses(allHouses);
         } catch (err) {
+            console.error("Failed to load houses:", err);
             houseContainer.innerHTML = `<div class="alert alert-danger">Failed to load houses.</div>`;
         }
     }
@@ -121,9 +144,7 @@
                   <div><i class="bi bi-droplet-half"></i> 2 Baths</div>
                   <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
                 </div>
-                <button class="btn btn-outline-primary w-100 mt-3 view-btn">
-                  View Detail
-                </button>
+                <button class="btn btn-outline-primary w-100 mt-3 view-btn">View Detail</button>
               </div>
             </a>
           </div>
@@ -155,8 +176,49 @@
                 }
             }
         } catch (err) {
+            console.error("Error updating wishlist:", err);
             alert("Error updating wishlist.");
         }
+    }
+
+    document.getElementById("searchForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        performSearch();
+    });
+
+    ["keyword", "minRent", "maxRent"].forEach(id => {
+        document.getElementById(id).addEventListener("input", debounce(performSearch, 300));
+    });
+
+    function performSearch() {
+        const keyword = document.getElementById("keyword").value.toLowerCase();
+        const minRent = parseFloat(document.getElementById("minRent").value) || 0;
+        const maxRent = parseFloat(document.getElementById("maxRent").value) || Number.MAX_VALUE;
+
+        const filtered = allHouses.filter(h => {
+            const name = h.name?.toLowerCase() || "";
+            const address = h.address?.toLowerCase() || "";
+            const rent = h.monthlyRent ?? 0;
+            return (name.includes(keyword) || address.includes(keyword)) &&
+                rent >= minRent && rent <= maxRent;
+        });
+
+        renderHouses(filtered);
+    }
+
+    function resetFilters() {
+        document.getElementById("keyword").value = "";
+        document.getElementById("minRent").value = "";
+        document.getElementById("maxRent").value = "";
+        renderHouses(allHouses);
+    }
+
+    function debounce(func, delay) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
     }
 </script>
 </body>

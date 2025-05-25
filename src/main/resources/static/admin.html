@@ -85,6 +85,7 @@
             const landlords = await res.json();
             renderLandlords(landlords);
         } catch (err) {
+            console.error("Failed to load landlord accounts:", err);
             document.getElementById("landlordContainer").innerHTML =
                 `<div class="alert alert-danger">Failed to load landlord accounts. Make sure you are logged in as admin.</div>`;
         }

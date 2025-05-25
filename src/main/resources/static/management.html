@@ -99,6 +99,7 @@
             const houses = await res.json();
             renderHouses(houses);
         } catch (err) {
+            console.error("Failed to fetch houses:", err);
             document.getElementById("houseContainer").innerHTML = `
         <div class="alert alert-danger">You are not authorized. Please log in as Landlord</div>
       `;
@@ -229,10 +230,11 @@
             document.getElementById("welcome-email").textContent = `Welcome ${user.email} (UserID:${user.id})`;
             document.getElementById("wallet-balance").textContent = user.balance.toLocaleString("id-ID");
         } catch (err) {
-            console.warn("Failed to load user info");
+            console.warn("Failed to load user info:", err);
+            document.getElementById("welcome-email").textContent = "Welcome, Guest";
+            document.getElementById("wallet-balance").textContent = "0";
         }
     }
-
 
     ["keyword", "minRent", "maxRent"].forEach(id => {
         document.getElementById(id).addEventListener("input", debounce(async function () {
@@ -281,6 +283,7 @@
                 alert("Sorry, your account hasn't been approved by the admin yet. You can't add houses until you're approved.");
             }
         } catch (err) {
+            console.error("Error checking approval status:", err);
             alert("Error checking approval status. Please try again.");
         }
     }

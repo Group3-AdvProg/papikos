@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.papikos.paymentTest.controller;
 
-import id.ac.ui.cs.advprog.papikos.paymentMain.controller.LoggingController;
+import id.ac.ui.cs.advprog.papikos.paymentmain.controller.LoggingController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

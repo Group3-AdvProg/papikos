@@ -2,9 +2,9 @@ package id.ac.ui.cs.advprog.papikos.paymentTest.service;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
-import id.ac.ui.cs.advprog.papikos.paymentMain.model.Transaction;
-import id.ac.ui.cs.advprog.papikos.paymentMain.repository.TransactionRepository;
-import id.ac.ui.cs.advprog.papikos.paymentMain.service.TransactionService;
+import id.ac.ui.cs.advprog.papikos.paymentmain.model.Transaction;
+import id.ac.ui.cs.advprog.papikos.paymentmain.repository.TransactionRepository;
+import id.ac.ui.cs.advprog.papikos.paymentmain.service.TransactionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;

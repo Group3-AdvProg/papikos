@@ -140,9 +140,14 @@
 
       if (direction !== "all") {
         txs = txs.filter(tx => {
-          const dir = tx.type === "TOP_UP"
-            ? "incoming"
-            : (tx.targetUser && String(tx.targetUser.id) === String(currentUserId) ? "incoming" : "outgoing");
+          let dir;
+          if (tx.type === "TOP_UP") {
+            dir = "incoming";
+          } else if (tx.targetUser && String(tx.targetUser.id) === String(currentUserId)) {
+            dir = "incoming";
+          } else {
+            dir = "outgoing";
+          }
           return dir === direction;
         });
       }
@@ -153,9 +158,14 @@
       }
 
       container.innerHTML = txs.map(tx => {
-        const dir = tx.type === "TOP_UP"
-          ? "Incoming"
-          : (tx.targetUser && String(tx.targetUser.id) === String(currentUserId) ? "Incoming" : "Outgoing");
+        let dir;
+        if (tx.type === "TOP_UP") {
+          dir = "Incoming";
+        } else if (tx.targetUser && String(tx.targetUser.id) === String(currentUserId)) {
+          dir = "Incoming";
+        } else {
+          dir = "Outgoing";
+        }
         const fromTo = tx.type === "TOP_UP"
           ? `From <strong>System</strong> to <strong>${tx.user?.fullName||tx.user?.username||"You"}</strong>`
           : `From <strong>${tx.user.fullName||tx.user.username||"User"}</strong> to <strong>${tx.targetUser.fullName||tx.targetUser.username||"User"}</strong>`;

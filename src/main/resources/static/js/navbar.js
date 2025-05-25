@@ -39,6 +39,7 @@ window.setupNavbar = function () {
                 links.push(`<li class="nav-item"><a class="nav-link" href="/chat.html"><i class="bi bi-chat-dots"></i> Chat</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/inbox.html">Inbox</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/wishlist.html">My Wishlist</a></li>`);
+                links.push(`<li class="nav-item"><a class="nav-link" href="/myBookings.html">My Bookings</a></li>`);
             }
 
             links.push(`
@@ -55,7 +56,8 @@ window.setupNavbar = function () {
             navbar.innerHTML = links.join("");
 
             const dropdownTrigger = document.querySelector('[data-bs-toggle="dropdown"]');
-            if (dropdownTrigger) new bootstrap.Dropdown(dropdownTrigger);
+            let dropdownInstance = null;
+            if (dropdownTrigger) dropdownInstance = new bootstrap.Dropdown(dropdownTrigger);
 
             document.getElementById("logout-btn").addEventListener("click", () => {
                 sessionStorage.removeItem("token");

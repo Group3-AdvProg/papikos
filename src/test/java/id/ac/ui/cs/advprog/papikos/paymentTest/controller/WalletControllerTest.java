@@ -3,11 +3,11 @@ package id.ac.ui.cs.advprog.papikos.paymentTest.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.auth.filter.JwtFilter;
 import id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil;
-import id.ac.ui.cs.advprog.papikos.paymentMain.controller.WalletController;
+import id.ac.ui.cs.advprog.papikos.paymentmain.controller.WalletController;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
-import id.ac.ui.cs.advprog.papikos.paymentMain.payload.request.TopUpRequest;
+import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.TopUpRequest;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
-import id.ac.ui.cs.advprog.papikos.paymentMain.service.TransactionService;
+import id.ac.ui.cs.advprog.papikos.paymentmain.service.TransactionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,7 +22,7 @@ import java.util.Optional;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import id.ac.ui.cs.advprog.papikos.paymentMain.payload.request.PaymentRequest;
+import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.PaymentRequest;
 
 @WebMvcTest(controllers = WalletController.class)
 @AutoConfigureMockMvc(addFilters = false)

@@ -1,15 +1,14 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.ac.ui.cs.advprog.papikos.house.Rental.controller.BoardingHouseController;
-import id.ac.ui.cs.advprog.papikos.house.Rental.service.BoardingHouseService;
+import id.ac.ui.cs.advprog.papikos.house.rental.controller.BoardingHouseController;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.BoardingHouseService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
