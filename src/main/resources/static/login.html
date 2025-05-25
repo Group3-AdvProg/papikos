@@ -49,7 +49,7 @@
                 </div>
 
                 <!-- Form -->
-                <form>
+                <form id="loginForm">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email address</label>
                         <input
@@ -159,5 +159,46 @@
 
 <!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Login handler -->
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email    = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!res.ok) {
+                return alert("Login failed. Please check your credentials.");
+            }
+
+            const data = await res.json();
+            sessionStorage.setItem("token", data.token);
+
+            const payload     = JSON.parse(atob(data.token.split('.')[1]));
+            const authorities = payload.authorities || [];
+
+            if (authorities.some(r => r.authority === "ROLE_ADMIN")) {
+                window.location.href = "/admin.html";
+            } else if (authorities.some(r => r.authority === "ROLE_LANDLORD")) {
+                window.location.href = "/management.html";
+            } else if (authorities.some(r => r.authority === "ROLE_TENANT")) {
+                window.location.href = "/rental.html";
+            } else {
+                window.location.href = "/";
+            }
+        } catch (err) {
+            console.error(err);
+            alert("An error occurred. Please try again.");
+        }
+    });
+</script>
 </body>
 </html>
