@@ -1,8 +1,8 @@
-package id.ac.ui.cs.advprog.papikos.paymentMain.service;
+package id.ac.ui.cs.advprog.papikos.paymentmain.service;
 
-import id.ac.ui.cs.advprog.papikos.paymentMain.model.Transaction;
+import id.ac.ui.cs.advprog.papikos.paymentmain.model.Transaction;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
-import id.ac.ui.cs.advprog.papikos.paymentMain.repository.TransactionRepository;
+import id.ac.ui.cs.advprog.papikos.paymentmain.repository.TransactionRepository;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.net.ContentHandler;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

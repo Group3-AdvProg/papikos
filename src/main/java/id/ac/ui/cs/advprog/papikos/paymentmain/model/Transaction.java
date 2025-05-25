@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.paymentMain.model;
+package id.ac.ui.cs.advprog.papikos.paymentmain.model;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import jakarta.persistence.*;

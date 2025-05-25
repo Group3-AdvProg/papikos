@@ -1,7 +1,7 @@
-package id.ac.ui.cs.advprog.papikos.paymentMain.controller;
+package id.ac.ui.cs.advprog.papikos.paymentmain.controller;
 
-import id.ac.ui.cs.advprog.papikos.paymentMain.model.Transaction;
-import id.ac.ui.cs.advprog.papikos.paymentMain.service.TransactionService;
+import id.ac.ui.cs.advprog.papikos.paymentmain.model.Transaction;
+import id.ac.ui.cs.advprog.papikos.paymentmain.service.TransactionService;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,8 +74,12 @@ public class TransactionController {
 
     @GetMapping("/user-or-target/{id}")
     public List<Transaction> getTransactionsByUserOrTarget(@PathVariable Long id) {
+        // Log access for auditing (differs from getTransactionsByUser)
+        System.out.println("Fetching transactions for user or as target: " + id);
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, USER_NOT_FOUND));
+        // This could be extended to support additional filtering or pagination if needed
         return transactionService.getTransactionsByUserOrTarget(user);
     }
 }

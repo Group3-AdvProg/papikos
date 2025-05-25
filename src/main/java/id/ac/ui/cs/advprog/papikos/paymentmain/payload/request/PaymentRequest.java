@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.paymentMain.payload.request;
+package id.ac.ui.cs.advprog.papikos.paymentmain.payload.request;
 
 import lombok.Getter;
 import lombok.Setter;

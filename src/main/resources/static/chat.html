@@ -92,9 +92,11 @@
             </div>
             <div class="modal-body">
                 <div class="mb-2">
-                    <label class="form-label">Landlord Email</label>
-                    <input type="email" name="landlordEmail"
-                           class="form-control" required />
+                    <label>
+                        <span class="form-label">Landlord Email</span>
+                        <input type="email" name="landlordEmail"
+                               class="form-control" required />
+                    </label>
                 </div>
             </div>
             <div class="modal-footer">
@@ -165,12 +167,6 @@
         const ul    = document.getElementById("rooms");
         ul.innerHTML = rooms.length ? "" :
             '<li class="list-group-item">No rooms yet</li>';
-
-        /* auto-jump to first room (uncomment if that UX is preferred) */
-        // if (!roomId && rooms.length) {
-        //     location.search = '?roomId=' + rooms[0].id;
-        //     return;
-        // }
 
         rooms.forEach(r=>{
             const youAreTenant = r.tenant?.email === currentEmail();

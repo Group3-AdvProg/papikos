@@ -145,12 +145,12 @@ class NotificationServiceImplTest {
         User tenant = new User();
         tenant.setId(2L);
 
-        House house = new House();
-        house.setId(1L);
-        house.setName("Kos UI");
-        house.setOwner(new User());
+        House approvedHouse = new House();
+        approvedHouse.setId(1L);
+        approvedHouse.setName("Kos UI");
+        approvedHouse.setOwner(new User());
 
-        when(houseRepo.findById(1L)).thenReturn(Optional.of(house));
+        when(houseRepo.findById(1L)).thenReturn(Optional.of(approvedHouse));
 
         notificationService.notifyTenantRentalApproved(99L, 2L, 1L).join();
 
@@ -167,12 +167,12 @@ class NotificationServiceImplTest {
         User tenant = new User();
         tenant.setId(2L);
 
-        House house = new House();
-        house.setId(1L);
-        house.setName("Kos UI");
-        house.setOwner(new User());
+        House rejectedHouse = new House();
+        rejectedHouse.setId(1L);
+        rejectedHouse.setName("Kos UI");
+        rejectedHouse.setOwner(new User());
 
-        when(houseRepo.findById(1L)).thenReturn(Optional.of(house));
+        when(houseRepo.findById(1L)).thenReturn(Optional.of(rejectedHouse));
 
         notificationService.notifyTenantRentalRejected(99L, 2L, 1L).join();
 

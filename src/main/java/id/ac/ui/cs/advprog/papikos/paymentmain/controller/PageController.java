@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.paymentMain.controller;
+package id.ac.ui.cs.advprog.papikos.paymentmain.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

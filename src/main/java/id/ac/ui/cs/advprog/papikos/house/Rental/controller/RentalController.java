@@ -1,10 +1,11 @@
-package id.ac.ui.cs.advprog.papikos.house.Rental.controller;
+package id.ac.ui.cs.advprog.papikos.house.rental.controller;
 
-import id.ac.ui.cs.advprog.papikos.house.Rental.dto.RentalDTO;
-import id.ac.ui.cs.advprog.papikos.house.Rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.exception.ResourceNotFoundException;
+import id.ac.ui.cs.advprog.papikos.house.rental.dto.RentalDTO;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
-import id.ac.ui.cs.advprog.papikos.house.Rental.service.RentalService;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.repository.HouseRepository;
 import id.ac.ui.cs.advprog.papikos.wishlist.service.NotificationService;
@@ -35,16 +36,15 @@ public class RentalController {
 
     @PostMapping
     public ResponseEntity<Rental> create(@RequestBody RentalDTO dto) {
-        logger.info("POST /api/rentals – tenant={} house={}",
-                dto.getTenantId(), dto.getHouseId());
+        logger.info("POST /api/rentals – tenant={} house={}", dto.getTenantId(), dto.getHouseId());
 
         House house = houseRepository.findById(dto.getHouseId())
-                .orElseThrow(() -> new RuntimeException("House not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("House not found"));
         User tenant = userRepository.findById(dto.getTenantId())
-                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
         if (!"ROLE_TENANT".equals(tenant.getRole())) {
             logger.warn("User [{}] is not a tenant – blocking rental creation", tenant.getId());
-            throw new RuntimeException("User is not a tenant");
+            throw new ResourceNotFoundException("User is not a tenant");
         }
 
         Rental rental = new Rental();
@@ -101,7 +101,7 @@ public class RentalController {
         logger.info("DELETE /api/rentals/{} – deleting", id);
 
         Rental existing = service.getRentalById(id)
-                .orElseThrow(() -> new RuntimeException("Rental not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Rental not found"));
         House house = existing.getHouse();
 
         service.deleteRental(id);
@@ -117,13 +117,12 @@ public class RentalController {
 
     @PostMapping("/async")
     public CompletableFuture<ResponseEntity<Rental>> createAsync(@RequestBody RentalDTO dto) {
-        logger.info("ASYNC POST /api/rentals – tenant={} house={}",
-                dto.getTenantId(), dto.getHouseId());
+        logger.info("ASYNC POST /api/rentals – tenant={} house={}", dto.getTenantId(), dto.getHouseId());
 
         House house = houseRepository.findById(dto.getHouseId())
-                .orElseThrow(() -> new RuntimeException("House not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("House not found"));
         User tenant = userRepository.findById(dto.getTenantId())
-                .orElseThrow(() -> new RuntimeException("Tenant not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found"));
 
         Rental rental = new Rental();
         rental.setHouse(house);

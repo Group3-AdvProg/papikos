@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.paymentMain.payload.response;
+package id.ac.ui.cs.advprog.papikos.paymentmain.payload.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

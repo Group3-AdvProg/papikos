@@ -1,7 +1,7 @@
-package id.ac.ui.cs.advprog.papikos.house.Rental.controller;
+package id.ac.ui.cs.advprog.papikos.house.rental.controller;
 
 import id.ac.ui.cs.advprog.papikos.house.model.House;
-import id.ac.ui.cs.advprog.papikos.house.Rental.service.BoardingHouseService;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.BoardingHouseService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -341,10 +341,10 @@ class HouseManagementControllerTest {
         tenant.setId(99L);
         rental.setTenant(tenant);
 
-        House house = new House("Kos Full", "Jl. Penuh", "desc", 0, 2000000.0,
+        House fullHouse = new House("Kos Full", "Jl. Penuh", "desc", 0, 2000000.0,
                 "https://example.com/kosz.jpg", owner);
-        house.setId(1L);
-        rental.setHouse(house);
+        fullHouse.setId(1L);
+        rental.setHouse(fullHouse);
 
         when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
         when(rentalService.getRentalById(12L)).thenReturn(Optional.of(rental));

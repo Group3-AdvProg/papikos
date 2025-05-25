@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.house.Rental.model;
+package id.ac.ui.cs.advprog.papikos.house.rental.model;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.house.model.House;

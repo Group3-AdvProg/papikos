@@ -38,12 +38,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * MVC slice tests for {@link ChatRoomRestController}.
- * <p>
- * An inner {@link RestControllerAdvice} maps {@link EntityNotFoundException}
- * to 404 so we can cover the failure branches as well.
- */
 @WebMvcTest(ChatRoomRestController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @Import(ChatRoomRestControllerTest.NotFoundAdvice.class)
@@ -59,28 +53,25 @@ class ChatRoomRestControllerTest {
     @Autowired private MockMvc mvc;
     @Autowired private ObjectMapper json;
 
-    @MockBean private ChatRoomService service;
-    @MockBean private UserRepository  userRepo;
-    @MockBean private JwtFilter       jwtFilter; // context placeholders
-    @MockBean private JwtUtil         jwtUtil;   // ─┘
-
-    private final String TENANT   = "tenant@example.com";
-    private final String LANDLORD = "landlord@example.com";
+    private static final String tenantEmail   = "tenant@example.com";
+    private static final String landlordEmail = "landlord@example.com";
 
     private User tenant;
     private User landlord;
 
+    @MockBean private ChatRoomService service;
+    @MockBean private UserRepository userRepo;
+    @MockBean private JwtFilter jwtFilter;
+    @MockBean private JwtUtil jwtUtil;
+
     @BeforeEach
     void setUp() {
-        tenant   = new User(); tenant.setId(1L); tenant.setEmail(TENANT);
-        landlord = new User(); landlord.setId(2L); landlord.setEmail(LANDLORD);
+        tenant   = new User(); tenant.setId(1L); tenant.setEmail(tenantEmail);
+        landlord = new User(); landlord.setId(2L); landlord.setEmail(landlordEmail);
 
-        // default stubbing – individual tests may override
-        when(userRepo.findByEmail(TENANT)).thenReturn(Optional.of(tenant));
-        when(userRepo.findByEmail(LANDLORD)).thenReturn(Optional.of(landlord));
+        when(userRepo.findByEmail(tenantEmail)).thenReturn(Optional.of(tenant));
+        when(userRepo.findByEmail(landlordEmail)).thenReturn(Optional.of(landlord));
     }
-
-    /* ───────────────────────────────────────── create / get ──────────── */
 
     @Test
     void createRoom_new_returns201() throws Exception {
@@ -91,12 +82,12 @@ class ChatRoomRestControllerTest {
         when(service.createRoom(1L, 2L)).thenReturn(created);
 
         CreateRoomRequest req = new CreateRoomRequest();
-        req.setLandlordEmail(LANDLORD);
+        req.setLandlordEmail(landlordEmail);
 
         mvc.perform(post("/api/chat/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(req))
-                        .principal(new TestingAuthenticationToken(TENANT, null)))
+                        .principal(new TestingAuthenticationToken(tenantEmail, null)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(10));
     }
@@ -108,45 +99,43 @@ class ChatRoomRestControllerTest {
         when(service.findRoom(1L, 2L)).thenReturn(Optional.of(room));
 
         CreateRoomRequest req = new CreateRoomRequest();
-        req.setLandlordEmail(LANDLORD);
+        req.setLandlordEmail(landlordEmail);
 
         mvc.perform(post("/api/chat/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(req))
-                        .principal(new TestingAuthenticationToken(TENANT, null)))
+                        .principal(new TestingAuthenticationToken(tenantEmail, null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(99));
     }
 
     @Test
     void createRoom_tenantMissing_returns404() throws Exception {
-        when(userRepo.findByEmail(TENANT)).thenReturn(Optional.empty());
+        when(userRepo.findByEmail(tenantEmail)).thenReturn(Optional.empty());
 
         CreateRoomRequest req = new CreateRoomRequest();
-        req.setLandlordEmail(LANDLORD);
+        req.setLandlordEmail(landlordEmail);
 
         mvc.perform(post("/api/chat/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(req))
-                        .principal(new TestingAuthenticationToken(TENANT, null)))
+                        .principal(new TestingAuthenticationToken(tenantEmail, null)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void createRoom_landlordMissing_returns404() throws Exception {
-        when(userRepo.findByEmail(LANDLORD)).thenReturn(Optional.empty());
+        when(userRepo.findByEmail(landlordEmail)).thenReturn(Optional.empty());
 
         CreateRoomRequest req = new CreateRoomRequest();
-        req.setLandlordEmail(LANDLORD);
+        req.setLandlordEmail(landlordEmail);
 
         mvc.perform(post("/api/chat/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(req))
-                        .principal(new TestingAuthenticationToken(TENANT, null)))
+                        .principal(new TestingAuthenticationToken(tenantEmail, null)))
                 .andExpect(status().isNotFound());
     }
-
-    /* ───────────────────────────────────────── list rooms / user nf ──── */
 
     @Test
     void listRooms_returnsUserRooms() throws Exception {
@@ -155,21 +144,19 @@ class ChatRoomRestControllerTest {
         when(service.listRoomsForUser(1L)).thenReturn(List.of(r));
 
         mvc.perform(get("/api/chat/rooms")
-                        .principal(new TestingAuthenticationToken(TENANT, null)))
+                        .principal(new TestingAuthenticationToken(tenantEmail, null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(7));
     }
 
     @Test
     void listRooms_userMissing_returns404() throws Exception {
-        when(userRepo.findByEmail(TENANT)).thenReturn(Optional.empty());
+        when(userRepo.findByEmail(tenantEmail)).thenReturn(Optional.empty());
 
         mvc.perform(get("/api/chat/rooms")
-                        .principal(new TestingAuthenticationToken(TENANT, null)))
+                        .principal(new TestingAuthenticationToken(tenantEmail, null)))
                 .andExpect(status().isNotFound());
     }
-
-    /* ───────────────────────────────────────── messages CRUD ─────────── */
 
     @Test
     void listMessages_returnsRoomMessages() throws Exception {

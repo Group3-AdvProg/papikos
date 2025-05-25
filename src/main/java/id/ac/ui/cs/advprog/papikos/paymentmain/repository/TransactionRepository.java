@@ -1,7 +1,7 @@
-package id.ac.ui.cs.advprog.papikos.paymentMain.repository;
+package id.ac.ui.cs.advprog.papikos.paymentmain.repository;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
-import id.ac.ui.cs.advprog.papikos.paymentMain.model.Transaction;
+import id.ac.ui.cs.advprog.papikos.paymentmain.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

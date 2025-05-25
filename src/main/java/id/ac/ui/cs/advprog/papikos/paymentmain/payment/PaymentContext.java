@@ -1,19 +1,22 @@
-package id.ac.ui.cs.advprog.papikos.paymentMain.payment;
+package id.ac.ui.cs.advprog.papikos.paymentmain.payment;
 
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Setter
 public class PaymentContext {
+    private static final Logger logger = LoggerFactory.getLogger(PaymentContext.class);
     private PaymentStrategy strategy;
 
     public boolean executePayment(double amount, double balance) {
         if (balance < amount) {
-            System.out.println("Insufficient balance.");
+            logger.warn("Insufficient balance.");
             return false;
         }
 
         if (strategy == null) {
-            System.out.println("No payment method selected.");
+            logger.warn("No payment method selected.");
             return false;
         }
 

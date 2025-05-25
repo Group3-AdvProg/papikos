@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.papikos.house.Rental.dto;
+package id.ac.ui.cs.advprog.papikos.house.rental.dto;
 
 import lombok.Data;
 

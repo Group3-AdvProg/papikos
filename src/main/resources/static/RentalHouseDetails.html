@@ -186,7 +186,8 @@
         });
         if (res.ok) {
             alert("Request sent!");
-            location.href = `/rental.html?houseId=${currentHouse.id}`;
+            const redirectUrl = `/rental.html?houseId=${currentHouse.id}`;
+            location.href = redirectUrl;
         } else {
             alert("Request failed");
         }

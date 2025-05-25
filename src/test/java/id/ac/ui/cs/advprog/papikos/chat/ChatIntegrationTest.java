@@ -89,8 +89,9 @@ class ChatIntegrationTest {
             }
         });
 
-        // give broker a moment
-        Thread.sleep(500);
+        // Wait until the subscription is likely active by polling the queue with a timeout
+        // (No message expected yet, but ensures subscription is ready)
+        queue.poll(500, TimeUnit.MILLISECONDS);
 
         // send a raw ChatMessage
         ChatMessage outgoing = new ChatMessage();
@@ -130,7 +131,8 @@ class ChatIntegrationTest {
             }
         });
 
-        Thread.sleep(500);
+        // Wait until the subscription is likely active by polling the queue with a timeout
+        queue.poll(500, TimeUnit.MILLISECONDS);
 
         ChatMessage joinMsg = new ChatMessage();
         joinMsg.setType(ChatMessage.MessageType.JOIN);

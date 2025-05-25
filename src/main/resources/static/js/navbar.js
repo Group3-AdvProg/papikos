@@ -56,7 +56,8 @@ window.setupNavbar = function () {
             navbar.innerHTML = links.join("");
 
             const dropdownTrigger = document.querySelector('[data-bs-toggle="dropdown"]');
-            if (dropdownTrigger) new bootstrap.Dropdown(dropdownTrigger);
+            let dropdownInstance = null;
+            if (dropdownTrigger) dropdownInstance = new bootstrap.Dropdown(dropdownTrigger);
 
             document.getElementById("logout-btn").addEventListener("click", () => {
                 sessionStorage.removeItem("token");

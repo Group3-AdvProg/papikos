@@ -38,7 +38,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
         logger.info("Login attempt for {}", authRequest.getEmail());
         try {
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
             );
         } catch (AuthenticationException ex) {
@@ -66,7 +66,7 @@ public class AuthController {
         newUser.setRole(registerRequest.getRole());
         newUser.setFullName(registerRequest.getFullName());
         newUser.setPhoneNumber(registerRequest.getPhoneNumber());
-        newUser.setApproved("ROLE_LANDLORD".equals(newUser.getRole()) ? false : true);
+        newUser.setApproved(!"ROLE_LANDLORD".equals(newUser.getRole()));
 
         userRepository.save(newUser);
         logger.info("User {} registered successfully with role {}", newUser.getEmail(), newUser.getRole());
