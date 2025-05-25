@@ -84,10 +84,12 @@ class HouseManagementControllerTest {
         when(houseManagementService.addHouse(any(House.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
-        mockMvc.perform(post("/api/management/houses")
-                        .principal(() -> "owner@example.com")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(house)))
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(post("/api/management/houses")
+                                        .principal(() -> "owner@example.com")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(house)))
+                                .andReturn()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Kos A"));
     }
@@ -97,10 +99,12 @@ class HouseManagementControllerTest {
         owner.setApproved(false);
         when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(owner));
 
-        mockMvc.perform(post("/api/management/houses")
-                        .principal(() -> "owner@example.com")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(house)))
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(post("/api/management/houses")
+                                        .principal(() -> "owner@example.com")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(house)))
+                                .andReturn()))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string("Account not approved by admin yet"));
     }
@@ -121,10 +125,12 @@ class HouseManagementControllerTest {
         when(houseManagementService.updateHouse(eq(1L), any(House.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
-        mockMvc.perform(put("/api/management/houses/1")
-                        .principal(() -> "owner@example.com")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(house)))
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(put("/api/management/houses/1")
+                                        .principal(() -> "owner@example.com")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(house)))
+                                .andReturn()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Kos A"));
     }
@@ -133,10 +139,12 @@ class HouseManagementControllerTest {
     void testUpdateHouse_NotFound() throws Exception {
         when(houseManagementService.findById(1L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(put("/api/management/houses/1")
-                        .principal(() -> "owner@example.com")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(house)))
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(put("/api/management/houses/1")
+                                        .principal(() -> "owner@example.com")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(house)))
+                                .andReturn()))
                 .andExpect(status().isNotFound());
     }
 
@@ -147,10 +155,12 @@ class HouseManagementControllerTest {
         house.setOwner(otherUser);
         when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
 
-        mockMvc.perform(put("/api/management/houses/1")
-                        .principal(() -> "owner@example.com")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(house)))
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(put("/api/management/houses/1")
+                                        .principal(() -> "owner@example.com")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(house)))
+                                .andReturn()))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string("Forbidden: You do not own this house."));
     }
@@ -166,10 +176,12 @@ class HouseManagementControllerTest {
         when(houseManagementService.updateHouse(eq(1L), any(House.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
-        mockMvc.perform(put("/api/management/houses/1")
-                        .principal(() -> "owner@example.com")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updated)))
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(put("/api/management/houses/1")
+                                        .principal(() -> "owner@example.com")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(updated)))
+                                .andReturn()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Kos A"));
 
@@ -182,8 +194,10 @@ class HouseManagementControllerTest {
         when(houseManagementService.deleteHouse(1L))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
-        mockMvc.perform(delete("/api/management/houses/1")
-                        .principal(() -> "owner@example.com"))
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(delete("/api/management/houses/1")
+                                        .principal(() -> "owner@example.com"))
+                                .andReturn()))
                 .andExpect(status().isNoContent());
     }
 
@@ -191,8 +205,10 @@ class HouseManagementControllerTest {
     void testDeleteHouse_NotFound() throws Exception {
         when(houseManagementService.findById(1L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(delete("/api/management/houses/1")
-                        .principal(() -> "owner@example.com"))
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(delete("/api/management/houses/1")
+                                        .principal(() -> "owner@example.com"))
+                                .andReturn()))
                 .andExpect(status().isNotFound());
     }
 
@@ -203,8 +219,10 @@ class HouseManagementControllerTest {
         house.setOwner(otherUser);
         when(houseManagementService.findById(1L)).thenReturn(Optional.of(house));
 
-        mockMvc.perform(delete("/api/management/houses/1")
-                        .principal(() -> "owner@example.com"))
+        mockMvc.perform(asyncDispatch(
+                        mockMvc.perform(delete("/api/management/houses/1")
+                                        .principal(() -> "owner@example.com"))
+                                .andReturn()))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string("Forbidden: You do not own this house."));
     }
