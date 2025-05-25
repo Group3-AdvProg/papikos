@@ -4,52 +4,38 @@
     <meta charset="UTF-8" />
     <title>Available Houses</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
-
     <style>
         :root { --bs-primary:#7065F0; }
         body  { font-family:'Segoe UI',sans-serif;background:#f9f9ff; }
-        .navbar { background:var(--bs-primary); }
-        .navbar a,.navbar-brand { color:#fff; }
-        .navbar a:hover { color:#ddd; }
 
         .card-clickable{ text-decoration:none;color:inherit; }
-        .card-clickable:hover{ opacity:.9; }
+        .card-clickable:hover{ opacity:.95; }
         .card-body *{ pointer-events:none; }
-        .view-btn{ pointer-events:auto; }         /* enable button click */
+        .view-btn{ pointer-events:auto; }
+        .wishlist-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: white;
+            border: none;
+            border-radius: 50%;
+            padding: 6px 8px;
+            box-shadow: 0 0 3px rgba(0,0,0,0.2);
+            z-index: 5;
+        }
+        .wishlist-btn .bi {
+            font-size: 1.2rem;
+            color: red;
+            pointer-events: auto;
+        }
     </style>
+    <link href="/css/papikos.css" rel="stylesheet" />
 </head>
 
 <body>
-<nav class="navbar navbar-expand-lg shadow-sm w-100">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/rental.html">Papikos</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/management.html">My Houses</a>
-                </li>
-                <!-- Chat button now styled as outline-primary -->
-                <li class="nav-item">
-                    <a class="btn btn-outline-primary me-2" href="/chat.html">
-                        <i class="bi bi-chat-dots-fill"></i> Chat
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn btn-outline-primary me-2" href="/login.html">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn btn-primary" href="/register.html">Sign up</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<div id="navbar-placeholder"></div>
 
 <div class="container py-4">
     <h2 class="fw-bold mb-4 text-primary">Available Houses</h2>
@@ -57,70 +43,120 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
 <script>
     const token = sessionStorage.getItem("token");
     const houseContainer = document.getElementById("houseContainer");
+    let currentUserId = null;
+    let wishlist = [];
 
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", async () => {
+        loadNavbar();
         if (!token) {
             houseContainer.innerHTML = `<div class="alert alert-warning">Please log in to view rental listings.</div>`;
             return;
         }
-        fetchHouses();
+
+        try {
+            const meRes = await fetch("/api/auth/users/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
+            const me = await meRes.json();
+            currentUserId = me.id;
+
+            const wishlistRes = await fetch(`/api/wishlist/user/${currentUserId}`, {
+                headers: { Authorization: "Bearer " + token }
+            });
+            wishlist = await wishlistRes.json();
+
+            fetchHouses();
+        } catch (e) {
+            wishlist = []; // fallback if /me or /wishlist fails
+            fetchHouses();
+        }
     });
 
     async function fetchHouses() {
         try {
-            const res = await fetch("/api/houses", { headers: { Authorization: "Bearer " + token } });
-            if (!res.ok) throw new Error(res.status);
+            const res = await fetch("/api/houses", {
+                headers: { Authorization: "Bearer " + token }
+            });
             const houses = await res.json();
             renderHouses(houses);
         } catch (err) {
-            houseContainer.innerHTML = `<div class="alert alert-danger">Failed to load houses (${err}).</div>`;
+            houseContainer.innerHTML = `<div class="alert alert-danger">Failed to load houses.</div>`;
         }
     }
 
     function renderHouses(houses) {
-        if (!houses.length) {
-            houseContainer.innerHTML = `<div class="alert alert-info">No houses found.</div>`;
-            return;
-        }
         houseContainer.innerHTML = "";
         houses.forEach(h => {
-            const address = h.location ?? h.address ?? "-";
-            const price = (h.price ?? h.monthlyRent ?? 0).toLocaleString("id-ID");
+            const address = h.address || "-";
+            const price = (h.monthlyRent ?? 0).toLocaleString("id-ID");
             const rooms = h.numberOfRooms ?? "-";
             const img = h.imageUrl || "https://via.placeholder.com/400x250.png?text=No+Image";
+            const isWishlisted = wishlist.includes(h.id);
 
             houseContainer.innerHTML += `
-      <div class="col">
-        <a class="card-clickable" href="RentalHouseDetails.html?houseId=${h.id}">
+        <div class="col">
           <div class="card shadow-sm border-0 position-relative">
-            <div class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 text-dark small">
-              Open&nbsp;<span class="fw-bold">FOR RENT</span>
-            </div>
-            <img src="${img}" class="card-img-top" alt="house">
-            <div class="card-body">
-              <p class="text-uppercase fw-bold text-muted small mb-1">${address}</p>
-              <h5 class="card-title mb-0 text-primary">${h.name}</h5>
-              <div class="mt-2">
-                <h4 class="fw-bold mb-0 text-dark">Rp <span>${price}</span></h4>
-                <span class="badge bg-light text-dark border border-secondary fw-semibold small">per month</span>
+            <button class="wishlist-btn" onclick="toggleWishlist(event, ${h.id}, this)">
+              <i class="bi ${isWishlisted ? 'bi-heart-fill' : 'bi-heart'}"></i>
+            </button>
+            <a class="card-clickable" href="RentalHouseDetails.html?houseId=${h.id}">
+              <div class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 text-dark small">
+                Open&nbsp;<span class="fw-bold">FOR RENT</span>
               </div>
-              <div class="text-muted mt-1 small"><strong>${rooms} rooms</strong></div>
-              <div class="d-flex gap-3 mt-3 text-muted small">
-                <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
-                <div><i class="bi bi-droplet-half"></i> 2 Baths</div>
-                <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
+              <img src="${img}" class="card-img-top" alt="house">
+              <div class="card-body">
+                <p class="text-uppercase fw-bold text-muted small mb-1">${address}</p>
+                <h5 class="card-title mb-0 text-primary">${h.name}</h5>
+                <div class="mt-2">
+                  <h4 class="fw-bold mb-0 text-dark">Rp ${price}</h4>
+                  <span class="badge bg-light text-dark border border-secondary fw-semibold small">per month</span>
+                </div>
+                <div class="text-muted mt-1 small"><strong>${rooms} rooms</strong></div>
+                <div class="d-flex gap-3 mt-3 text-muted small">
+                  <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
+                  <div><i class="bi bi-droplet-half"></i> 2 Baths</div>
+                  <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
+                </div>
+                <button class="btn btn-outline-primary w-100 mt-3 view-btn">
+                  View Detail
+                </button>
               </div>
-              <button class="btn btn-outline-primary w-100 mt-3 view-btn">
-                View Detail
-              </button>
-            </div>
+            </a>
           </div>
-        </a>
-      </div>`;
+        </div>`;
         });
+    }
+
+    async function toggleWishlist(e, houseId, btn) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!currentUserId) return;
+
+        const isLiked = btn.querySelector("i").classList.contains("bi-heart-fill");
+        const url = `/api/wishlist/${isLiked ? "remove" : "add"}?userId=${currentUserId}&houseId=${houseId}`;
+        const method = isLiked ? "DELETE" : "POST";
+
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                btn.querySelector("i").classList.toggle("bi-heart");
+                btn.querySelector("i").classList.toggle("bi-heart-fill");
+                if (isLiked) {
+                    wishlist = wishlist.filter(id => id !== houseId);
+                } else {
+                    wishlist.push(houseId);
+                }
+            }
+        } catch (err) {
+            alert("Error updating wishlist.");
+        }
     }
 </script>
 </body>

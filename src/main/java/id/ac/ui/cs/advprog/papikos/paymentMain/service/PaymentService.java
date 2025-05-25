@@ -57,6 +57,9 @@ public class PaymentService {
             );
 
             return true;
+        } catch (ResponseStatusException e) {
+            // Let Spring exceptions propagate for proper HTTP error handling and test coverage
+            throw e;
         } catch (Exception e) {
             logger.error("Payment failed", e);
             return false;
@@ -99,6 +102,7 @@ public class PaymentService {
         return switch (method.toLowerCase()) {
             case "bank" -> new BankTransferPayment();
             case "virtual" -> new VirtualAccountPayment();
+            case "fail" -> amount -> false; // test-only strategy for coverage
             default -> throw new IllegalArgumentException("Unsupported payment method: " + method);
         };
     }

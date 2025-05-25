@@ -9,6 +9,8 @@ import id.ac.ui.cs.advprog.papikos.chat.model.ChatMessage;
 import id.ac.ui.cs.advprog.papikos.chat.model.ChatRoom;
 import id.ac.ui.cs.advprog.papikos.chat.service.ChatRoomService;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,6 +23,8 @@ import java.util.Optional;
 @RequestMapping("/api/chat/rooms")
 public class ChatRoomRestController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ChatRoomRestController.class);
+
     private final ChatRoomService service;
     private final UserRepository  userRepo;
 
@@ -30,73 +34,86 @@ public class ChatRoomRestController {
         this.userRepo = userRepo;
     }
 
-    /* ────────────────────────────────────────────────────────────────────
-     *  Get-or-create 1:1 room (idempotent)
-     *  ─► 201 CREATED  when a new room is saved
-     *  ─► 200 OK       when the room already exists
-     * ─────────────────────────────────────────────────────────────────── */
     @PostMapping
     public ResponseEntity<ChatRoom> createOrGetRoom(Authentication auth,
                                                     @RequestBody CreateRoomRequest req) {
-        /* 1 — resolve users */
-        User tenant   = userRepo.findByEmail(auth.getName())
-                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
-
+        logger.info("User [{}] requests room with landlord [{}]", auth.getName(), req.getLandlordEmail());
+        User tenant = userRepo.findByEmail(auth.getName())
+                .orElseThrow(() -> {
+                    logger.warn("Tenant not found: {}", auth.getName());
+                    return new EntityNotFoundException("Tenant not found");
+                });
         User landlord = userRepo.findByEmail(req.getLandlordEmail())
-                .orElseThrow(() -> new EntityNotFoundException("Landlord not found"));
+                .orElseThrow(() -> {
+                    logger.warn("Landlord not found: {}", req.getLandlordEmail());
+                    return new EntityNotFoundException("Landlord not found");
+                });
 
-        /* 2 — already there? */
-        Optional<ChatRoom> existing =
-                service.findRoom(tenant.getId(), landlord.getId());
-
+        Optional<ChatRoom> existing = service.findRoom(tenant.getId(), landlord.getId());
         if (existing.isPresent()) {
-            return ResponseEntity.ok(existing.get());           // 200
+            logger.info("Existing room [{}] returned for users {} and {}", existing.get().getId(), tenant.getId(), landlord.getId());
+            return ResponseEntity.ok(existing.get());
         }
 
-        /* 3 — create new */
         ChatRoom created = service.createRoom(tenant.getId(), landlord.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(created); // 201
+        logger.info("Created new room [{}] for users {} and {}", created.getId(), tenant.getId(), landlord.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
-
-    /* ─────────────────────────────────────────────────────────────────── */
 
     @GetMapping
     public List<ChatRoom> listRoomsForCurrentUser(Authentication auth) {
+        logger.info("Listing rooms for user [{}]", auth.getName());
         Long userId = userRepo.findByEmail(auth.getName())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"))
+                .orElseThrow(() -> {
+                    logger.warn("User not found: {}", auth.getName());
+                    return new EntityNotFoundException("User not found");
+                })
                 .getId();
-        return service.listRoomsForUser(userId);
+        List<ChatRoom> rooms = service.listRoomsForUser(userId);
+        logger.debug("Found {} rooms for user [{}]", rooms.size(), auth.getName());
+        return rooms;
     }
 
     @GetMapping("/{roomId}/messages")
     public List<ChatMessage> listMessages(@PathVariable Long roomId) {
-        return service.listMessages(roomId);
+        logger.info("Listing messages for room [{}]", roomId);
+        List<ChatMessage> msgs = service.listMessages(roomId);
+        logger.debug("Found {} messages in room [{}]", msgs.size(), roomId);
+        return msgs;
     }
 
     @PostMapping("/{roomId}/messages")
     @ResponseStatus(HttpStatus.CREATED)
     public ChatMessage postMessage(@PathVariable Long roomId,
                                    @RequestBody CreateMessageRequest req) {
+        logger.info("Posting message to room [{}] from [{}]: {}", roomId, req.getSenderEmail(), req.getContent());
         ChatMessage msg = ChatMessage.builder()
                 .type(req.getType())
                 .content(req.getContent())
                 .build();
-        return service.saveMessage(roomId, req.getSenderEmail(), msg).join();
+        ChatMessage saved = service.saveMessage(roomId, req.getSenderEmail(), msg).join();
+        logger.info("Saved message [{}] in room [{}]", saved.getId(), roomId);
+        return saved;
     }
 
     @PutMapping("/{roomId}/messages/{messageId}")
     public ChatMessage updateMessage(@PathVariable Long roomId,
                                      @PathVariable Long messageId,
                                      @RequestBody UpdateMessageRequest req) {
+        logger.info("Updating message [{}] in room [{}] with new content: {}", messageId, roomId, req.getContent());
         ChatMessage patch = new ChatMessage();
         patch.setContent(req.getContent());
-        return service.updateMessage(roomId, messageId, patch);
+        ChatMessage updated = service.updateMessage(roomId, messageId, patch);
+        logger.info("Updated message [{}] in room [{}]", updated.getId(), roomId);
+        return updated;
     }
 
     @DeleteMapping("/{roomId}/messages/{messageId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMessage(@PathVariable Long roomId,
                               @PathVariable Long messageId) {
+        logger.info("Deleting message [{}] from room [{}]", messageId, roomId);
         service.deleteMessage(roomId, messageId);
+        logger.info("Deleted message [{}] from room [{}]", messageId, roomId);
     }
 }

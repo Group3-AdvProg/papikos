@@ -13,19 +13,23 @@
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg bg-white shadow-sm w-100">
-    <div class="container">
-        <a class="navbar-brand fw-bold text-primary" href="wishlist.html">Papikos</a>
-    </div>
-</nav>
+<div id="navbar-placeholder"></div>
 
 <div class="container mt-4">
     <h2 class="text-primary fw-bold mb-4">📬 My Notifications</h2>
     <div id="notifContainer" class="list-group"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
 <script>
     const token = sessionStorage.getItem("token");
+
+    if (!token) {
+        alert("Please login first.");
+        window.location.href = "/login.html";
+        throw new Error("No token, redirecting...");
+    }
 
     async function fetchUserId() {
         const res = await fetch("/api/auth/users/me", {
@@ -66,6 +70,7 @@
     }
 
     window.onload = () => {
+        loadNavbar();
         loadNotifications();
         setInterval(loadNotifications, 60000);
     };

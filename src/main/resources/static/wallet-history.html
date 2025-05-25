@@ -1,58 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Wallet Transaction History</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <title>Wallet Transaction History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap CSS only -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
-<body class="bg-gray-100 min-h-screen font-sans text-gray-800">
+<body class="bg-light">
 
-<!-- Header -->
-<header class="bg-blue-100 border border-blue-300 py-4 shadow-sm">
-    <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
-        <div>
-            🧾 <span class="font-semibold">Transaction History</span>
-        </div>
-        <a href="/wallet.html" class="text-sm text-blue-600 hover:underline">← Back to Wallet</a>
+  <!-- NAVBAR PLACEHOLDER -->
+  <div id="navbar-placeholder"></div>
+
+  <!-- Header -->
+  <header class="bg-primary bg-opacity-10 border-bottom py-3 mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">🧾 Transaction History</h5>
+      <a href="wallet.html" class="text-decoration-none">&larr; Back to Wallet</a>
     </div>
-</header>
+  </header>
 
-<!-- Main Content -->
-<main class="max-w-4xl mx-auto px-4 py-8">
+  <!-- Main Content -->
+  <main class="container mb-5">
     <!-- Filter Form -->
-    <form id="filter-form" class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-6">
-        <select id="type" class="border border-gray-300 px-3 py-2 rounded">
-            <option value="">All Types</option>
-            <option value="TOP_UP">Top-Up</option>
-            <option value="RENT_PAYMENT">Rent Payment</option>
+    <form id="filter-form" class="row g-2 mb-4">
+      <div class="col-12 col-md-2">
+        <select id="type" class="form-select">
+          <option value="">All Types</option>
+          <option value="TOP_UP">Top-Up</option>
+          <option value="RENT_PAYMENT">Rent Payment</option>
         </select>
-        <input type="date" id="from" class="border border-gray-300 px-3 py-2 rounded" />
-        <input type="date" id="to" class="border border-gray-300 px-3 py-2 rounded" />
-        <select id="sort" class="border border-gray-300 px-3 py-2 rounded">
-            <option value="latest">Latest</option>
-            <option value="earliest">Earliest</option>
-            <option value="amount-most">Amount (Most)</option>
-            <option value="amount-least">Amount (Least)</option>
+      </div>
+      <div class="col-12 col-md-2">
+        <input type="date" id="from" class="form-control" placeholder="From date" />
+      </div>
+      <div class="col-12 col-md-2">
+        <input type="date" id="to" class="form-control" placeholder="To date" />
+      </div>
+      <div class="col-12 col-md-2">
+        <select id="sort" class="form-select">
+          <option value="latest">Latest</option>
+          <option value="earliest">Earliest</option>
+          <option value="amount-most">Amount (Most)</option>
+          <option value="amount-least">Amount (Least)</option>
         </select>
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Filter</button>
+      </div>
+      <div class="col-12 col-md-2">
+        <select id="direction-filter" class="form-select">
+          <option value="all">All Directions</option>
+          <option value="incoming">Incoming</option>
+          <option value="outgoing">Outgoing</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary">Filter</button>
+      </div>
     </form>
 
     <!-- Results -->
-    <div id="results" class="space-y-3 text-sm"></div>
+    <div id="results" class="row g-3"></div>
+  </main>
 
-    <!-- Mini Transaction History Section -->
-    <div class="flex items-center gap-2 mb-2">
-        <label for="direction-filter" class="text-sm">Show:</label>
-        <select id="direction-filter" class="border border-gray-300 px-2 py-1 rounded text-sm">
-            <option value="all">All</option>
-            <option value="incoming">Incoming</option>
-            <option value="outgoing">Outgoing</option>
-        </select>
-    </div>
-    <div id="mini-transactions" class="space-y-2"></div>
-</main>
-
-<script>
+  <!-- Bootstrap JS & Navbar loader -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/navbarLoader.js"></script>
+  <script>
     let token = sessionStorage.getItem("token");
     let currentUserId = null;
     let lastTransactions = [];
@@ -63,12 +75,10 @@
         window.location.href = "/login.html";
         return;
       }
-
       try {
         const res = await fetch("/api/auth/users/me", {
           headers: { Authorization: "Bearer " + token }
         });
-
         if (!res.ok) throw new Error("Unauthorized");
         const user = await res.json();
         currentUserId = user.id;
@@ -96,135 +106,84 @@
           sorted.sort((a, b) => Number(a.amount) - Number(b.amount));
           break;
         default:
-          // Default to latest
           sorted.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       }
       return sorted;
     }
 
     async function fetchAndRenderTransactions(url) {
-      const resultsDiv = document.getElementById("results");
-      resultsDiv.innerHTML = "Loading...";
+      const container = document.getElementById("results");
+      container.innerHTML = '<div class="col-12 text-center text-muted">Loading...</div>';
       try {
-        const res = await fetch(url, {
-          headers: { Authorization: "Bearer " + token }
-        });
-
+        const res = await fetch(url, { headers: { Authorization: "Bearer " + token } });
         if (res.status === 401) {
           alert("Session expired. Please log in again.");
           sessionStorage.removeItem("token");
           window.location.href = "/login.html";
           return;
         }
-
-        if (!res.ok) throw new Error("Failed to fetch");
-
-        let transactions = await res.json();
-        if (!Array.isArray(transactions)) transactions = [transactions];
-
-        lastTransactions = transactions; // Save for sorting
-
+        if (!res.ok) throw new Error();
+        let txs = await res.json();
+        if (!Array.isArray(txs)) txs = [txs];
+        lastTransactions = txs;
         renderTransactions();
       } catch {
-        resultsDiv.innerHTML = `<p class="text-red-500">Failed to load transactions.</p>`;
+        container.innerHTML = '<div class="col-12 text-center text-danger">Failed to load transactions.</div>';
       }
     }
 
     function renderTransactions() {
-      const resultsDiv = document.getElementById("results");
-      const sortBy = document.getElementById("sort")?.value || "latest";
-      const transactions = sortTransactions(lastTransactions, sortBy);
+      const container = document.getElementById("results");
+      const sortBy = document.getElementById("sort").value;
+      const direction = document.getElementById("direction-filter").value;
+      let txs = sortTransactions(lastTransactions, sortBy);
 
-      if (!transactions.length) {
-        resultsDiv.innerHTML = `<p class="text-gray-500">No transactions found.</p>`;
+      if (direction !== "all") {
+        txs = txs.filter(tx => {
+          const dir = tx.type === "TOP_UP"
+            ? "incoming"
+            : (tx.targetUser && String(tx.targetUser.id) === String(currentUserId) ? "incoming" : "outgoing");
+          return dir === direction;
+        });
+      }
+
+      if (!txs.length) {
+        container.innerHTML = '<div class="col-12 text-center text-muted">No transactions found.</div>';
         return;
       }
 
-      resultsDiv.innerHTML = transactions.map(tx => {
-        // Determine incoming/outgoing
-        let direction = "-";
-        if (tx.type === "TOP_UP") {
-          direction = "Incoming";
-        } else if (tx.targetUser && currentUserId) {
-          direction = String(tx.targetUser.id) === String(currentUserId) ? "Incoming" : "Outgoing";
-        }
+      container.innerHTML = txs.map(tx => {
+        const dir = tx.type === "TOP_UP"
+          ? "Incoming"
+          : (tx.targetUser && String(tx.targetUser.id) === String(currentUserId) ? "Incoming" : "Outgoing");
+        const fromTo = tx.type === "TOP_UP"
+          ? `From <strong>System</strong> to <strong>${tx.user?.fullName||tx.user?.username||"You"}</strong>`
+          : `From <strong>${tx.user.fullName||tx.user.username||"User"}</strong> to <strong>${tx.targetUser.fullName||tx.targetUser.username||"User"}</strong>`;
 
         return `
-        <div class="border p-3 rounded bg-gray-50">
-          <div class="flex justify-between items-center">
-            <strong>${tx.type || "?"}</strong>
-            <span class="text-xs text-gray-600">ID: ${tx.id || "-"}</span>
-          </div>
-          <div>
-            Rp ${Number(tx.amount || 0).toLocaleString('id-ID')} via ${tx.method || "-"}
-            ${tx.targetUser && tx.targetUser.fullName ? `<br>To: <span class="font-semibold">${tx.targetUser.fullName}</span>` : ""}
-            <br>
-            <span class="text-xs text-gray-500">${tx.timestamp ? new Date(tx.timestamp).toLocaleString("id-ID") : ""}</span>
-            <br>
-            <span class="text-xs ${direction === "Outgoing" ? "text-red-500" : "text-green-600"} font-semibold">${direction}</span>
-          </div>
-        </div>
-        `;
-      }).join("");
-    }
-
-    async function loadMiniTransactions() {
-        if (!currentUserId || !token) return;
-        const res = await fetch(`/api/transaction/user-or-target/${currentUserId}`, {
-            headers: { Authorization: "Bearer " + token }
-        });
-        if (!res.ok) return;
-        const txs = await res.json();
-        window._allMiniTxs = txs; // cache for filtering
-        renderMiniTransactions();
-    }
-
-    function renderMiniTransactions() {
-        const txs = window._allMiniTxs || [];
-        const filter = document.getElementById("direction-filter").value;
-        const filtered = txs.filter(tx => {
-            if (filter === "all") return true;
-            let direction = "-";
-            if (tx.type === "TOP_UP") direction = "incoming";
-            else if (tx.targetUser && currentUserId) {
-                direction = String(tx.targetUser.id) === String(currentUserId) ? "incoming" : "outgoing";
-            }
-            return direction === filter;
-        });
-        const miniDiv = document.getElementById("mini-transactions");
-        if (!filtered.length) {
-            miniDiv.innerHTML = `<p class="text-gray-500 text-sm">No transactions found.</p>`;
-            return;
-        }
-        miniDiv.innerHTML = filtered.slice(0, 5).map(tx => {
-            let direction = "-";
-            if (tx.type === "TOP_UP") direction = "incoming";
-            else if (tx.targetUser && currentUserId) {
-                direction = String(tx.targetUser.id) === String(currentUserId) ? "incoming" : "outgoing";
-            }
-            return `
-            <div class="border p-2 rounded bg-gray-50 flex justify-between items-center">
-                <span>
-                    <strong>${tx.type || "?"}</strong>
-                    <span class="text-xs text-gray-600">ID: ${tx.id || "-"}</span>
-                    <br>
-                    Rp ${Number(tx.amount || 0).toLocaleString('id-ID')}
-                </span>
-                <span class="text-xs ${direction === "outgoing" ? "text-red-500" : "text-green-600"} font-semibold">
-                    ${direction.charAt(0).toUpperCase() + direction.slice(1)}
-                </span>
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="fw-bold">${tx.type}</span>
+                  <small class="text-muted">ID: ${tx.id}</small>
+                </div>
+                <p class="mb-1">Rp ${Number(tx.amount).toLocaleString('id-ID')} via ${tx.method}</p>
+                <p class="mb-1"><small>${fromTo}</small></p>
+                <p class="mb-1"><small class="text-muted">${new Date(tx.timestamp).toLocaleString('id-ID')}</small></p>
+                <span class="badge ${dir==="Outgoing"?"bg-danger":"bg-success"}">${dir}</span>
+              </div>
             </div>
-            `;
-        }).join("");
+          </div>`;
+      }).join('');
     }
 
     function filterTransactions() {
       const type = document.getElementById("type").value;
       const from = document.getElementById("from").value;
       const to = document.getElementById("to").value;
-      if (!currentUserId) return;
-
       let url = `/api/transaction/user/${currentUserId}`;
+
       if (type && from && to) {
         url = `/api/transaction/filter?userId=${currentUserId}&type=${type}&from=${from}T00:00:00&to=${to}T23:59:59`;
       } else if (type) {
@@ -236,23 +195,17 @@
       fetchAndRenderTransactions(url);
     }
 
-    const filterForm = document.getElementById("filter-form");
-    if (filterForm) {
-      filterForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-        filterTransactions();
-      });
-
-      // Re-render transactions when sort dropdown changes
-      document.getElementById("sort").addEventListener("change", renderTransactions);
-    }
-
-    document.getElementById("direction-filter").addEventListener("change", renderMiniTransactions);
+    document.getElementById("filter-form").addEventListener("submit", e => {
+      e.preventDefault();
+      filterTransactions();
+    });
+    document.getElementById("sort").addEventListener("change", renderTransactions);
+    document.getElementById("direction-filter").addEventListener("change", renderTransactions);
 
     window.addEventListener("DOMContentLoaded", () => {
+      loadNavbar();
       loadUser();
-      loadMiniTransactions();
     });
-</script>
+  </script>
 </body>
 </html>
