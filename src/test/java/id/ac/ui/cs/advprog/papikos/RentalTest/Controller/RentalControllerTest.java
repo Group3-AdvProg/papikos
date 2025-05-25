@@ -272,24 +272,45 @@ class RentalControllerTest {
                 .andExpect(jsonPath("$.id").value(2));
     }
 
-    @Test void testCreateRentalAsync_UserNotTenant() throws Exception {
+    @Test
+    void testCreateRentalAsync_UserNotTenant() throws Exception {
+        // prepare DTO
         RentalDTO dto = new RentalDTO();
         dto.setHouseId(1L);
         dto.setTenantId(1L);
+        dto.setDurationInMonths(2); // ← avoid null
 
+        // stub repos
         House house = new House();
-        User user = new User();
-        user.setRole("ROLE_ADMIN");
-
+        house.setMonthlyRent(1000.0);
         when(houseRepository.findById(1L)).thenReturn(Optional.of(house));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        mockMvc.perform(post("/api/rentals/async")
+        User admin = new User();
+        admin.setId(1L);
+        admin.setRole("ROLE_ADMIN");
+        admin.setFullName("Admin User");
+        admin.setPhoneNumber("08123456789");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+
+        // stub async service
+        Rental fake = new Rental();
+        fake.setId(77L);
+        when(rentalService.createRentalAsync(any()))
+                .thenReturn(CompletableFuture.completedFuture(fake));
+
+        // perform async request
+        var mvcResult = mockMvc.perform(post("/api/rentals/async")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string(containsString("User is not a tenant")));
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        // dispatch and assert OK + returned id
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(77));
     }
+
 
     @Test void testFindByIdAsync_NotFound() throws Exception {
         when(rentalService.getRentalByIdAsync(404L)).thenReturn(CompletableFuture.completedFuture(Optional.empty()));
