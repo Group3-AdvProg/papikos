@@ -2,6 +2,8 @@ package id.ac.ui.cs.advprog.papikos.paymentmain.controller;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
 import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.PaymentRequest;
 import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.TopUpRequest;
 import id.ac.ui.cs.advprog.papikos.paymentmain.payload.response.ApiResponse;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/wallet")
@@ -29,6 +32,9 @@ public class WalletController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RentalRepository rentalRepository;
 
     private final PaymentContext context = new PaymentContext();
 
@@ -123,7 +129,20 @@ public class WalletController {
         userRepository.save(tenant);
         userRepository.save(landlord);
 
-        // 5) Record transaction & respond
+        // 5) Mark the rental as paid
+        System.out.println("Trying to mark rental as paid...");
+        Optional<Rental> rentalOpt = rentalRepository.findTopByTenantAndHouseOwnerAndIsPaidFalseOrderByIdDesc(tenant, landlord);
+        if (rentalOpt.isPresent()) {
+            Rental rental = rentalOpt.get();
+            rental.setPaid(true);
+            rentalRepository.save(rental);
+            System.out.println("Rental marked as paid: ID = " + rental.getId());
+        } else {
+            System.out.println("No unpaid rental found for this tenant-owner pair.");
+        }
+
+
+        // 6) Record transaction & respond
         transactionService.recordTransaction(
                 tenant, landlord,
                 request.getAmount(),

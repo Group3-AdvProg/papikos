@@ -10,4 +10,5 @@ public class PaymentRequest {
     private Long targetId;
     private Double amount;
     private String method;
+    private Long rentalId;  // ✅ Added field
 }
