@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Service
 @RequiredArgsConstructor
@@ -16,45 +18,64 @@ public class RentalServiceImpl implements RentalService {
 
     private final RentalRepository repo;
 
+    // ─── in-memory caches ───────────────────────────────────────────────
+    private final ConcurrentMap<Long, Rental> rentalCache = new ConcurrentHashMap<>();
+    private volatile List<Rental> rentalsCache;
+
     @Override
     public Rental createRental(Rental rental) {
-        return repo.save(rental);
+        Rental saved = repo.save(rental);
+        rentalCache.put(saved.getId(), saved);
+        rentalsCache = null;
+        return saved;
     }
 
     @Override
     @Async("asyncExecutor")
     public CompletableFuture<Rental> createRentalAsync(Rental rental) {
         Rental saved = repo.save(rental);
+        rentalCache.put(saved.getId(), saved);
+        rentalsCache = null;
         return CompletableFuture.completedFuture(saved);
     }
 
     @Override
     public List<Rental> getAllRentals() {
-        return repo.findAll();
+        if (rentalsCache != null) {
+            return rentalsCache;
+        }
+        List<Rental> rentals = repo.findAll();
+        rentalsCache = rentals;
+        rentals.forEach(r -> rentalCache.putIfAbsent(r.getId(), r));
+        return rentals;
     }
 
     @Override
     @Async("asyncExecutor")
     public CompletableFuture<List<Rental>> getAllRentalsAsync() {
-        List<Rental> rentals = repo.findAll();
-        return CompletableFuture.completedFuture(rentals);
+        return CompletableFuture.completedFuture(getAllRentals());
     }
 
     @Override
     public Optional<Rental> getRentalById(Long id) {
-        return repo.findById(id);
+        Rental cached = rentalCache.get(id);
+        if (cached != null) {
+            return Optional.of(cached);
+        }
+        Optional<Rental> result = repo.findById(id);
+        result.ifPresent(r -> rentalCache.putIfAbsent(id, r));
+        return result;
     }
 
     @Override
     @Async("asyncExecutor")
     public CompletableFuture<Optional<Rental>> getRentalByIdAsync(Long id) {
-        Optional<Rental> result = repo.findById(id);
-        return CompletableFuture.completedFuture(result);
+        return CompletableFuture.completedFuture(getRentalById(id));
     }
 
     @Override
     public Rental updateRental(Long id, Rental rentalDetails) {
-        return repo.findById(id)
+        Rental updated = repo.findById(id)
                 .map(r -> {
                     r.setHouse(rentalDetails.getHouse());
                     r.setCheckInDate(rentalDetails.getCheckInDate());
@@ -68,6 +89,9 @@ public class RentalServiceImpl implements RentalService {
                     return repo.save(r);
                 })
                 .orElseThrow(() -> new RuntimeException("rental not found: " + id));
+        rentalCache.put(updated.getId(), updated);
+        rentalsCache = null;
+        return updated;
     }
 
     @Override
@@ -87,19 +111,24 @@ public class RentalServiceImpl implements RentalService {
                     return repo.save(r);
                 })
                 .orElseThrow(() -> new RuntimeException("rental not found: " + id));
-
+        rentalCache.put(updated.getId(), updated);
+        rentalsCache = null;
         return CompletableFuture.completedFuture(updated);
     }
 
     @Override
     public void deleteRental(Long id) {
         repo.deleteById(id);
+        rentalCache.remove(id);
+        rentalsCache = null;
     }
 
     @Override
     @Async("asyncExecutor")
     public CompletableFuture<Void> deleteRentalAsync(Long id) {
         repo.deleteById(id);
+        rentalCache.remove(id);
+        rentalsCache = null;
         return CompletableFuture.completedFuture(null);
     }
 }
