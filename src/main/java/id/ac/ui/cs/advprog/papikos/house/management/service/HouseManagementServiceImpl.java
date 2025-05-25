@@ -18,7 +18,6 @@ public class HouseManagementServiceImpl implements HouseManagementService {
     private HouseRepository houseRepository;
 
     @Override
-    @Async
     public CompletableFuture<Void> addHouse(House house) {
         houseRepository.save(house);
         return CompletableFuture.completedFuture(null);
@@ -38,19 +37,17 @@ public class HouseManagementServiceImpl implements HouseManagementService {
     }
 
     @Override
-    @Async
     public CompletableFuture<Void> updateHouse(Long id, House updatedHouse) {
-        if (houseRepository.findById(id).isPresent()) {
-            updatedHouse.setId(id);
-            houseRepository.save(updatedHouse);
-        } else {
-            throw new IllegalArgumentException("House not found with ID: " + id);
-        }
+        House existingHouse = houseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("House not found with ID: " + id));
+
+        updatedHouse.setId(existingHouse.getId());
+        houseRepository.save(updatedHouse);
+
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    @Async
     public CompletableFuture<Void> deleteHouse(Long id) {
         houseRepository.deleteById(id);
         return CompletableFuture.completedFuture(null);
