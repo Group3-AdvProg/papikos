@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Wishlist</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    :root { --bs-primary: #7065F0; }
+    body  { font-family: 'Segoe UI', sans-serif; background: #f9f9ff; }
+
+    .card-clickable { text-decoration: none; color: inherit; }
+    .card-clickable:hover { opacity: .95; }
+    .wishlist-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background-color: white;
+      border: none;
+      border-radius: 50%;
+      padding: 6px 8px;
+      box-shadow: 0 0 3px rgba(0,0,0,0.2);
+      z-index: 5;
+    }
+    .wishlist-btn .bi {
+      font-size: 1.2rem;
+      color: red;
+      pointer-events: auto;
+    }
+  </style>
+  <link href="/css/papikos.css" rel="stylesheet" />
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+
+<div class="container py-4">
+  <h2 class="fw-bold mb-4 text-primary">My Wishlist</h2>
+  <div class="row row-cols-1 row-cols-md-3 g-4" id="wishlistContainer"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
+<script>
+  const token = sessionStorage.getItem("token");
+  const wishlistContainer = document.getElementById("wishlistContainer");
+  let currentUserId = null;
+  let wishlistIds = [];
+
+  window.addEventListener("DOMContentLoaded", async () => {
+    loadNavbar();
+    if (!token) {
+      wishlistContainer.innerHTML = `<div class="alert alert-warning">Please log in to view your wishlist.</div>`;
+      return;
+    }
+
+    try {
+      const meRes = await fetch("/api/auth/users/me", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      const me = await meRes.json();
+      currentUserId = me.id;
+
+      const wishlistRes = await fetch(`/api/wishlist/user/${currentUserId}`, {
+        headers: { Authorization: "Bearer " + token }
+      });
+      wishlistIds = await wishlistRes.json();
+
+      fetchHouses();
+    } catch (e) {
+      sessionStorage.removeItem("token");
+      wishlistContainer.innerHTML = `<div class="alert alert-danger">Session expired. Please log in again.</div>`;
+    }
+  });
+
+  async function fetchHouses() {
+    try {
+      const res = await fetch("/api/houses", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      const houses = await res.json();
+      const filtered = houses.filter(h => wishlistIds.includes(h.id));
+      renderHouses(filtered);
+    } catch (err) {
+      wishlistContainer.innerHTML = `<div class="alert alert-danger">Failed to load wishlist.</div>`;
+    }
+  }
+
+  function renderHouses(houses) {
+    wishlistContainer.innerHTML = "";
+
+    if (!houses.length) {
+      wishlistContainer.innerHTML = `<div class="alert alert-info">You haven't added any houses to your wishlist yet.</div>`;
+      return;
+    }
+
+    houses.forEach(h => {
+      const img = h.imageUrl || "https://via.placeholder.com/400x250.png?text=No+Image";
+      const address = h.address || "-";
+      const price = (h.monthlyRent ?? 0).toLocaleString("id-ID");
+      const rooms = h.numberOfRooms ?? "-";
+
+      wishlistContainer.innerHTML += `
+        <div class="col">
+          <div class="card shadow-sm border-0 position-relative">
+            <button class="wishlist-btn" onclick="removeFromWishlist(event, ${h.id}, this)">
+              <i class="bi bi-heart-fill"></i>
+            </button>
+            <a class="card-clickable" href="RentalHouseDetails.html?houseId=${h.id}">
+              <div class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 text-dark small">
+                Saved&nbsp;<span class="fw-bold">❤️</span>
+              </div>
+              <img src="${img}" class="card-img-top" alt="house">
+              <div class="card-body">
+                <p class="text-uppercase fw-bold text-muted small mb-1">${address}</p>
+                <h5 class="card-title mb-0 text-primary">${h.name}</h5>
+                <div class="mt-2">
+                  <h4 class="fw-bold mb-0 text-dark">Rp ${price}</h4>
+                  <span class="badge bg-light text-dark border border-secondary fw-semibold small">per month</span>
+                </div>
+                <div class="text-muted mt-1 small"><strong>${rooms} rooms</strong></div>
+                <div class="d-flex gap-3 mt-3 text-muted small">
+                  <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
+                  <div><i class="bi bi-droplet-half"></i> 2 Baths</div>
+                  <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>`;
+    });
+  }
+
+  async function removeFromWishlist(e, houseId, btn) {
+    e.stopPropagation();
+    e.preventDefault();
+    try {
+      const res = await fetch(`/api/wishlist/remove?userId=${currentUserId}&houseId=${houseId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        wishlistIds = wishlistIds.filter(id => id !== houseId);
+        fetchHouses();
+      } else {
+        alert("Failed to remove from wishlist.");
+      }
+    } catch (err) {
+      alert("Error removing from wishlist.");
+    }
+  }
+</script>
+</body>
+</html>

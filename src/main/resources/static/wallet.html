@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Wallet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+
+  <!-- Custom Styles -->
+  <link href="/css/papikos.css" rel="stylesheet"/>
+</head>
+<body class="bg-light">
+
+  <!-- NAVBAR PLACEHOLDER -->
+  <div id="navbar-placeholder"></div>
+
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+
+        <!-- Back Link -->
+        <div class="mb-4">
+          <a href="javascript:history.back()" class="text-decoration-none">
+            <i class="bi bi-arrow-left"></i> Back
+          </a>
+        </div>
+
+        <!-- Wallet Card -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h2 class="card-title mb-0">My Wallet</h2>
+              <div>
+                <span id="wallet-balance" class="fs-4 text-success fw-bold">Rp 0</span>
+              </div>
+            </div>
+
+            <!-- User Info -->
+            <div class="mb-4">
+              <i class="bi bi-person-circle"></i>
+              Welcome, <span id="welcome-email" class="fw-semibold">User</span>
+            </div>
+
+            <div class="row g-4">
+              <!-- Top Up -->
+              <div class="col-md-6">
+                <h5 class="mb-3">Top Up</h5>
+                <div class="input-group mb-2">
+                  <span class="input-group-text">Rp</span>
+                  <input type="number"
+                         id="topup-amount"
+                         class="form-control"
+                         placeholder="Amount"
+                         min="1">
+                </div>
+                <select id="topup-method" class="form-select mb-3">
+                  <option value="bank">Bank Transfer</option>
+                  <option value="virtual">Virtual Account</option>
+                </select>
+                <button id="topup-btn" class="btn btn-primary w-100">Top Up</button>
+                <div id="topup-msg" class="text-danger small mt-2"></div>
+              </div>
+
+              <!-- Pay Rent -->
+              <div class="col-md-6">
+                <h5 class="mb-3">Pay Rent</h5>
+                <input type="text"
+                       id="pay-landlord"
+                       class="form-control mb-2"
+                       placeholder="Landlord ID">
+                <div class="input-group mb-3">
+                  <span class="input-group-text">Rp</span>
+                  <input type="number"
+                         id="pay-amount"
+                         class="form-control"
+                         placeholder="Amount"
+                         min="1">
+                </div>
+                <button id="pay-btn" class="btn btn-success w-100">Pay Rent</button>
+                <div id="pay-msg" class="text-danger small mt-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transaction History Link -->
+        <div class="text-center">
+          <a href="wallet-history.html" class="btn btn-outline-secondary">
+            View Full Transaction History
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Bootstrap JS & Navbar Loader -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/navbarLoader.js"></script>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      loadNavbar();
+
+      const token = sessionStorage.getItem("token");
+      if (!token) return redirectToLogin();
+
+      async function loadProfile() {
+        try {
+          const res = await fetch("/api/auth/users/me", {
+            headers: { "Authorization": "Bearer " + token }
+          });
+          if (!res.ok) throw new Error();
+          const user = await res.json();
+
+          document.getElementById("welcome-email").textContent =
+            `${user.email} (ID: ${user.id})`;
+          document.getElementById("wallet-balance").textContent =
+            "Rp " + Number(user.balance).toLocaleString("id-ID");
+        } catch {
+          redirectToLogin();
+        }
+      }
+
+      function redirectToLogin() {
+        alert("Session expired. Please log in again.");
+        sessionStorage.removeItem("token");
+        window.location.href = "/login.html";
+      }
+
+      function bindTopUp() {
+        const btn = document.getElementById("topup-btn");
+        const msg = document.getElementById("topup-msg");
+        let inProgress = false;
+
+        btn.addEventListener("click", async () => {
+          if (inProgress) return;
+          inProgress = true;
+          msg.textContent = "";
+
+          const amount = parseFloat(document.getElementById("topup-amount").value);
+          const method = document.getElementById("topup-method").value;
+          if (isNaN(amount) || amount <= 0) {
+            msg.textContent = "Enter a valid amount.";
+            inProgress = false;
+            return;
+          }
+          if (!confirm(`Top up Rp ${amount.toLocaleString("id-ID")} via ${method}?`)) {
+            inProgress = false;
+            return;
+          }
+
+          btn.disabled = true;
+          btn.innerText = "Processing...";
+
+          try {
+            const res = await fetch("/api/wallet/topup", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify({ amount, method })
+            });
+            if (res.status === 401) return redirectToLogin();
+
+            const { status, message } = await res.json();
+            if (status === "SUCCESS") {
+              alert("Top-up successful!");
+              await loadProfile();
+              document.getElementById("topup-amount").value = "";
+            } else {
+              msg.textContent = message || "Top-up failed.";
+            }
+          } catch {
+            msg.textContent = "Network error.";
+          } finally {
+            btn.disabled = false;
+            btn.innerText = "Top Up";
+            inProgress = false;
+          }
+        });
+      }
+
+      function bindPayRent() {
+        const btn = document.getElementById("pay-btn");
+        const msg = document.getElementById("pay-msg");
+        let inProgress = false;
+
+        btn.addEventListener("click", async () => {
+          if (inProgress) return;
+          inProgress = true;
+          msg.textContent = "";
+
+          const landlordId = document.getElementById("pay-landlord").value.trim();
+          const amount = parseFloat(document.getElementById("pay-amount").value);
+          if (!landlordId || isNaN(amount) || amount <= 0) {
+            msg.textContent = "Complete all fields.";
+            inProgress = false;
+            return;
+          }
+          if (!confirm(`Pay Rp ${amount.toLocaleString("id-ID")} to landlord ${landlordId}?`)) {
+            inProgress = false;
+            return;
+          }
+
+          btn.disabled = true;
+          btn.innerText = "Processing...";
+
+          try {
+            const res = await fetch("/api/wallet/pay-rent", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify({ targetId: landlordId, amount })
+            });
+            if (res.status === 401) return redirectToLogin();
+
+            const { status, message } = await res.json();
+            if (status === "SUCCESS") {
+              alert("Payment successful!");
+              await loadProfile();
+              document.getElementById("pay-landlord").value = "";
+              document.getElementById("pay-amount").value = "";
+            } else {
+              msg.textContent = message || "Payment failed.";
+            }
+          } catch {
+            msg.textContent = "Network error.";
+          } finally {
+            btn.disabled = false;
+            btn.innerText = "Pay Rent";
+            inProgress = false;
+          }
+        });
+      }
+
+      // initialize
+      loadProfile();
+      bindTopUp();
+      bindPayRent();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10 font-sans">
+<div id="navbar-placeholder"></div>
+<div class="max-w-lg mx-auto bg-white rounded-xl shadow-lg p-6 space-y-4 text-center">
+    <h1 class="text-3xl font-bold text-indigo-600">Welcome!</h1>
+    <p class="text-gray-600">Choose a feature to test:</p>
+
+    <div class="space-y-3">
+        <a href="/topup.html" class="block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Top Up Wallet</a>
+        <a href="/pay-rent.html" class="block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Pay Rent</a>
+        <a href="/transaction-history.html" class="block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">View Transaction History</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
+<script>
+    window.addEventListener("DOMContentLoaded", () => {
+        loadNavbar();
+    });
+</script>
+</body>
+</html>

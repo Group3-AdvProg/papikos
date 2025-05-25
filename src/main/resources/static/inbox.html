@@ -1,0 +1,79 @@
+<!-- inbox.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Notifications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f9f9ff;
+            font-family: 'Segoe UI', sans-serif;
+        }
+    </style>
+</head>
+<body>
+<div id="navbar-placeholder"></div>
+
+<div class="container mt-4">
+    <h2 class="text-primary fw-bold mb-4">📬 My Notifications</h2>
+    <div id="notifContainer" class="list-group"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
+<script>
+    const token = sessionStorage.getItem("token");
+
+    if (!token) {
+        alert("Please login first.");
+        window.location.href = "/login.html";
+        throw new Error("No token, redirecting...");
+    }
+
+    async function fetchUserId() {
+        const res = await fetch("/api/auth/users/me", {
+            headers: { Authorization: "Bearer " + token }
+        });
+        const user = await res.json();
+        return user.id;
+    }
+
+    async function loadNotifications() {
+        const userId = await fetchUserId();
+        const res = await fetch(`/api/notifications/receiver/${userId}`, {
+            headers: { Authorization: "Bearer " + token }
+        });
+
+        const container = document.getElementById("notifContainer");
+        container.innerHTML = "";
+
+        if (res.status === 204) {
+            container.innerHTML = `<div class="text-muted text-center">No notifications yet.</div>`;
+            return;
+        }
+
+        const notifications = (await res.json()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        for (const notif of notifications) {
+            const notifItem = document.createElement("div");
+            notifItem.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-start";
+            notifItem.innerHTML = `
+            <div>
+                <div class="fw-bold">📢 Notification</div>
+                ${notif.message}
+            </div>
+            <span class="text-muted small">${new Date(notif.createdAt).toLocaleString("id-ID")}</span>
+        `;
+            container.appendChild(notifItem);
+        }
+    }
+
+    window.onload = () => {
+        loadNavbar();
+        loadNotifications();
+        setInterval(loadNotifications, 60000);
+    };
+</script>
+</body>
+</html>

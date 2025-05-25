@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rental Requests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bs-primary: #7065F0;
+        }
+
+        .text-primary {
+            color: var(--bs-primary) !important;
+        }
+
+        .bg-primary {
+            background-color: var(--bs-primary) !important;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f9f9ff;
+        }
+
+        .btn-primary {
+            background-color: var(--bs-primary);
+            border-color: var(--bs-primary);
+        }
+
+        .btn-outline-primary {
+            color: var(--bs-primary);
+            border-color: var(--bs-primary);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--bs-primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div id="navbar-placeholder"></div>
+
+<div class="container py-4">
+    <h2 class="text-primary fw-bold mb-4">Rental Requests</h2>
+    <div id="requestList" class="list-group"></div>
+    <a href="javascript:history.back()" class="btn btn-secondary mt-4">⬅ Back to House</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/navbarLoader.js"></script>
+<script>
+    const token = sessionStorage.getItem("token");
+    const houseId = new URLSearchParams(window.location.search).get("houseId");
+
+    async function fetchRentals() {
+        const res = await fetch("/api/rentals", {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        const container = document.getElementById("requestList");
+
+        if (!res.ok) {
+            const errorMsg = await res.text();
+            container.innerHTML = `<div class="alert alert-danger">Failed to fetch rentals: ${errorMsg}</div>`;
+            return;
+        }
+
+        const rentals = await res.json();
+        const filtered = rentals.filter(r => r.house.id == houseId);
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="alert alert-info">No rental requests for this house yet.</div>`;
+            return;
+        }
+
+        filtered.forEach(r => {
+            const wasRejected = isRentalRejected(r.id);
+            const isApproved = r.approved;
+
+            const div = document.createElement("div");
+            div.className = "list-group-item d-flex justify-content-between align-items-start flex-column flex-md-row";
+
+            const status = wasRejected
+                ? "❌ Rejected"
+                : isApproved ? "✅ Approved" : "⏳ Pending";
+
+            const showButtons = !isApproved && !wasRejected;
+
+            div.innerHTML = `
+                <div>
+                    <h5 class="mb-1">${r.fullName}</h5>
+                    <p class="mb-1">
+                        <strong>Phone:</strong> ${r.phoneNumber}<br>
+                        <strong>Check-in:</strong> ${r.checkInDate}<br>
+                        <strong>Duration:</strong> ${r.durationInMonths} months<br>
+                        <strong>Total Price:</strong> Rp ${r.totalPrice.toLocaleString("id-ID")}<br>
+                        <strong>Status:</strong> ${status}
+                    </p>
+                </div>
+                ${showButtons ? `
+                    <div class="mt-3 mt-md-0">
+                        <button class="btn btn-success btn-sm me-2" onclick="approveRental(${r.id})">Approve</button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="rejectRental(${r.id})">Reject</button>
+                    </div>
+                ` : ''}
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    async function approveRental(rentalId) {
+        const res = await fetch(`/api/management/rentals/${rentalId}/approve`, {
+            method: "POST",
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
+
+        if (res.ok) {
+            alert("Rental approved!");
+            location.reload();
+        } else {
+            const error = await res.text();
+            alert("Failed to approve rental: " + error);
+        }
+    }
+
+    async function rejectRental(rentalId) {
+        const confirmed = confirm("Are you sure you want to reject this rental?");
+        if (!confirmed) return;
+
+        const res = await fetch(`/api/management/rentals/${rentalId}/reject`, {
+            method: "POST",
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
+
+        if (res.ok) {
+            rememberRejectedRental(rentalId);
+            alert("Rental rejected.");
+            location.reload();
+        } else {
+            const error = await res.text();
+            alert("Failed to reject rental: " + error);
+        }
+    }
+
+    function rememberRejectedRental(rentalId) {
+        const rejected = JSON.parse(localStorage.getItem("rejectedRentals") || "[]");
+        if (!rejected.includes(rentalId)) {
+            rejected.push(rentalId);
+            localStorage.setItem("rejectedRentals", JSON.stringify(rejected));
+        }
+    }
+
+    function isRentalRejected(rentalId) {
+        const rejected = JSON.parse(localStorage.getItem("rejectedRentals") || "[]");
+        return rejected.includes(rentalId);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        loadNavbar();
+        fetchRentals();
+    });
+
+</script>
+</body>
+</html>

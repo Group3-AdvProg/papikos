@@ -32,13 +32,38 @@ val webdriverManagerVersion = "5.6.3"
 val junitJupiterVersion = "5.9.1"
 
 dependencies {
+	// Security
+	testImplementation("org.springframework.security:spring-security-test")
+
+	// Spring Boot starters
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation ("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
+	// ✅ WebSocket & Messaging support
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
+	implementation("org.springframework:spring-messaging")
+
+	// ─── JPA & Hibernate ─────────────────────────────────
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+	// ─── Database (H2 for dev; switch to Postgres/MySQL in prod) ──
+	runtimeOnly("com.h2database:h2")
+	runtimeOnly("org.postgresql:postgresql:42.7.3")
+
+	// Lombok
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 	annotationProcessor("org.projectlombok:lombok")
+	runtimeOnly("com.h2database:h2")
 
+
+	// Devtools
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+	// Spring Boot Test Starter
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
@@ -48,13 +73,29 @@ dependencies {
 	testImplementation("io.github.bonigarcia:webdrivermanager:$webdriverManagerVersion")
 	testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
+
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.security:spring-security-config")
+	implementation("org.springframework.security:spring-security-web")
+	implementation("org.springframework.security:spring-security-core")
+	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+	implementation ("org.postgresql:postgresql:42.5.4")
+
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("io.micrometer:micrometer-registry-prometheus")
+
+}
+
+tasks.test {
+	systemProperty("spring.profiles.active", "test")
 }
 
 // Optional: custom test tasks
 tasks.register<Test>("unitTest") {
 	description = "Runs unit tests."
 	group = "verification"
-
 	filter {
 		excludeTestsMatching("*FunctionalTest")
 	}
@@ -63,20 +104,16 @@ tasks.register<Test>("unitTest") {
 tasks.register<Test>("functionalTest") {
 	description = "Runs functional tests."
 	group = "verification"
-
 	filter {
 		includeTestsMatching("*FunctionalTest")
 	}
 }
 
-// ----- Key part: Exclude FunctionalTest from the built-in `test` task and finalize with Jacoco -----
-
+// Exclude FunctionalTest from the built-in `test` task and finalize with Jacoco
 tasks.test {
-	// 1) Exclude functional tests (they will NOT be run by `./gradlew test`)
 	filter {
 		excludeTestsMatching("*FunctionalTest")
 	}
-	// 2) Ensure code coverage report (jacocoTestReport) runs right after `test`
 	finalizedBy(tasks.jacocoTestReport)
 }
 
@@ -85,7 +122,7 @@ tasks.jacocoTestReport {
 	dependsOn(tasks.test)
 }
 
-// ----- Ensure JUnit Platform is used for ALL test tasks -----
+// Ensure JUnit Platform is used for ALL test tasks
 tasks.withType<Test>().configureEach {
 	useJUnitPlatform()
 }
@@ -97,3 +134,4 @@ sonar {
 		property("sonar.host.url", "https://sonarcloud.io")
 	}
 }
+
