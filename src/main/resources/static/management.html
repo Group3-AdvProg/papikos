@@ -4,37 +4,106 @@
     <meta charset="UTF-8" />
     <title>Manage Boarding Houses</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Bootstrap CSS & Icons -->
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+    />
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+            rel="stylesheet"
+    />
+
+    <!-- Your custom styles -->
     <link href="/css/papikos.css" rel="stylesheet" />
 </head>
-<body>
+<body class="bg-light text-dark">
 
+<!-- Navbar -->
 <div id="navbar-placeholder"></div>
 
-<div class="container py-4">
-    <h1 class="fw-bold">My Boarding Houses</h1>
-    <button class="btn btn-primary mb-3" onclick="checkApprovalBeforeAdd()">
-        ➕ Add New House
-    </button>
+<!-- Hero Banner -->
+<header class="position-relative mb-4">
+    <img
+            src="/images/slide1.png"
+            alt="Boarding house"
+            class="w-100"
+            style="object-fit: cover; height: 300px;"
+    />
+    <div
+            class="position-absolute top-50 start-50 translate-middle text-white text-center"
+            style="text-shadow: 0 2px 6px rgba(0,0,0,0.7);"
+    >
+        <h1 class="display-4 fw-bold">My Boarding Houses</h1>
+    </div>
+</header>
 
-    <form id="searchForm" class="row g-2 mb-3">
-        <div class="col-md-4">
-            <input type="text" id="keyword" name="keyword" class="form-control" placeholder="Search by name or location..." />
-        </div>
-        <div class="col-md-3">
-            <input type="number" id="minRent" name="minRent" class="form-control" placeholder="Min Rent" />
-        </div>
-        <div class="col-md-3">
-            <input type="number" id="maxRent" name="maxRent" class="form-control" placeholder="Max Rent" />
-        </div>
-        <div class="col-md-2">
-            <button class="btn btn-outline-secondary w-100" type="button" onclick="resetFilters()">Reset</button>
-        </div>
-    </form>
+<main class="container pb-5">
+    <!-- Add Button below Hero -->
+    <div class="d-flex justify-content-end mb-4">
+        <button class="btn btn-primary" onclick="checkApprovalBeforeAdd()">
+            ➕ Add New House
+        </button>
+    </div>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4" id="houseContainer"></div>
-</div>
+    <!-- Search + Filters -->
+    <div class="mb-5 p-4 bg-white rounded shadow-sm">
+        <!-- Large search input -->
+        <div class="input-group input-group-lg mb-3 shadow-sm">
+            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+            <input
+                    type="text"
+                    id="keyword"
+                    name="keyword"
+                    class="form-control border-start-0"
+                    placeholder="Search by name or location..."
+            />
+            <button
+                    class="btn btn-primary"
+                    type="button"
+                    onclick="fetchHouses()"
+            >
+                Search
+            </button>
+        </div>
+        <!-- Small filters row -->
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input
+                        type="number"
+                        id="minRent"
+                        name="minRent"
+                        class="form-control"
+                        placeholder="Min Rent"
+                />
+            </div>
+            <div class="col-md-4">
+                <input
+                        type="number"
+                        id="maxRent"
+                        name="maxRent"
+                        class="form-control"
+                        placeholder="Max Rent"
+                />
+            </div>
+            <div class="col-md-4 d-grid">
+                <button
+                        class="btn btn-outline-secondary"
+                        type="button"
+                        onclick="resetFilters()"
+                >
+                    Reset Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Houses grid -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="houseContainer">
+        <!-- Cards injected here -->
+    </div>
+</main>
 
 <!-- Create Modal -->
 <div class="modal fade" id="createHouseModal" tabindex="-1" aria-hidden="true">
@@ -42,15 +111,66 @@
         <form class="modal-content" id="createHouseForm">
             <div class="modal-header">
                 <h5 class="modal-title">Add New House</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                ></button>
             </div>
             <div class="modal-body">
-                <div class="mb-2"><input class="form-control" name="name" placeholder="Name" required /></div>
-                <div class="mb-2"><input class="form-control" name="address" placeholder="Address" required /></div>
-                <div class="mb-2"><input class="form-control" name="description" placeholder="Description" required /></div>
-                <div class="mb-2"><input class="form-control" name="numberOfRooms" type="number" placeholder="Number of Rooms" required /></div>
-                <div class="mb-2"><input class="form-control" name="monthlyRent" type="number" step="0.01" placeholder="Monthly Rent" required /></div>
-                <div class="mb-2"><input class="form-control" name="imageUrl" type="url" placeholder="Image URL" required /></div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="name"
+                            placeholder="Name"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="address"
+                            placeholder="Address"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="description"
+                            placeholder="Description"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="numberOfRooms"
+                            type="number"
+                            placeholder="Number of Rooms"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="monthlyRent"
+                            type="number"
+                            step="0.01"
+                            placeholder="Monthly Rent"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="imageUrl"
+                            type="url"
+                            placeholder="Image URL"
+                            required
+                    />
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -67,15 +187,72 @@
             <input type="hidden" name="id" id="edit-id" />
             <div class="modal-header">
                 <h5 class="modal-title">Edit House</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                ></button>
             </div>
             <div class="modal-body">
-                <div class="mb-2"><input class="form-control" name="name" id="edit-name" placeholder="Name" required /></div>
-                <div class="mb-2"><input class="form-control" name="address" id="edit-address" placeholder="Address" required /></div>
-                <div class="mb-2"><input class="form-control" name="description" id="edit-description" placeholder="Description" required /></div>
-                <div class="mb-2"><input class="form-control" name="numberOfRooms" id="edit-rooms" type="number" placeholder="Rooms" required /></div>
-                <div class="mb-2"><input class="form-control" name="monthlyRent" id="edit-rent" type="number" step="0.01" placeholder="Rent" required /></div>
-                <div class="mb-2"><input class="form-control" name="imageUrl" id="edit-image" type="url" placeholder="Image URL" required /></div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="name"
+                            id="edit-name"
+                            placeholder="Name"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="address"
+                            id="edit-address"
+                            placeholder="Address"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="description"
+                            id="edit-description"
+                            placeholder="Description"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="numberOfRooms"
+                            id="edit-rooms"
+                            type="number"
+                            placeholder="Rooms"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="monthlyRent"
+                            id="edit-rent"
+                            type="number"
+                            step="0.01"
+                            placeholder="Rent"
+                            required
+                    />
+                </div>
+                <div class="mb-2">
+                    <input
+                            class="form-control"
+                            name="imageUrl"
+                            id="edit-image"
+                            type="url"
+                            placeholder="Image URL"
+                            required
+                    />
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -85,6 +262,7 @@
     </div>
 </div>
 
+<!-- Bootstrap JS & custom scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/navbarLoader.js"></script>
 <script>
@@ -100,158 +278,209 @@
             renderHouses(houses);
         } catch (err) {
             console.error("Failed to fetch houses:", err);
-            document.getElementById("houseContainer").innerHTML = `
-        <div class="alert alert-danger">You are not authorized. Please log in as Landlord</div>
-      `;
+            document.getElementById("houseContainer").innerHTML =
+                '<div class="alert alert-danger">You are not authorized. Please log in as Landlord</div>';
         }
     }
 
     function renderHouses(houses) {
         const container = document.getElementById("houseContainer");
         container.innerHTML = "";
-        houses.forEach((house) => {
+        houses.forEach(house => {
             container.innerHTML += `
-        <div class="col">
-          <div class="card shadow-sm border-0 position-relative">
-            <a href="houseDetails.html?id=${house.id}" class="card-clickable text-decoration-none text-dark">
-              <div class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 text-dark small">
-                Open: <span class="fw-bold">BEST NEAR UI!</span>
-              </div>
-              <img src="${house.imageUrl || "https://via.placeholder.com/400x250.png?text=No+Image"}"
-                   class="card-img-top" alt="House image">
-              <div class="card-body">
-                <p class="text-uppercase fw-bold text-muted small mb-1">${house.address}</p>
-                <h5 class="card-title mb-0 text-primary">${house.name}</h5>
-                <div class="mt-2">
-                  <h4 class="fw-bold mb-0 text-dark">Rp <span>${house.monthlyRent}</span></h4>
-                  <span class="badge bg-light text-dark border border-secondary fw-semibold small">NO FEE</span>
+          <div class="col">
+            <div class="card shadow-sm border-0 position-relative h-100">
+              <a
+                href="houseDetails.html?id=${house.id}"
+                class="text-decoration-none text-dark h-100 d-flex flex-column"
+              >
+                <div
+                  class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 small"
+                >
+                  Open: <span class="fw-bold">BEST NEAR UI!</span>
                 </div>
-                <div class="text-muted mt-1 small"><strong>${house.numberOfRooms} rooms</strong><br>12-month lease</div>
-                <div class="d-flex gap-3 mt-3 text-muted small">
-                  <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
-                  <div><i class="bi bi-droplet-half"></i> 2 baths</div>
-                  <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
+                <img
+                  src="${house.imageUrl ||
+            'https://via.placeholder.com/400x250.png?text=No+Image'}"
+                  class="card-img-top"
+                  alt="House image"
+                />
+                <div class="card-body flex-grow-1">
+                  <p class="text-uppercase fw-bold text-muted small mb-1">
+                    ${house.address}
+                  </p>
+                  <h5 class="card-title mb-0 text-primary">${house.name}</h5>
+                  <div class="mt-2">
+                    <h4 class="fw-bold mb-0 text-dark">
+                      Rp <span>${house.monthlyRent}</span>
+                    </h4>
+                    <span class="badge bg-light text-dark border border-secondary fw-semibold small">
+                      NO FEE
+                    </span>
+                  </div>
+                  <div class="text-muted mt-1 small">
+                    <strong>${house.numberOfRooms} rooms</strong><br>
+                    12-month lease
+                  </div>
                 </div>
+              </a>
+              <div
+                class="card-footer bg-white border-top-0 d-flex justify-content-between px-3 pb-3"
+              >
+                <button
+                  class="btn btn-sm btn-warning"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editHouseModal"
+                  data-id="${house.id}"
+                  data-name="${house.name}"
+                  data-address="${house.address}"
+                  data-description="${house.description}"
+                  data-rooms="${house.numberOfRooms}"
+                  data-rent="${house.monthlyRent}"
+                  data-image="${house.imageUrl}"
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  onclick="event.stopPropagation(); event.preventDefault(); deleteHouse(${house.id})"
+                >
+                  ❌ Delete
+                </button>
               </div>
-            </a>
-            <div class="card-footer bg-white border-top-0 d-flex justify-content-between px-3 pb-3 action-buttons">
-              <button class="btn btn-sm btn-warning"
-                      data-bs-toggle="modal"
-                      data-bs-target="#editHouseModal"
-                      data-id="${house.id}" data-name="${house.name}" data-address="${house.address}"
-                      data-description="${house.description}" data-rooms="${house.numberOfRooms}"
-                      data-rent="${house.monthlyRent}" data-image="${house.imageUrl}">
-                ✏️ Edit
-              </button>
-              <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); event.preventDefault(); deleteHouse(${house.id})">
-                ❌ Delete
-              </button>
             </div>
           </div>
-        </div>
-      `;
+        `;
         });
     }
 
-    document.getElementById("createHouseForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const data = Object.fromEntries(new FormData(form));
-        data.numberOfRooms = parseInt(data.numberOfRooms);
-        data.monthlyRent = parseFloat(data.monthlyRent);
+    document
+        .getElementById("createHouseForm")
+        .addEventListener("submit", async e => {
+            e.preventDefault();
+            const form = e.target;
+            const data = Object.fromEntries(new FormData(form));
+            data.numberOfRooms = parseInt(data.numberOfRooms);
+            data.monthlyRent = parseFloat(data.monthlyRent);
 
-        await fetch("/api/management/houses", {
-            method: "POST",
-            headers: {
-                Authorization: "Bearer " + token,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
+            await fetch("/api/management/houses", {
+                method: "POST",
+                headers: {
+                    Authorization: "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            form.reset();
+            bootstrap.Modal.getInstance(
+                document.getElementById("createHouseModal")
+            ).hide();
+            fetchHouses();
         });
 
-        form.reset();
-        bootstrap.Modal.getInstance(document.getElementById("createHouseModal")).hide();
-        fetchHouses();
-    });
-
-    document.getElementById("editHouseModal").addEventListener("show.bs.modal", function (event) {
-        const button = event.relatedTarget;
-        document.getElementById("edit-id").value = button.getAttribute("data-id");
-        document.getElementById("edit-name").value = button.getAttribute("data-name");
-        document.getElementById("edit-address").value = button.getAttribute("data-address");
-        document.getElementById("edit-description").value = button.getAttribute("data-description");
-        document.getElementById("edit-rooms").value = button.getAttribute("data-rooms");
-        document.getElementById("edit-rent").value = button.getAttribute("data-rent");
-        document.getElementById("edit-image").value = button.getAttribute("data-image");
-    });
-
-    document.getElementById("editHouseForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const id = document.getElementById("edit-id").value;
-        const data = Object.fromEntries(new FormData(form));
-        data.numberOfRooms = parseInt(data.numberOfRooms);
-        data.monthlyRent = parseFloat(data.monthlyRent);
-
-        await fetch(`/api/management/houses/${id}`, {
-            method: "PUT",
-            headers: {
-                Authorization: "Bearer " + token,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
+    document
+        .getElementById("editHouseModal")
+        .addEventListener("show.bs.modal", event => {
+            const btn = event.relatedTarget;
+            document.getElementById("edit-id").value = btn.getAttribute("data-id");
+            document.getElementById("edit-name").value = btn.getAttribute(
+                "data-name"
+            );
+            document.getElementById("edit-address").value = btn.getAttribute(
+                "data-address"
+            );
+            document.getElementById("edit-description").value = btn.getAttribute(
+                "data-description"
+            );
+            document.getElementById("edit-rooms").value = btn.getAttribute(
+                "data-rooms"
+            );
+            document.getElementById("edit-rent").value = btn.getAttribute(
+                "data-rent"
+            );
+            document.getElementById("edit-image").value = btn.getAttribute(
+                "data-image"
+            );
         });
 
-        bootstrap.Modal.getInstance(document.getElementById("editHouseModal")).hide();
-        fetchHouses();
-    });
+    document
+        .getElementById("editHouseForm")
+        .addEventListener("submit", async e => {
+            e.preventDefault();
+            const form = e.target;
+            const id = document.getElementById("edit-id").value;
+            const data = Object.fromEntries(new FormData(form));
+            data.numberOfRooms = parseInt(data.numberOfRooms);
+            data.monthlyRent = parseFloat(data.monthlyRent);
+
+            await fetch(`/api/management/houses/${id}`, {
+                method: "PUT",
+                headers: {
+                    Authorization: "Bearer " + token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            bootstrap.Modal.getInstance(
+                document.getElementById("editHouseModal")
+            ).hide();
+            fetchHouses();
+        });
 
     async function deleteHouse(id) {
         if (!confirm("Are you sure you want to delete this house?")) return;
         await fetch(`/api/management/houses/${id}`, {
             method: "DELETE",
-            headers: { Authorization: "Bearer " + token },
+            headers: { Authorization: "Bearer " + token }
         });
         fetchHouses();
     }
 
     async function loadUserInfo() {
-        const token = sessionStorage.getItem("token");
-        if (!token) {
+        const t = sessionStorage.getItem("token");
+        if (!t) {
             document.getElementById("welcome-email").textContent = "Welcome, Guest";
             document.getElementById("wallet-balance").textContent = "0";
             return;
         }
         try {
             const res = await fetch("/api/auth/me", {
-                headers: { Authorization: "Bearer " + token }
+                headers: { Authorization: "Bearer " + t }
             });
-            const user = await res.json();
-            document.getElementById("welcome-email").textContent = `Welcome ${user.email} (UserID:${user.id})`;
-            document.getElementById("wallet-balance").textContent = user.balance.toLocaleString("id-ID");
-        } catch (err) {
-            console.warn("Failed to load user info:", err);
+            const u = await res.json();
+            document.getElementById(
+                "welcome-email"
+            ).textContent = `Welcome ${u.email} (UserID:${u.id})`;
+            document.getElementById(
+                "wallet-balance"
+            ).textContent = u.balance.toLocaleString("id-ID");
+        } catch {
             document.getElementById("welcome-email").textContent = "Welcome, Guest";
             document.getElementById("wallet-balance").textContent = "0";
         }
     }
 
     ["keyword", "minRent", "maxRent"].forEach(id => {
-        document.getElementById(id).addEventListener("input", debounce(async function () {
-            const keyword = document.getElementById("keyword").value;
-            const minRent = document.getElementById("minRent").value;
-            const maxRent = document.getElementById("maxRent").value;
-            const params = new URLSearchParams();
-            if (keyword) params.append("keyword", keyword);
-            if (minRent) params.append("minRent", minRent);
-            if (maxRent) params.append("maxRent", maxRent);
-            const res = await fetch(`/api/management/houses/search?${params.toString()}`, {
-                headers: { Authorization: "Bearer " + token }
-            });
-            if (!res.ok) return;
-            const filteredHouses = await res.json();
-            renderHouses(filteredHouses);
-        }, 300));
+        document.getElementById(id).addEventListener(
+            "input",
+            debounce(async function () {
+                const kw = document.getElementById("keyword").value;
+                const mn = document.getElementById("minRent").value;
+                const mx = document.getElementById("maxRent").value;
+                const p = new URLSearchParams();
+                if (kw) p.append("keyword", kw);
+                if (mn) p.append("minRent", mn);
+                if (mx) p.append("maxRent", mx);
+                const res = await fetch(
+                    `/api/management/houses/search?${p.toString()}`,
+                    { headers: { Authorization: "Bearer " + token } }
+                );
+                if (!res.ok) return;
+                renderHouses(await res.json());
+            }, 300)
+        );
     });
 
     function resetFilters() {
@@ -261,11 +490,11 @@
         fetchHouses();
     }
 
-    function debounce(func, delay) {
-        let timeout;
-        return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), delay);
+    function debounce(fn, delay) {
+        let t;
+        return function (...a) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, a), delay);
         };
     }
 
@@ -274,16 +503,18 @@
             const res = await fetch("/api/auth/users/me", {
                 headers: { Authorization: "Bearer " + token }
             });
-            if (!res.ok) throw new Error("Failed to fetch user");
-            const user = await res.json();
-            if (user.approved) {
-                const modal = new bootstrap.Modal(document.getElementById("createHouseModal"));
-                modal.show();
+            if (!res.ok) throw new Error();
+            const u = await res.json();
+            if (u.approved) {
+                new bootstrap.Modal(
+                    document.getElementById("createHouseModal")
+                ).show();
             } else {
-                alert("Sorry, your account hasn't been approved by the admin yet. You can't add houses until you're approved.");
+                alert(
+                    "Sorry, your account hasn't been approved by the admin yet. You can't add houses until you're approved."
+                );
             }
-        } catch (err) {
-            console.error("Error checking approval status:", err);
+        } catch {
             alert("Error checking approval status. Please try again.");
         }
     }
