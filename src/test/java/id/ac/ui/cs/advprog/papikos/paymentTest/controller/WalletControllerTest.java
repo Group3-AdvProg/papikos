@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.papikos.paymentTest.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.auth.filter.JwtFilter;
 import id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil;
+import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
 import id.ac.ui.cs.advprog.papikos.paymentmain.controller.WalletController;
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
 import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.TopUpRequest;
@@ -39,6 +40,9 @@ public class WalletControllerTest {
 
     @MockBean
     private UserRepository userRepository;
+
+    @MockBean
+    private RentalRepository rentalRepository;
 
     @MockBean
     private JwtUtil jwtUtil;
@@ -111,7 +115,7 @@ public class WalletControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .principal(mockPrincipal("test@example.com")))
-                .andExpect(status().isOk())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Invalid top-up method."))
                 .andExpect(jsonPath("$.redirectTo").value("/wallet/topup"));
@@ -267,7 +271,7 @@ public class WalletControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
                 .principal(mockPrincipal("test@example.com")))
-                .andExpect(status().isOk())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Insufficient balance."))
                 .andExpect(jsonPath("$.redirectTo").doesNotExist());
