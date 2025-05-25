@@ -5,91 +5,155 @@
     <title>Papikos • Chat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Bootstrap CSS (with SRI) -->
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
             rel="stylesheet"
             integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
             crossorigin="anonymous"
-    /> :contentReference[oaicite:0]{index=0}
+    />
 
+    <!-- Bootstrap Icons -->
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
             rel="stylesheet"
     />
 
     <style>
-        :root { --bs-primary:#7065F0; }
+        :root {
+            --papikos-primary: #7065F0;
+            --papikos-primary-dark: #5e54d8;
+            --papikos-bg: #f4f6ff;
+        }
 
+        html, body { height: 100%; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--papikos-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ---------- Utility ---------- */
+        .scroll-y         { overflow-y: auto; }
+        .scroll-hide      { scrollbar-width: thin; scrollbar-color: #cfcfe5 transparent; }
+        .scroll-hide::-webkit-scrollbar        { width: .5rem; }
+        .scroll-hide::-webkit-scrollbar-track  { background: transparent; }
+        .scroll-hide::-webkit-scrollbar-thumb  { background:#cfcfe5;border-radius:1rem; }
+
+        /* ---------- Buttons ---------- */
         .btn-primary {
-            background: var(--bs-primary) !important;
-            border-color: var(--bs-primary) !important;
-            color:#fff !important;
+            background: var(--papikos-primary) !important;
+            border-color: var(--papikos-primary) !important;
         }
         .btn-primary:hover {
-            background:#5e54d8 !important;
-            border-color:#5e54d8 !important;
+            background: var(--papikos-primary-dark) !important;
+            border-color: var(--papikos-primary-dark) !important;
         }
 
-        body     { font-family:'Segoe UI', sans-serif; background:#f9f9ff; }
-        #rooms   { max-height:70vh; overflow:auto; }
-        #messages{
-            height:60vh; overflow-y:auto;
-            background:#fff; border-radius:.5rem;
-        }
-        #messages .me            { text-align:right; }
-        #messages .me .bubble    { background:var(--bs-primary); color:#fff; }
-        #messages .other .bubble { background:#eef0ff; }
+        /* ---------- Layout ---------- */
+        .chat-wrapper { flex: 1 1 auto; }
+        .card-rooms   { height: 100%; border: 0; box-shadow: 0 4px 12px rgba(0,0,0,.05); }
+        .card-chat    { height: 100%; border: 0; box-shadow: 0 4px 12px rgba(0,0,0,.05); display: flex; flex-direction: column; }
 
-        .bubble{
-            display:inline-block; padding:.5rem .8rem;
-            border-radius:1rem; max-width:80%;
+        /* ---------- Rooms Sidebar ---------- */
+        #rooms { max-height: calc(100vh - 230px); }
+        #rooms .list-group-item { cursor: pointer; }
+        #rooms .list-group-item.active {
+            background: var(--papikos-primary);
+            border-color: var(--papikos-primary);
         }
-        .meta    { font-size:.75rem; color:#6c757d; }
+
+        /* ---------- Messages Panel ---------- */
+        .chat-header {
+            padding: .75rem 1rem;
+            border-bottom: 1px solid #e9e9f7;
+            background: #ffffff;
+            font-weight: 600;
+        }
+        .chat-body {
+            flex: 1 1 auto;
+            padding: 1rem 1.2rem;
+            background: #ffffff;
+        }
+        .chat-footer {
+            border-top: 1px solid #e9e9f7;
+            padding: .75rem 1rem .8rem;
+            background: #ffffff;
+        }
+
+        /* Message bubbles */
+        .bubble {
+            display: inline-block;
+            padding: .55rem .9rem;
+            border-radius: 1rem;
+            max-width: 75%;
+            word-break: break-word;
+            box-shadow: 0 2px 4px rgba(0,0,0,.05);
+        }
+        .me            { text-align: right; }
+        .me  .bubble   { background: var(--papikos-primary); color: #fff; }
+        .other .bubble { background: #eef0ff; color: #212529; }
+        .meta {
+            font-size: .75rem;
+            color: #6c757d;
+        }
         .actions {
-            font-size:.8rem; margin-left:.25rem; cursor:pointer; opacity:.7;
+            font-size: .9rem; margin-left: .35rem; cursor: pointer; opacity: .7;
         }
-        .actions:hover { opacity:1; }
+        .actions:hover { opacity: 1; }
+
+        /* Empty placeholder */
+        #emptyHint {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
     </style>
 </head>
 <body>
 
 <div id="navbar-placeholder"></div>
 
-<div class="container py-4">
-    <div class="row g-4">
+<div class="container-fluid py-4 chat-wrapper">
+    <div class="row g-4 h-100">
         <!-- ▸ sidebar ------------------------------------------------------ -->
-        <div class="col-md-4">
-            <h5 class="fw-bold mb-3">Rooms</h5>
-
-            <!-- hidden by default; “ROLE_TENANT” removes d-none -->
-            <div id="newRoomWrapper" class="d-grid gap-2 mb-3 d-none">
-                <button class="btn btn-outline-primary"
-                        data-bs-toggle="modal"
-                        data-bs-target="#newRoomModal">
-                    ➕ New Room
-                </button>
+        <aside class="col-md-4 col-lg-3">
+            <div class="card card-rooms h-100 d-flex flex-column">
+                <div class="card-header bg-white border-0 pt-3 pb-2">
+                    <h6 class="fw-semibold m-0">Rooms</h6>
+                </div>
+                <div class="card-body pt-0 pb-3 px-3 d-grid gap-2">
+                    <!-- hidden by default; “ROLE_TENANT” removes d-none -->
+                    <button id="newRoomBtn" class="btn btn-outline-primary d-none" data-bs-toggle="modal" data-bs-target="#newRoomModal">
+                        <i class="bi bi-plus-circle me-1"></i> New Room
+                    </button>
+                    <ul class="list-group list-group-flush scroll-y scroll-hide flex-grow-1" id="rooms"></ul>
+                </div>
             </div>
-
-            <ul class="list-group" id="rooms"></ul>
-        </div>
+        </aside>
 
         <!-- ▸ chat panel ---------------------------------------------------- -->
-        <div class="col-md-8 d-flex flex-column">
-            <div id="messages" class="p-3 flex-grow-1 border mb-2">
-                <p id="emptyHint" class="text-muted m-0">
-                    Select a room to begin chatting.
-                </p>
-            </div>
+        <section class="col-md-8 col-lg-9 h-100 d-flex flex-column">
+            <div class="card card-chat flex-grow-1">
+                <div class="chat-header" id="chatHeader">Chat Room</div>
 
-            <form id="msgForm" class="input-group">
-                <input id="msgInput" class="form-control"
-                       placeholder="Type a message…" required />
-                <button class="btn btn-primary" type="submit">
-                    <i class="bi bi-send-fill"></i>
-                </button>
-            </form>
-        </div>
+                <div class="chat-body scroll-y scroll-hide" id="messages">
+                    <p id="emptyHint" class="text-muted">Select a room to begin chatting.</p>
+                </div>
+
+                <form id="msgForm" class="chat-footer input-group">
+                    <input id="msgInput" class="form-control" placeholder="Type a message…" autocomplete="off" required />
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
     </div>
 </div>
 
@@ -102,12 +166,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-2">
-                    <label>
-                        <span class="form-label">Landlord Email</span>
-                        <input type="email" name="landlordEmail"
-                               class="form-control" required />
-                    </label>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Landlord Email</label>
+                    <input type="email" name="landlordEmail" class="form-control" placeholder="name@example.com" required />
                 </div>
             </div>
             <div class="modal-footer">
@@ -122,18 +183,19 @@
 <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"
-></script> :contentReference[oaicite:1]{index=1}
+        crossorigin="anonymous"></script>
 
+<!-- SockJS + STOMP -->
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<!-- Navbar loader (your existing util) -->
 <script src="/js/navbarLoader.js"></script>
 
 <script>
     /* ─── helpers ─────────────────────────────────────────────────────────── */
     function token()        { return sessionStorage.getItem("token"); }
-    function parseJwt(t)    { try { return JSON.parse(atob(t.split('.')[1])); }
-    catch { return {}; } }
+    function parseJwt(t)    { try { return JSON.parse(atob(t.split('.')[1])); } catch { return {}; } }
     function currentEmail() { return parseJwt(token()||"").sub || null; }
 
     async function api(url, init={}) {
@@ -148,14 +210,11 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         const jwt   = parseJwt(token()||"");
-        const roles = jwt.authorities
-            ? jwt.authorities.map(a=>a.authority)
-            : jwt.roles || [];
+        const roles = jwt.authorities ? jwt.authorities.map(a=>a.authority) : jwt.roles || [];
 
         /* show create-room only for tenants */
-        const newRoomWrapper = document.getElementById("newRoomWrapper");
         if (roles.includes("ROLE_TENANT"))
-            newRoomWrapper.classList.remove("d-none");
+            document.getElementById("newRoomBtn").classList.remove("d-none");
 
         initChat();
     });
@@ -182,7 +241,7 @@
         const rooms = await res.json();
         const ul    = document.getElementById("rooms");
         ul.innerHTML = rooms.length ? "" :
-            '<li class="list-group-item">No rooms yet</li>';
+            '<li class="list-group-item text-center text-muted">No rooms yet</li>';
 
         rooms.forEach(r=>{
             const youAreTenant = r.tenant?.email === currentEmail();
@@ -190,21 +249,21 @@
             const label  = other?.fullName || other?.email || "Unknown";
 
             ul.insertAdjacentHTML("beforeend", `
-            <li class="list-group-item ${r.id==roomId?'active':''}">
-                <a href="?roomId=${r.id}"
-                   class="${r.id==roomId?'text-white':'text-primary fw-semibold'} text-decoration-none">
-                    ${label}
-                </a>
+            <li class="list-group-item list-group-item-action ${r.id==roomId?'active':''}" onclick="selectRoom(${r.id})">
+                ${label}
             </li>`);
         });
+    }
+    function selectRoom(id){
+        if (id==roomId) return;
+        location.href = `?roomId=${id}`;
     }
 
     /* websocket -------------------------------------------------------------- */
     function connectWS() {
         stomp = Stomp.over(new SockJS("/ws"));
         stomp.connect({Authorization:"Bearer "+token()}, ()=>{
-            stomp.subscribe(`/topic/room/${roomId}`, msg =>
-                showMessage(JSON.parse(msg.body)) );
+            stomp.subscribe(`/topic/room/${roomId}`, msg => showMessage(JSON.parse(msg.body)) );
         });
     }
 
@@ -230,6 +289,7 @@
             <br />
             <span class="meta">${mine?'You':m.sender?.email||'Anon'} • ${t}</span>
         </div>`);
+        scrollBottom();
     }
 
     function scrollBottom() {
@@ -243,22 +303,21 @@
             e.preventDefault();
             if (!stomp?.connected) return;
 
-            const content = document.getElementById("msgInput").value.trim();
+            const input = document.getElementById("msgInput");
+            const content = input.value.trim();
             if (!content) return;
 
             stomp.send(`/app/chat/${roomId}/sendMessage`, {},
                 JSON.stringify({ senderEmail:currentEmail(), type:"CHAT", content }));
-            document.getElementById("msgInput").value="";
+            input.value="";
         });
     }
 
     /* edit/delete ------------------------------------------------------------ */
     function editIcons(id){
         return `
-        <i class="bi bi-pencil-square actions text-warning"
-           title="Edit"   onclick="editMsg(${id})"></i>
-        <i class="bi bi-trash-fill actions text-danger"
-           title="Delete" onclick="deleteMsg(${id})"></i>`;
+        <i class="bi bi-pencil-square actions text-warning" title="Edit"   onclick="editMsg(${id})"></i>
+        <i class="bi bi-trash-fill actions text-danger"     title="Delete" onclick="deleteMsg(${id})"></i>`;
     }
     window.editMsg = async id => {
         const node   = document.querySelector(`[data-id='${id}']`);
@@ -277,8 +336,7 @@
     };
     window.deleteMsg = async id => {
         if (!confirm("Delete this message?")) return;
-        const ok = await api(`/api/chat/rooms/${roomId}/messages/${id}`,{
-            method:"DELETE"});
+        const ok = await api(`/api/chat/rooms/${roomId}/messages/${id}`,{ method:"DELETE"});
         if (ok?.ok) document.querySelector(`[data-id='${id}']`).remove();
         else alert("Delete failed");
     };
@@ -288,8 +346,7 @@
         document.getElementById("newRoomForm")
             .addEventListener("submit",async e=>{
                 e.preventDefault();
-                const landlordEmail =
-                    e.target.elements["landlordEmail"].value.trim();
+                const landlordEmail = e.target.elements["landlordEmail"].value.trim();
                 if (!landlordEmail) return alert("Enter landlord email!");
 
                 const res = await api("/api/chat/rooms",{
@@ -298,16 +355,14 @@
                     body:JSON.stringify({landlordEmail})
                 });
                 if (res?.ok){
-                    bootstrap.Modal.getInstance(
-                        document.getElementById("newRoomModal")).hide();
+                    bootstrap.Modal.getInstance(document.getElementById("newRoomModal")).hide();
                     loadRooms();
                 } else alert("Failed to create room");
             });
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
-        loadNavbar();
-    });
+    // navbar async load
+    window.addEventListener("DOMContentLoaded", () => { loadNavbar(); });
 </script>
 </body>
 </html>
