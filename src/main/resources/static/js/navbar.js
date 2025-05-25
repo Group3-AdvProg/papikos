@@ -40,6 +40,7 @@ window.setupNavbar = function () {
                 links.push(`<li class="nav-item"><a class="nav-link" href="/chat.html"><i class="bi bi-chat-dots"></i> Chat</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/inbox.html">Inbox</a></li>`);
                 links.push(`<li class="nav-item"><a class="nav-link" href="/wishlist.html">My Wishlist</a></li>`);
+                links.push(`<li class="nav-item"><a class="nav-link" href="/myBookings.html">My Bookings</a></li>`);
             }
 
             links.push(`
