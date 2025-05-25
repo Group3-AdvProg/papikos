@@ -48,6 +48,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
 	// ─── Database (H2 for dev; switch to Postgres/MySQL in prod) ──
+	implementation("me.paulschwarz:spring-dotenv:3.0.0")
 	runtimeOnly("com.h2database:h2")
 	runtimeOnly("org.postgresql:postgresql:42.7.3")
 
