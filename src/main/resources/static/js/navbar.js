@@ -1,10 +1,9 @@
 window.setupNavbar = function () {
     const token = sessionStorage.getItem("token");
-    const navbar = document.getElementById("navbar-links");
+    const navbar = document.getElementById("navbarUserArea");
 
     function showGuestNavbar() {
         navbar.innerHTML = `
-            <li class="nav-item"><a class="nav-link" href="/rental.html">Browse Rentals</a></li>
             <li class="nav-item"><a class="btn btn-outline-primary me-2" href="/login.html">Login</a></li>
             <li class="nav-item"><a class="btn btn-primary" href="/register.html">Sign up</a></li>
         `;
