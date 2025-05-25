@@ -50,6 +50,7 @@
                 <a href="rentalRequests.html?houseId=${house.id}" class="btn btn-outline-primary mt-3">View Rental Requests</a>
             `;
         } catch (err) {
+            console.error("Failed to load house detail:", err);
             document.getElementById("houseDetail").innerHTML = `
                 <div class="alert alert-danger">Failed to load house detail.</div>
             `;
@@ -62,101 +63,5 @@
         loadNavbar();
     });
 </script>
-
-<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>-->
-<!--<script>-->
-<!--    const token = sessionStorage.getItem("token");-->
-<!--    const params = new URLSearchParams(window.location.search);-->
-<!--    const houseId = params.get("id");-->
-<!--    let userId = null;-->
-<!--    let isWishlisted = false;-->
-
-<!--    async function fetchUserId() {-->
-<!--        const res = await fetch("/api/auth/users/me", {-->
-<!--            headers: { Authorization: "Bearer " + token }-->
-<!--        });-->
-<!--        const user = await res.json();-->
-<!--        return user.id;-->
-<!--    }-->
-
-<!--    async function checkWishlistStatus(uid) {-->
-<!--        const res = await fetch(`/api/wishlist/user/${uid}`, {-->
-<!--            headers: { Authorization: "Bearer " + token }-->
-<!--        });-->
-<!--        const list = await res.json();-->
-<!--        return list.includes(houseId);-->
-<!--    }-->
-
-<!--    async function toggleWishlist() {-->
-<!--        const method = isWishlisted ? "DELETE" : "POST";-->
-<!--        const url = isWishlisted-->
-<!--            ? `/api/wishlist/user/${userId}/remove/${houseId}`-->
-<!--            : `/api/wishlist/user/${userId}/add/${houseId}`;-->
-<!--        const res = await fetch(url, {-->
-<!--            method,-->
-<!--            headers: { Authorization: "Bearer " + token }-->
-<!--        });-->
-<!--        if (res.ok) {-->
-<!--            isWishlisted = !isWishlisted;-->
-<!--            updateWishlistButton();-->
-<!--        }-->
-<!--    }-->
-
-<!--    function updateWishlistButton() {-->
-<!--        const btn = document.getElementById("wishlistToggleBtn");-->
-<!--        if (isWishlisted) {-->
-<!--            btn.textContent = "💔 Remove from Wishlist";-->
-<!--            btn.classList.remove("btn-outline-primary");-->
-<!--            btn.classList.add("btn-danger");-->
-<!--        } else {-->
-<!--            btn.textContent = "❤️ Add to Wishlist";-->
-<!--            btn.classList.add("btn-outline-primary");-->
-<!--            btn.classList.remove("btn-danger");-->
-<!--        }-->
-<!--    }-->
-
-<!--    async function fetchHouseDetail() {-->
-<!--        try {-->
-<!--            userId = await fetchUserId();-->
-<!--            isWishlisted = await checkWishlistStatus(userId);-->
-
-<!--            const res = await fetch(`/api/management/houses/${houseId}`, {-->
-<!--                headers: {-->
-<!--                    'Authorization': 'Bearer ' + token-->
-<!--                }-->
-<!--            });-->
-
-<!--            if (!res.ok) throw new Error("Failed to fetch");-->
-
-<!--            const house = await res.json();-->
-<!--            document.getElementById("houseDetail").innerHTML = `-->
-<!--                <h2 class="text-primary fw-bold">${house.name}</h2>-->
-<!--                <img src="${house.imageUrl}" class="img-fluid rounded mb-3" alt="House Image" style="max-width: 600px;">-->
-<!--                <p><strong>Address:</strong> ${house.address}</p>-->
-<!--                <p><strong>Description:</strong> ${house.description}</p>-->
-<!--                <p><strong>Rooms:</strong> ${house.numberOfRooms}</p>-->
-<!--                <p><strong>Monthly Rent:</strong> Rp ${house.monthlyRent.toLocaleString("id-ID")}</p>-->
-<!--                <a href="rentalRequests.html?houseId=${house.id}" class="btn btn-outline-primary mt-3">View Rental Requests</a>-->
-<!--                <p id="wishlistToggleContainer">-->
-<!--                    <button id="wishlistToggleBtn" class="btn mt-3">❤️ Add to Wishlist</button>-->
-<!--                </p>-->
-<!--                <p id="wishlistToggleContainer">-->
-<!--                    <button id="wishlistToggleBtn" class="btn btn-outline-primary mt-3">❤️ Add to Wishlist</button>-->
-<!--                </p>-->
-<!--            `;-->
-
-<!--            updateWishlistButton();-->
-<!--            document.getElementById("wishlistToggleBtn").addEventListener("click", toggleWishlist);-->
-
-<!--        } catch (err) {-->
-<!--            document.getElementById("houseDetail").innerHTML = `-->
-<!--                <div class="alert alert-danger">Failed to load house detail.</div>-->
-<!--            `;-->
-<!--        }-->
-<!--    }-->
-
-<!--    window.onload = fetchHouseDetail;-->
-<!--</script>-->
-
 </body>
 </html>

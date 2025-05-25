@@ -35,6 +35,7 @@ public class HouseManagementController {
     private UserRepository userRepository;
 
     private static final Logger logger = LoggerFactory.getLogger(HouseManagementController.class);
+    private static final String FORBIDDEN_NOT_OWNER = "Forbidden: You do not own this house.";
 
     @GetMapping("/houses")
     public ResponseEntity<List<House>> getAllHouses(Principal principal) {
@@ -66,7 +67,7 @@ public class HouseManagementController {
 
         return houseOpt
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(403).body("Forbidden: You do not own this house."));
+                .orElse(ResponseEntity.status(403).body(FORBIDDEN_NOT_OWNER));
     }
 
     @PutMapping("/houses/{id}")
@@ -80,7 +81,7 @@ public class HouseManagementController {
         User owner = userRepository.findByEmail(principal.getName()).orElseThrow();
         if (!existingHouse.get().getOwner().getId().equals(owner.getId())) {
             logger.warn("User [{}] attempted to update house [{}] they do not own", owner.getEmail(), id);
-            return ResponseEntity.status(403).body("Forbidden: You do not own this house.");
+            return ResponseEntity.status(403).body(FORBIDDEN_NOT_OWNER);
         }
 
         updatedHouse.setOwner(owner);
@@ -107,7 +108,7 @@ public class HouseManagementController {
         User owner = userRepository.findByEmail(principal.getName()).orElseThrow();
         if (!house.get().getOwner().getId().equals(owner.getId())) {
             logger.warn("User [{}] attempted to delete house [{}] they do not own", owner.getEmail(), id);
-            return ResponseEntity.status(403).body("Forbidden: You do not own this house.");
+            return ResponseEntity.status(403).body(FORBIDDEN_NOT_OWNER);
         }
 
         houseManagementService.deleteHouse(id).join();

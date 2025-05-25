@@ -22,6 +22,8 @@ import java.security.Principal;
 @RequestMapping("/api/wallet")
 public class WalletController {
 
+    private static final String STATUS_FAILED = "FAILED";
+
     @Autowired
     private TransactionService transactionService;
 
@@ -50,7 +52,7 @@ public class WalletController {
         if (strategy == null) {
             // invalid method
             return ResponseEntity.ok(
-                    new ApiResponse("FAILED", "Invalid top-up method.", "/wallet/topup")
+                    new ApiResponse(STATUS_FAILED, "Invalid top-up method.", "/wallet/topup")
             );
         }
 
@@ -80,7 +82,7 @@ public class WalletController {
             );
         } else {
             return ResponseEntity.ok(
-                    new ApiResponse("FAILED", "Top-up failed.", "/wallet/topup")
+                    new ApiResponse(STATUS_FAILED, "Top-up failed.", "/wallet/topup")
             );
         }
     }
@@ -111,7 +113,7 @@ public class WalletController {
         // 3) Balance check
         if (tenant.getBalance() < request.getAmount()) {
             return ResponseEntity.ok(
-                    new ApiResponse("FAILED", "Insufficient balance.", null)
+                    new ApiResponse(STATUS_FAILED, "Insufficient balance.", null)
             );
         }
 

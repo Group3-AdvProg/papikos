@@ -92,8 +92,9 @@
 
             await fetchHouses();
         } catch (e) {
-            wishlist = [];
-            await fetchHouses();
+            console.error("Failed to load user or wishlist:", e);
+            wishlist = []; // fallback if /me or /wishlist fails
+            fetchHouses();
         }
     });
 
@@ -105,6 +106,7 @@
             allHouses = await res.json();
             renderHouses(allHouses);
         } catch (err) {
+            console.error("Failed to load houses:", err);
             houseContainer.innerHTML = `<div class="alert alert-danger">Failed to load houses.</div>`;
         }
     }
@@ -174,6 +176,7 @@
                 }
             }
         } catch (err) {
+            console.error("Error updating wishlist:", err);
             alert("Error updating wishlist.");
         }
     }
