@@ -3,30 +3,38 @@ package id.ac.ui.cs.advprog.papikos.paymentTest.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.papikos.auth.filter.JwtFilter;
 import id.ac.ui.cs.advprog.papikos.auth.util.JwtUtil;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
 import id.ac.ui.cs.advprog.papikos.paymentmain.controller.WalletController;
-import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.PaymentRequest;
 import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.TopUpRequest;
-import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.paymentmain.service.TransactionService;
+import id.ac.ui.cs.advprog.papikos.paymentmain.repository.TransactionRepository;
+import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.security.Principal;
 import java.util.Optional;
 
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.PaymentRequest;
 
 @WebMvcTest(controllers = WalletController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(TransactionService.class)
 public class WalletControllerTest {
 
     @Autowired
@@ -35,8 +43,11 @@ public class WalletControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @SpyBean
     private TransactionService transactionService;
+
+    @MockBean
+    private TransactionRepository transactionRepository;
 
     @MockBean
     private UserRepository userRepository;
@@ -69,16 +80,21 @@ public class WalletControllerTest {
         user.setId(1L);
         user.setBalance(0.0);
         user.setEmail("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         mockMvc.perform(post("/api/wallet/topup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .principal(mockPrincipal("test@example.com")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("Top-up successful."))
                 .andExpect(jsonPath("$.redirectTo").doesNotExist());
+
+        verify(transactionRepository, times(1)).save(any());
     }
 
     @Test
@@ -89,32 +105,38 @@ public class WalletControllerTest {
         user.setId(1L);
         user.setBalance(0.0);
         user.setEmail("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(user));
+
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         mockMvc.perform(post("/api/wallet/topup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .principal(mockPrincipal("test@example.com")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("Top-up successful."))
                 .andExpect(jsonPath("$.redirectTo").doesNotExist());
+
+        verify(transactionRepository, times(1)).save(any());
     }
 
     @Test
     void topUpInvalidMethod_shouldFail() throws Exception {
-        TopUpRequest request = buildRequest("crypto"); // Invalid method
+        TopUpRequest request = buildRequest("crypto");
 
         User user = new User();
         user.setId(1L);
         user.setBalance(0.0);
         user.setEmail("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(user));
 
         mockMvc.perform(post("/api/wallet/topup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .principal(mockPrincipal("test@example.com")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Invalid top-up method."))
@@ -124,18 +146,19 @@ public class WalletControllerTest {
     @Test
     void topUp_shouldFailDueToForcedExecutionFailure() throws Exception {
         TopUpRequest request = buildRequest("bank");
-        request.setAmount(9999); // Triggers the controller's test-only failure logic
+        request.setAmount(9999);
 
         User user = new User();
         user.setId(1L);
         user.setBalance(0.0);
         user.setEmail("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(user));
 
         mockMvc.perform(post("/api/wallet/topup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .principal(mockPrincipal("test@example.com")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Top-up failed."))
@@ -145,12 +168,13 @@ public class WalletControllerTest {
     @Test
     void topUp_shouldFailWhenUserNotFound() throws Exception {
         TopUpRequest request = buildRequest("bank");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/wallet/topup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .principal(mockPrincipal("test@example.com")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isNotFound())
                 .andExpect(status().reason("User not found"));
     }
@@ -161,7 +185,8 @@ public class WalletControllerTest {
         user.setId(1L);
         user.setBalance(200.0);
         user.setEmail("test@example.com");
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(user));
 
         mockMvc.perform(get("/api/wallet/balance")
                         .principal(mockPrincipal("test@example.com")))
@@ -171,7 +196,8 @@ public class WalletControllerTest {
 
     @Test
     void getBalance_shouldFailWhenUserNotFound() throws Exception {
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/wallet/balance")
                         .principal(mockPrincipal("test@example.com")))
@@ -180,12 +206,13 @@ public class WalletControllerTest {
     }
 
     @Test
-    void payRent_shouldSucceed() throws Exception {
+    void payRent_shouldSucceed_andMarkRentalPaid() throws Exception {
         PaymentRequest request = new PaymentRequest();
         request.setUserId(1L);
         request.setTargetId(2L);
         request.setAmount(100.0);
 
+        // prepare tenant and landlord
         User tenant = new User();
         tenant.setId(1L);
         tenant.setBalance(200.0);
@@ -195,17 +222,34 @@ public class WalletControllerTest {
         landlord.setId(2L);
         landlord.setBalance(50.0);
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(tenant));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
+        // stub the *exact* finder your controller uses:
+        Rental rental = new Rental();
+        rental.setId(2L);
+        rental.setPaid(false);
+        when(rentalRepository
+                .findTopByTenantAndHouseOwnerAndIsPaidFalseOrderByIdDesc(tenant, landlord))
+                .thenReturn(Optional.of(rental));
+
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(tenant));
+        when(userRepository.findById(2L))
+                .thenReturn(Optional.of(landlord));
+        when(transactionRepository.save(any()))
+                .thenAnswer(i -> i.getArgument(0));
 
         mockMvc.perform(post("/api/wallet/pay-rent")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .principal(mockPrincipal("test@example.com")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.message").value("Rent payment successful."))
                 .andExpect(jsonPath("$.redirectTo").value("/management.html"));
+
+        // capture and verify the save
+        ArgumentCaptor<Rental> captor = ArgumentCaptor.forClass(Rental.class);
+        verify(rentalRepository, times(1)).save(captor.capture());
+        assertTrue(captor.getValue().isPaid(), "rental must be marked as paid");
     }
 
     @Test
@@ -215,14 +259,15 @@ public class WalletControllerTest {
         request.setTargetId(2L);
         request.setAmount(100.0);
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/wallet/pay-rent")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .principal(mockPrincipal("test@example.com")))
-            .andExpect(status().isNotFound())
-            .andExpect(status().reason("Tenant not found"));
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(mockPrincipal("test@example.com")))
+                .andExpect(status().isNotFound())
+                .andExpect(status().reason("Tenant not found"));
     }
 
     @Test
@@ -237,13 +282,15 @@ public class WalletControllerTest {
         tenant.setBalance(200.0);
         tenant.setEmail("test@example.com");
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(tenant));
-        when(userRepository.findById(2L)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(tenant));
+        when(userRepository.findById(2L))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/wallet/pay-rent")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .principal(mockPrincipal("test@example.com")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isNotFound())
                 .andExpect(status().reason("Landlord not found"));
     }
@@ -264,13 +311,15 @@ public class WalletControllerTest {
         landlord.setId(2L);
         landlord.setBalance(50.0);
 
-        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(tenant));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
+        when(userRepository.findByEmail("test@example.com"))
+                .thenReturn(Optional.of(tenant));
+        when(userRepository.findById(2L))
+                .thenReturn(Optional.of(landlord));
 
         mockMvc.perform(post("/api/wallet/pay-rent")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))
-                .principal(mockPrincipal("test@example.com")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .principal(mockPrincipal("test@example.com")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("FAILED"))
                 .andExpect(jsonPath("$.message").value("Insufficient balance."))
