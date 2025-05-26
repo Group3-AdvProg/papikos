@@ -4,12 +4,98 @@
     <meta charset="UTF-8">
     <title>House Detail</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/papikos.css" rel="stylesheet" />
     <style>
-        .img-fluid {
-            max-width: 100%;
-            height: auto;
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .zillow-layout {
+            max-width: 1200px;
+            margin: 40px auto;
+            background-color: #fff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .zillow-image {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .zillow-content {
+            display: flex;
+            flex-direction: row;
+            padding: 2rem;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .zillow-left {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .zillow-right {
+            width: 300px;
+            min-width: 280px;
+        }
+
+        .badge-green {
+            background-color: #d4edda;
+            color: #155724;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 4px 10px;
+            display: inline-block;
+            margin-bottom: 0.75rem;
+        }
+
+        .house-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .house-address {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box {
+            background-color: #e6f4ea;
+            border: 1px solid #c7e9d1;
+            border-radius: 10px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            color: #1e4620;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-labels {
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-labels p {
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .zillow-content {
+                flex-direction: column;
+            }
+            .zillow-right {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -17,10 +103,45 @@
 
 <div id="navbar-placeholder"></div>
 
-<div class="container py-4">
-    <div id="houseDetail" class="mt-4"></div>
-    <a href="management.html" class="btn btn-secondary mt-3">⬅ Back to Management</a>
+
+<div class="zillow-layout" id="house-content">
+    <img id="houseImage" src="" alt="House" class="zillow-image">
+
+    <div class="zillow-content">
+        <div class="zillow-left">
+            <div class="badge-green">✅ Special offer</div>
+            <h2 id="houseName" class="house-title">Loading...</h2>
+            <p id="houseAddress" class="house-address">Loading address...</p>
+
+            <div class="info-box">
+                <strong>Special offer!</strong><br />
+                Price shown is Base Rent, does not include non-optional fees and utilities.
+                Review building overview for details.
+            </div>
+
+            <div class="info-labels">
+                <p><strong>Description:</strong> <span id="houseDescription">...</span></p>
+                <p><strong>Rooms:</strong> <span id="houseRooms">...</span></p>
+                <p><strong>Monthly Rent:</strong> Rp <span id="houseRent">...</span></p>
+            </div>
+        </div>
+
+        <div class="zillow-right d-flex flex-column justify-content-start">
+            <a id="applyBtn" class="btn btn-outline-primary mb-2">View Rental Requests</a>
+            <a id="back" class="btn btn-secondary btn-back">⬅ Back to Management</a>
+        </div>
+    </div>
 </div>
+
+<footer class="py-4 bg-white border-top">
+    <div class="container text-center">
+        <p class="mb-1">&copy; 2025 Papikos. All rights reserved.</p>
+        <small>
+            <a href="/terms.html" class="text-muted me-3">Terms & Conditions</a>
+            <a href="/privacy.html" class="text-muted">Privacy Policy</a>
+        </small>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/navbarLoader.js"></script>
@@ -32,36 +153,31 @@
     async function fetchHouseDetail() {
         try {
             const res = await fetch(`/api/management/houses/${houseId}`, {
-                headers: {
-                    'Authorization': 'Bearer ' + token
-                }
+                headers: { 'Authorization': 'Bearer ' + token }
             });
 
             if (!res.ok) throw new Error("Failed to fetch");
 
             const house = await res.json();
-            document.getElementById("houseDetail").innerHTML = `
-                <h2 class="text-primary fw-bold">${house.name}</h2>
-                <img src="${house.imageUrl}" class="img-fluid rounded mb-3" alt="House Image" style="max-width: 600px;">
-                <p><strong>Address:</strong> ${house.address}</p>
-                <p><strong>Description:</strong> ${house.description}</p>
-                <p><strong>Rooms:</strong> ${house.numberOfRooms}</p>
-                <p><strong>Monthly Rent:</strong> Rp ${house.monthlyRent.toLocaleString("id-ID")}</p>
-                <a href="rentalRequests.html?houseId=${house.id}" class="btn btn-outline-primary mt-3">View Rental Requests</a>
-            `;
+            document.getElementById("houseImage").src = house.imageUrl;
+            document.getElementById("houseName").textContent = house.name;
+            document.getElementById("houseAddress").textContent = house.address;
+            document.getElementById("houseDescription").textContent = house.description;
+            document.getElementById("houseRooms").textContent = house.numberOfRooms;
+            document.getElementById("houseRent").textContent = house.monthlyRent.toLocaleString("id-ID");
+            document.getElementById("applyBtn").href = `rentalRequests.html?houseId=${house.id}`;
+            document.getElementById("back").href = `management.html`;
         } catch (err) {
             console.error("Failed to load house detail:", err);
-            document.getElementById("houseDetail").innerHTML = `
-                <div class="alert alert-danger">Failed to load house detail.</div>
-            `;
+            document.querySelector(".zillow-left").innerHTML = `
+        <div class="alert alert-danger">Failed to load house detail.</div>
+      `;
         }
     }
 
     window.onload = fetchHouseDetail;
-
-    window.addEventListener("DOMContentLoaded", () => {
-        loadNavbar();
-    });
+    window.addEventListener("DOMContentLoaded", loadNavbar);
 </script>
+
 </body>
 </html>

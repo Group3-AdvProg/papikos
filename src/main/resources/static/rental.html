@@ -40,7 +40,7 @@
         }
         .wishlist-btn .bi {
             font-size: 1.2rem;
-            color: red;
+            color: #ff00b7;
             pointer-events: auto;
         }
     </style>
@@ -48,6 +48,21 @@
 
 <body>
 <div id="navbar-placeholder"></div>
+
+<header class="position-relative mb-4">
+    <img
+            src="/images/rental.png"
+            alt="Boarding house"
+            class="w-100"
+            style="object-fit: cover; height: 300px;"
+    />
+    <div
+            class="position-absolute top-50 start-50 translate-middle text-white text-center"
+            style="text-shadow: 0 2px 6px rgba(0,0,0,0.7);"
+    >
+        <h1 class="display-4 fw-bold">Our Available Rentals</h1>
+    </div>
+</header>
 
 <div class="container py-4">
     <h2 class="fw-bold mb-4 text-primary">Available Houses</h2>
@@ -71,8 +86,18 @@
         </div>
     </form>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4" id="houseContainer"></div>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="houseContainer"></div>
 </div>
+
+<footer class="py-4 bg-white border-top">
+    <div class="container text-center">
+        <p class="mb-1">&copy; 2025 Papikos. All rights reserved.</p>
+        <small>
+            <a href="/terms.html" class="text-muted me-3">Terms & Conditions</a>
+            <a href="/privacy.html" class="text-muted">Privacy Policy</a>
+        </small>
+    </div>
+</footer>
 
 <!-- Bootstrap JS with SRI -->
 <script
@@ -139,34 +164,36 @@
             const isWishlisted = wishlist.includes(h.id);
 
             houseContainer.innerHTML += `
-        <div class="col">
-          <div class="card shadow-sm border-0 position-relative">
-            <button class="wishlist-btn" onclick="toggleWishlist(event, ${h.id}, this)">
-              <i class="bi ${isWishlisted ? 'bi-heart-fill' : 'bi-heart'}"></i>
-            </button>
-            <a class="card-clickable" href="RentalHouseDetails.html?houseId=${h.id}">
-              <div class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 text-dark small">
-                Open <span class="fw-bold">FOR RENT</span>
+            <div class="col">
+              <div class="card shadow-sm border-0 position-relative h-100 d-flex flex-column">
+                <button class="wishlist-btn" onclick="toggleWishlist(event, ${h.id}, this)">
+                  <i class="bi ${isWishlisted ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                </button>
+                <a class="card-clickable d-flex flex-column h-100" href="RentalHouseDetails.html?houseId=${h.id}">
+                  <div class="position-absolute top-0 start-0 bg-white p-1 px-2 rounded-end shadow-sm fw-semibold mt-2 ms-2 text-dark small">
+                    Open <span class="fw-bold">FOR RENT</span>
+                  </div>
+                  <img src="${img}" class="card-img-top" alt="house">
+                  <div class="card-body flex-grow-1 d-flex flex-column">
+                    <p class="text-uppercase fw-bold text-muted small mb-1">${address}</p>
+                    <h5 class="card-title mb-0 text-primary">${h.name}</h5>
+                    <div class="mt-2">
+                      <h4 class="fw-bold mb-0 text-dark">Rp ${price}</h4>
+                      <span class="badge bg-light text-dark border border-secondary fw-semibold small">per month</span>
+                    </div>
+                    <div class="text-muted mt-1 small"><strong>${rooms} rooms</strong></div>
+                    <div class="d-flex gap-3 mt-3 text-muted small">
+                      <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
+                      <div><i class="bi bi-droplet-half"></i> 2 Baths</div>
+                      <div><i class="bi bi-aspect-ratio-fill"></i> 40 m²</div>
+                    </div>
+                    <div class="mt-auto">
+                      <button class="btn btn-outline-primary w-100 mt-3 view-btn">View Detail</button>
+                    </div>
+                  </div>
+                </a>
               </div>
-              <img src="${img}" class="card-img-top" alt="house">
-              <div class="card-body">
-                <p class="text-uppercase fw-bold text-muted small mb-1">${address}</p>
-                <h5 class="card-title mb-0 text-primary">${h.name}</h5>
-                <div class="mt-2">
-                  <h4 class="fw-bold mb-0 text-dark">Rp ${price}</h4>
-                  <span class="badge bg-light text-dark border border-secondary fw-semibold small">per month</span>
-                </div>
-                <div class="text-muted mt-1 small"><strong>${rooms} rooms</strong></div>
-                <div class="d-flex gap-3 mt-3 text-muted small">
-                  <div><i class="bi bi-house-heart-fill"></i> 1 Bed</div>
-                  <div><i class="bi bi-droplet-half"></i> 2 Baths</div>
-                  <div><i class="bi bi-aspect-ratio-fill"></i> - m²</div>
-                </div>
-                <button class="btn btn-outline-primary w-100 mt-3 view-btn">View Detail</button>
-              </div>
-            </a>
-          </div>
-        </div>`;
+            </div>`;
         });
     }
 

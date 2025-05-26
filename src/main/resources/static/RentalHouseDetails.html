@@ -17,12 +17,98 @@
             crossorigin="anonymous"
             referrerpolicy="no-referrer"
     />
+    <link href="/css/papikos.css" rel="stylesheet" />
     <style>
         :root { --bs-primary: #7065F0; }
         body  { font-family: 'Segoe UI', sans-serif; background: #f9f9ff; }
-        .navbar { background: var(--bs-primary); }
-        .navbar a, .navbar-brand { color: #fff; }
-        .navbar a:hover { color: #ddd; }
+
+        .zillow-layout {
+            max-width: 1200px;
+            margin: 40px auto;
+            background-color: #fff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .zillow-image {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 0; /* Remove internal rounding */
+            display: block;
+        }
+
+
+        .zillow-content {
+            display: flex;
+            flex-direction: row;
+            padding: 2rem;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .zillow-left {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .zillow-right {
+            width: 300px;
+            min-width: 280px;
+        }
+
+        .badge-green {
+            background-color: #d4edda;
+            color: #155724;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 4px 10px;
+            display: inline-block;
+            margin-bottom: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            .zillow-content {
+                flex-direction: column;
+            }
+            .zillow-right {
+                width: 100%;
+            }
+        }
+
+        .house-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .house-address {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box {
+            background-color: #e6f4ea;
+            border: 1px solid #c7e9d1;
+            border-radius: 10px;
+            padding: 1rem;
+            font-size: 0.95rem;
+            color: #1e4620;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-labels {
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-labels p {
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -32,6 +118,16 @@
     <div id="detailArea" class="row justify-content-center"></div>
     <a class="btn btn-outline-secondary mt-4" href="/rental.html">⬅ Back to list</a>
 </div>
+
+<footer class="py-4 bg-white border-top">
+    <div class="container text-center">
+        <p class="mb-1">&copy; 2025 Papikos. All rights reserved.</p>
+        <small>
+            <a href="/terms.html" class="text-muted me-3">Terms & Conditions</a>
+            <a href="/privacy.html" class="text-muted">Privacy Policy</a>
+        </small>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/navbarLoader.js"></script>
@@ -79,18 +175,15 @@
         const rooms = h.numberOfRooms ?? "-";
         const img   = h.imageUrl || "https://via.placeholder.com/600x350.png?text=No+Image";
 
-        const ownerBlock = houseOwner
-            ? `
-        <div class="card mb-4">
-          <div class="card-header bg-light fw-semibold">Owner Details</div>
-          <div class="card-body">
+        const ownerBlock = houseOwner ? `
+          <div class="info-box">
+            <p class="mb-1"><strong>Owner Details</strong></p>
             <p class="mb-1"><strong>Name:</strong> ${houseOwner.fullName}</p>
             <p class="mb-1"><strong>Phone:</strong> ${houseOwner.phoneNumber}</p>
             <p class="mb-0"><strong>Email:</strong> ${houseOwner.email}</p>
           </div>
-        </div>
-      `
-            : `<div class="alert alert-warning">Owner info not available.</div>`;
+        ` : `<div class="alert alert-warning">Owner info not available.</div>`;
+
 
         // Only show the chat button if you’re NOT the landlord
         const showChatBtn = houseOwner && currentUser.id !== houseOwner.id
@@ -103,31 +196,46 @@
             : "";
 
         document.getElementById("detailArea").innerHTML = `
-      <div class="col-md-8">
-        ${ownerBlock}
-        <div class="card shadow-sm border-0">
-          <img src="${img}" class="card-img-top" alt="house" />
-          <div class="card-body">
-            <p class="text-uppercase fw-bold text-muted small mb-1">${addr}</p>
-            <h3 class="text-primary fw-bold">${h.name}</h3>
-            <h4 class="fw-bold mt-3">Rp ${price}</h4>
-            <div class="text-muted small mb-3">${rooms} rooms</div>
-            <p>${h.description ?? "-"}</p>
+          <div class="zillow-layout">
+            <img src="${img}" class="zillow-image" alt="house" />
+            <div class="zillow-content">
+              <div class="zillow-left">
+                <div class="badge-green">✅ Special offer</div>
+                <h2 class="house-title text-primary">${h.name}</h2>
+                <p class="house-address">${addr}</p>
 
-            ${showChatBtn}
+                <div class="info-box mb-4">
+                  <strong>Special offer!</strong><br />
+                  Price shown is Base Rent, does not include non-optional fees and utilities.
+                  Review building overview for details.
+                </div>
 
-            <label for="checkInDate" class="form-label fw-semibold">Check-in Date</label>
-            <input type="date" id="checkInDate" class="form-control w-25 mb-3" required />
+                <div class="info-labels">
+                  <p><strong>Description:</strong> ${h.description ?? "-"}</p>
+                  <p><strong>Rooms:</strong> ${rooms}</p>
+                  <p><strong>Monthly Rent:</strong> Rp ${price}</p>
+                </div>
+              </div>
 
-            <label for="duration" class="form-label fw-semibold">Duration (months)</label>
-            <input type="number" id="duration" class="form-control w-25 mb-3"
-                   value="1" min="1" required />
+              <div class="zillow-right d-flex flex-column justify-content-start">
+                ${ownerBlock}
 
-            <button class="btn btn-primary w-100" onclick="bookNow()">Book Now</button>
+                ${showChatBtn}
+
+                <label for="checkInDate" class="form-label fw-semibold mt-2">Check-in Date</label>
+                <input type="date" id="checkInDate" class="form-control mb-3" required />
+
+                <label for="duration" class="form-label fw-semibold">Duration (months)</label>
+                <input type="number" id="duration" class="form-control mb-3"
+                       value="1" min="1" required />
+
+                <button class="btn btn-primary w-100 mt-auto" onclick="bookNow()">Book Now</button>
+                <a class="btn btn-outline-secondary mt-3" href="/rental.html">⬅ Back to list</a>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    `;
+        `;
+
     }
 
     async function contactLandlord() {

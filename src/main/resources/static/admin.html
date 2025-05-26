@@ -11,23 +11,25 @@
             rel="stylesheet"
             integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
             crossorigin="anonymous"
-    /> :contentReference[oaicite:0]{index=0}
+    />
 
     <link
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
             rel="stylesheet"
     />
 
+    <link href="/css/papikos.css" rel="stylesheet" />
     <style>
         :root { --bs-primary: #7065F0; }
         .text-primary { color: var(--bs-primary) !important; }
-        .bg-primary { background-color: var(--bs-primary) !important; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #f9f9ff; }
         .btn-primary { background-color: var(--bs-primary); border-color: var(--bs-primary); }
-        .btn-outline-primary { color: var(--bs-primary); border-color: var(--bs-primary); }
-        .btn-outline-primary:hover { background-color: var(--bs-primary); color: white; }
         .card { transition: box-shadow 0.2s ease; }
         .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .card {
+            border-radius: 12px;
+            background-color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -35,19 +37,26 @@
 <div id="navbar-placeholder"></div>
 
 <div class="container py-5">
-    <h1 class="fw-bold mb-4">Pending Landlord Approvals</h1>
-    <div id="landlordContainer" class="row g-4"></div>
+    <h1 class="fw-bold text-center mb-5">Admin Dashboard</h1>
+
+    <div class="mb-5">
+        <h3 class="fw-semibold mb-4">📜 Pending Landlord Approvals</h3>
+        <div id="landlordContainer" class="row g-4"></div>
+    </div>
+
+    <div class="mb-5">
+        <h3 class="fw-semibold mb-4">📢 Broadcast Notification</h3>
+        <div class="card shadow-sm p-4">
+            <div class="mb-3">
+                <label for="broadcastMessage" class="form-label fw-semibold">Message</label>
+                <textarea class="form-control" id="broadcastMessage" rows="3" placeholder="Write a message to notify all users..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="sendBroadcast()">Send Notification</button>
+            <div id="broadcastStatus" class="mt-3 text-success fw-semibold"></div>
+        </div>
+    </div>
 </div>
 
-<h1 class="fw-bold mb-4">📢 Broadcast Notification</h1>
-<div class="card shadow-sm p-4 mb-5">
-    <div class="mb-3">
-        <label for="broadcastMessage" class="form-label fw-semibold">Message</label>
-        <textarea class="form-control" id="broadcastMessage" rows="3" placeholder="Write a message to notify all users..."></textarea>
-    </div>
-    <button class="btn btn-primary" onclick="sendBroadcast()">Send Notification</button>
-    <div id="broadcastStatus" class="mt-3 text-success fw-semibold"></div>
-</div>
 
 <!-- Bootstrap JS Bundle (with SRI) -->
 <script

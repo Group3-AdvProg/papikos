@@ -21,29 +21,7 @@
 </head>
 <body class="bg-white text-dark">
 
-<!-- NAVBAR -->
-<nav class="navbar navbar-expand-lg bg-white shadow-sm py-3">
-    <div class="container">
-        <a class="navbar-brand fw-bold text-primary" href="#">Papikos</a>
-        <button
-                class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarNav"
-        >
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mx-auto">
-                <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="/about.html">About Us</a></li>
-                <li class="nav-item"><a class="nav-link" href="/properties.html">Properties</a></li>
-                <li class="nav-item"><a class="nav-link" href="/services.html">Services</a></li>
-            </ul>
-            <ul class="navbar-nav ms-auto" id="navbarUserArea"></ul>
-        </div>
-    </div>
-</nav>
+<div id="navbar-placeholder"></div>
 
 <!-- HERO -->
 <section class="py-5">
@@ -125,38 +103,29 @@
                         <!-- repeat 3 cards per slide -->
                         <div class="col-md-4">
                             <div class="card h-100 border-0 shadow-sm">
-                                <img src="/images/prop-1.jpg" class="card-img-top" alt="..."/>
+                                <img src="/images/prop-1.png" class="card-img-top" alt="..."/>
                                 <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">Modern Villa in Bali</h5>
-                                    <p class="text-muted flex-grow-1">4 beds • 3 baths • $1,200,000</p>
-                                    <button class="btn btn-primary" onclick="location.href='/properties.html'">
-                                        View Property Details
-                                    </button>
+                                    <h5 class="card-title">Harvard Dormitory</h5>
+                                    <p class="text-muted flex-grow-1">20 beds • 10 baths • Rp.10.000.000</p>
                                 </div>
                             </div>
                         </div>
                         <!-- copy and adjust src/title/price for two more -->
                         <div class="col-md-4">
                             <div class="card h-100 border-0 shadow-sm">
-                                <img src="/images/prop-2.jpg" class="card-img-top" alt="..."/>
+                                <img src="/images/prop-2.png" class="card-img-top" alt="..."/>
                                 <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">City Apartment in Jakarta</h5>
-                                    <p class="text-muted flex-grow-1">2 beds • 2 baths • $450,000</p>
-                                    <button class="btn btn-primary" onclick="location.href='/properties.html'">
-                                        View Property Details
-                                    </button>
+                                    <h5 class="card-title">Student One Elizabeth St</h5>
+                                    <p class="text-muted flex-grow-1">30 beds • 30 baths • Rp.5.000.000</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card h-100 border-0 shadow-sm">
-                                <img src="/images/prop-3.jpg" class="card-img-top" alt="..."/>
+                                <img src="/images/prop-3.png" class="card-img-top" alt="..."/>
                                 <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">Luxury Condo in Surabaya</h5>
-                                    <p class="text-muted flex-grow-1">3 beds • 2 baths • $750,000</p>
-                                    <button class="btn btn-primary" onclick="location.href='/properties.html'">
-                                        View Property Details
-                                    </button>
+                                    <h5 class="card-title">Mahata Margonda</h5>
+                                    <p class="text-muted flex-grow-1">1 beds • 1 baths • Rp.3.500.000</p>
                                 </div>
                             </div>
                         </div>
@@ -179,7 +148,6 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold">What Our Clients Say</h2>
-            <a href="/testimonials.html" class="btn btn-outline-primary">View All Testimonials</a>
         </div>
         <div id="testimonialsCarousel" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
@@ -202,7 +170,7 @@
                                 <div class="d-flex align-items-center mt-3">
                                     <img src="/images/client1.jpg" class="rounded-circle me-2" width="40" alt="Wade"/>
                                     <div>
-                                        <strong>Wade Warren</strong><br/>
+                                        <strong>Jodie Comer</strong><br/>
                                         <small class="text-muted">Jakarta, ID</small>
                                     </div>
                                 </div>
@@ -225,7 +193,7 @@
                                 <div class="d-flex align-items-center mt-3">
                                     <img src="/images/client2.jpg" class="rounded-circle me-2" width="40" alt="Emelie"/>
                                     <div>
-                                        <strong>Emelie Thomson</strong><br/>
+                                        <strong>Daisy-Edgar Jones</strong><br/>
                                         <small class="text-muted">Bandung, ID</small>
                                     </div>
                                 </div>
@@ -247,7 +215,7 @@
                                 <div class="d-flex align-items-center mt-3">
                                     <img src="/images/client3.jpg" class="rounded-circle me-2" width="40" alt="John"/>
                                     <div>
-                                        <strong>John Mans</strong><br/>
+                                        <strong>Lauren German</strong><br/>
                                         <small class="text-muted">Surabaya, ID</small>
                                     </div>
                                 </div>
@@ -272,7 +240,6 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold">Frequently Asked Questions</h2>
-            <a href="/faq.html" class="btn btn-outline-primary">View All FAQ’s</a>
         </div>
         <div id="faqCarousel" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
@@ -282,21 +249,18 @@
                             <div class="card p-4 border-0 shadow-sm h-100">
                                 <h6>How do I search for properties on Papikos?</h6>
                                 <p class="text-muted">Use our search bar and filters to find kos that match your criteria.</p>
-                                <a href="/faq.html" class="btn btn-sm btn-outline-primary mt-auto">Read More</a>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card p-4 border-0 shadow-sm h-100">
                                 <h6>What documents do I need to rent?</h6>
                                 <p class="text-muted">You’ll need ID, proof of enrollment/employment, and a deposit.</p>
-                                <a href="/faq.html" class="btn btn-sm btn-outline-primary mt-auto">Read More</a>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card p-4 border-0 shadow-sm h-100">
                                 <h6>How can I contact a landlord?</h6>
                                 <p class="text-muted">Log in, click “Message Landlord” on any listing, and send your inquiry.</p>
-                                <a href="/faq.html" class="btn btn-sm btn-outline-primary mt-auto">Read More</a>
                             </div>
                         </div>
                     </div>
@@ -318,7 +282,7 @@
     <div class="container">
         <h3 class="fw-bold mb-3">Ready to Find Your Kos?</h3>
         <p class="text-muted mb-4">Sign in to browse all listings, save favorites, and contact landlords directly.</p>
-        <a href="/properties.html" class="btn btn-lg btn-primary">Explore Properties</a>
+        <a href="/register.html" class="btn btn-lg btn-primary">Sign up now!</a>
     </div>
 </section>
 
@@ -333,6 +297,7 @@
     </div>
 </footer>
 
+<script src="/js/navbarLoader.js"></script>
 <!-- Bootstrap JS -->
 <script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
@@ -345,14 +310,10 @@
         sessionStorage.removeItem("token");
         window.location.href = "/";
     }
-    function renderNavbarAuthState() {
-        const token = sessionStorage.getItem("token");
-        document.getElementById("navbarUserArea").innerHTML = token
-            ? `<li class="nav-item"><button class="btn btn-outline-danger" onclick="logout()">Logout</button></li>`
-            : `<li class="nav-item"><a class="btn btn-outline-primary me-2" href="/login.html">Login</a></li>
-           <li class="nav-item"><a class="btn btn-primary" href="/register.html">Sign Up</a></li>`;
-    }
-    renderNavbarAuthState();
+
+    window.addEventListener("DOMContentLoaded", () => {
+        loadNavbar();
+    });
 </script>
 </body>
 </html>

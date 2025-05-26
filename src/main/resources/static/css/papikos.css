@@ -26,9 +26,14 @@ body {
     border-color: #5e54d8 !important;
 }
 
+.btn-outline-primary {
+    border-color: #7065F0 !important;
+    color: #7065F0 !important;
+}
+
 .btn-outline-primary:hover {
     background-color: var(--bs-primary);
-    color: white;
+    color: white !important;
 }
 
 .hero {
