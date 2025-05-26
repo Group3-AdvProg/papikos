@@ -17,17 +17,14 @@ import static org.mockito.Mockito.*;
 
 public class RentalServiceImplTest {
 
-    @Mock
     private RentalRepository repo;
-
-    @InjectMocks
     private RentalServiceImpl service;
-
     private final Long id = 1L;
 
     @BeforeEach
     void init() {
-        MockitoAnnotations.openMocks(this);
+        repo = Mockito.mock(RentalRepository.class);
+        service = new RentalServiceImpl(repo);
     }
 
     private Rental baseRental(String houseName, Long houseId) {
@@ -345,4 +342,24 @@ public class RentalServiceImplTest {
         // verify repository only called once
         verify(repo, times(1)).findAll();
     }
+    @Test
+    void updateRentalCache_shouldInsertIntoCacheAndInvalidateListCache() throws Exception {
+        Rental rental = baseRental("InsertedViaCache", 404L);
+        rental.setId(404L);
+
+        service.updateRentalCache(rental);
+
+        // Inspect internal cache directly instead of relying on getRentalById()
+        var cacheField = RentalServiceImpl.class.getDeclaredField("rentalCache");
+        cacheField.setAccessible(true);
+        var cache = (Map<Long, Rental>) cacheField.get(service);
+
+        assertTrue(cache.containsKey(404L), "rentalCache should contain inserted ID");
+        assertEquals(404L, cache.get(404L).getId());
+
+        var listCacheField = RentalServiceImpl.class.getDeclaredField("rentalsCache");
+        listCacheField.setAccessible(true);
+        assertNull(listCacheField.get(service), "rentalsCache should be invalidated");
+    }
+
 }

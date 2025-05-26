@@ -58,14 +58,14 @@ public class RentalServiceImpl implements RentalService {
 
     @Override
     public Optional<Rental> getRentalById(Long id) {
-        Rental cached = rentalCache.get(id);
-        if (cached != null) {
-            return Optional.of(cached);
-        }
-        Optional<Rental> result = repo.findById(id);
-        result.ifPresent(r -> rentalCache.putIfAbsent(id, r));
+        Optional<Rental> result = repo.findById(id); // 🚫 skip cache
+        result.ifPresent(r -> {
+            rentalCache.put(r.getId(), r);   // refresh cache
+            rentalsCache = null;
+        });
         return result;
     }
+
 
     @Override
     @Async("asyncExecutor")
@@ -130,5 +130,10 @@ public class RentalServiceImpl implements RentalService {
         rentalCache.remove(id);
         rentalsCache = null;
         return CompletableFuture.completedFuture(null);
+    }
+
+    public void updateRentalCache(Rental rental) {
+        rentalCache.put(rental.getId(), rental);
+        rentalsCache = null;
     }
 }

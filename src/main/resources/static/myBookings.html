@@ -17,7 +17,6 @@
 <div id="navbar-placeholder"></div>
 <div class="container py-4">
     <h2 class="fw-bold text-primary mb-4">My Bookings</h2>
-
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-5" id="paidContainer"></div>
     <div class="row row-cols-1 row-cols-md-3 g-4" id="unpaidContainer"></div>
 </div>
@@ -30,129 +29,143 @@
     const unpaidContainer = document.getElementById("unpaidContainer");
 
     window.addEventListener("DOMContentLoaded", async () => {
-        loadNavbar();
-        if (!token) {
-            paidContainer.innerHTML = unpaidContainer.innerHTML = `<div class="alert alert-warning">Please log in first.</div>`;
-            return;
+      loadNavbar();
+      if (!token) {
+        paidContainer.innerHTML = unpaidContainer.innerHTML = `<div class="alert alert-warning">Please log in first.</div>`;
+        return;
+      }
+
+      try {
+        const meRes = await fetch("/api/auth/users/me", { headers: { Authorization: `Bearer ${token}` } });
+        if (!meRes.ok) throw new Error("Not authenticated");
+        const me = await meRes.json();
+
+        const rentRes = await fetch("/api/rentals", { headers: { Authorization: `Bearer ${token}` } });
+        if (!rentRes.ok) throw new Error("Couldn’t fetch rentals");
+        const rentals = await rentRes.json();
+
+        const myRentals = rentals.filter(r => r.tenant?.id === me.id);
+        const paidRentals = myRentals.filter(r => r.paid);
+        const unpaidRentals = myRentals.filter(r => !r.paid);
+
+        if (!myRentals.length) {
+          unpaidContainer.innerHTML = `<div class="alert alert-info">No rental requests yet.</div>`;
         }
 
-        try {
-            const meRes = await fetch("/api/auth/users/me", { headers: { Authorization: `Bearer ${token}` } });
-            if (!meRes.ok) throw new Error("Not authenticated");
-            const me = await meRes.json();
+        paidRentals.forEach(renderCard.bind(null, true));
+        unpaidRentals.forEach(renderCard.bind(null, false));
 
-            const rentRes = await fetch("/api/rentals", { headers: { Authorization: `Bearer ${token}` } });
-            if (!rentRes.ok) throw new Error("Couldn’t fetch rentals");
-            const rentals = await rentRes.json();
-
-            const myRentals = rentals.filter(r => r.tenant?.id === me.id);
-            const paidRentals = myRentals.filter(r => r.isPaid);
-            const unpaidRentals = myRentals.filter(r => !r.isPaid);
-
-            if (!myRentals.length) {
-                unpaidContainer.innerHTML = `<div class="alert alert-info">No rental requests yet.</div>`;
-            }
-
-            paidRentals.forEach(renderCard.bind(null, true));
-            unpaidRentals.forEach(renderCard.bind(null, false));
-
-        } catch (err) {
-            console.error(err);
-            unpaidContainer.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
-        }
+      } catch (err) {
+        console.error(err);
+        unpaidContainer.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
+      }
     });
 
     function renderCard(isPaid, r, insertAtTop = false) {
-        const h = r.house;
-        const img = h.imageUrl || "https://via.placeholder.com/400x250?text=No+Image";
-        const addr = h.address || "-";
-        const price = (h.monthlyRent || 0).toLocaleString("id-ID");
-        const rooms = h.numberOfRooms || "-";
+      const h = r.house;
+      const img = h.imageUrl || "https://via.placeholder.com/400x250?text=No+Image";
+      const addr = h.address || "-";
+      const price = (h.monthlyRent || 0).toLocaleString("id-ID");
+      const rooms = h.numberOfRooms || "-";
 
-        const div = document.createElement("div");
-        div.className = "col";
-        div.id = `rental-${r.id}`;
+      const div = document.createElement("div");
+      div.className = "col";
+      div.id = `rental-${r.id}`;
 
-        div.innerHTML = `
-            <div class="card shadow-sm border-0">
-              <img src="${img}" class="card-img-top" alt="house">
-              <div class="card-body">
-                <p class="small text-uppercase text-muted mb-1">${addr}</p>
-                <h5 class="text-primary mb-2">${h.name}</h5>
-                <h4 class="fw-bold">Rp ${price}</h4>
-                <p class="small text-muted">${rooms} rooms</p>
-                ${isPaid
-                  ? `<span class="text-success fw-semibold">✅ Paid</span>`
-                  : `
-                  <button class="btn btn-success w-100 mb-2"
-                          onclick="payNow(${r.house.owner.id}, ${r.totalPrice}, ${r.id})">
-                    💰 Pay Now (Rp ${r.totalPrice.toLocaleString("id-ID")})
-                  </button>
-                  <button class="btn btn-outline-danger w-100"
-                          onclick="cancelRequest(${r.id})">
-                    Cancel Request
-                  </button>`}
-              </div>
-            </div>`;
+      div.innerHTML = `
+        <div class="card shadow-sm border-0">
+          <img src="${img}" class="card-img-top" alt="house">
+          <div class="card-body">
+            <p class="small text-uppercase text-muted mb-1">${addr}</p>
+            <h5 class="text-primary mb-2">${h.name}</h5>
+            <h4 class="fw-bold">Rp ${price}</h4>
+            <p class="small text-muted">${rooms} rooms</p>
+            ${isPaid
+              ? `<span class="text-success fw-semibold">✅ Paid</span>`
+              : `
+              <button class="btn btn-success w-100 mb-2"
+                      onclick="payNow(${r.house.owner.id}, ${r.totalPrice}, ${r.id})">
+                💰 Pay Now (Rp ${r.totalPrice.toLocaleString("id-ID")})
+              </button>
+              <button class="btn btn-outline-danger w-100"
+                      onclick="cancelRequest(${r.id})">
+                Cancel Request
+              </button>`}
+          </div>
+        </div>`;
 
-        const container = isPaid ? paidContainer : unpaidContainer;
-        insertAtTop && isPaid ? container.prepend(div) : container.appendChild(div);
+      const container = isPaid ? paidContainer : unpaidContainer;
+      insertAtTop && isPaid ? container.prepend(div) : container.appendChild(div);
     }
 
     async function cancelRequest(rentalId) {
-        if (!confirm("Yakin mau cancel request ini?")) return;
-        try {
-            const res = await fetch(`/api/rentals/${rentalId}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error(`Cancel failed (${res.status})`);
-            document.getElementById(`rental-${rentalId}`).remove();
-            alert("Request berhasil dibatalkan!");
-        } catch (e) {
-            console.error(e);
-            alert("Gagal cancel request: " + e.message);
-        }
+      if (!confirm("Yakin mau cancel request ini?")) return;
+      try {
+        const res = await fetch(`/api/rentals/${rentalId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error(`Cancel failed (${res.status})`);
+        document.getElementById(`rental-${rentalId}`).remove();
+        alert("Request berhasil dibatalkan!");
+      } catch (e) {
+        console.error(e);
+        alert("Gagal cancel request: " + e.message);
+      }
     }
 
     async function payNow(landlordId, amount, rentalId) {
-        if (!confirm(`Bayar Rp ${amount.toLocaleString("id-ID")} sekarang?`)) return;
+      if (!confirm(`Bayar Rp ${amount.toLocaleString("id-ID")} sekarang?`)) return;
 
-        try {
-            const res = await fetch("/api/wallet/pay-rent", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    targetId: landlordId,
-                    amount: amount,
-                    rentalId: rentalId
-                })
+      try {
+        const res = await fetch("/api/wallet/pay-rent", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            targetId: landlordId,
+            amount: amount,
+            rentalId: rentalId
+          })
+        });
+
+        if (res.ok) {
+          alert("Pembayaran berhasil!");
+          document.getElementById(`rental-${rentalId}`)?.remove();
+
+          // ✅ Retry fetch for up to 3 times to ensure DB/cache sync
+          let updatedRental = null;
+          for (let i = 0; i < 3; i++) {
+            const rentalRes = await fetch(`/api/rentals/${rentalId}`, {
+              headers: { Authorization: `Bearer ${token}` }
             });
 
-            if (res.ok) {
-                alert("Pembayaran berhasil!");
-                document.getElementById(`rental-${rentalId}`)?.remove();
-
-                const rentalRes = await fetch("/api/rentals", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const rentals = await rentalRes.json();
-                const updatedRental = rentals.find(r => r.id === rentalId);
-
-                updatedRental && updatedRental.isPaid
-                  ? renderCard(true, updatedRental, true)
-                  : alert("Rental paid but still marked as unpaid.");
-
-            } else {
-                const err = await res.text();
-                alert("Gagal membayar: " + err);
+            if (!rentalRes.ok) {
+              throw new Error("Failed to fetch updated rental");
             }
-        } catch (e) {
-            alert("Error saat membayar: " + e.message);
+
+            updatedRental = await rentalRes.json();
+            if (updatedRental.paid) break;
+
+            // wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+
+          if (updatedRental?.paid) {
+            renderCard(true, updatedRental, true);
+          } else {
+            alert("Rental paid but still marked as unpaid. Please refresh the page or contact support.");
+          }
+
+        } else {
+          const err = await res.text();
+          alert("Gagal membayar: " + err);
         }
+      } catch (e) {
+        alert("Error saat membayar: " + e.message);
+      }
     }
 </script>
 </body>

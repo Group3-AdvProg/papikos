@@ -17,4 +17,6 @@ public interface RentalService {
     CompletableFuture<Rental> updateRentalAsync(Long id, Rental rentalDetails);
     void deleteRental(Long id);
     CompletableFuture<Void> deleteRentalAsync(Long id); // async delete
+    void updateRentalCache(Rental rental);
+
 }

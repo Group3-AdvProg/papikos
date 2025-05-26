@@ -1,6 +1,9 @@
 package id.ac.ui.cs.advprog.papikos.paymentTest.service;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
+import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
+import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalService;
 import id.ac.ui.cs.advprog.papikos.paymentmain.payload.request.PaymentRequest;
 import id.ac.ui.cs.advprog.papikos.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.papikos.paymentmain.service.PaymentService;
@@ -19,13 +22,25 @@ public class PaymentServiceTest {
 
     private PaymentService service;
     private UserRepository userRepository;
+    private RentalRepository rentalRepository;
+    private RentalService rentalService;
 
     @BeforeEach
     void setUp() {
         userRepository = Mockito.mock(UserRepository.class);
         TransactionService transactionService = Mockito.mock(TransactionService.class);
+        rentalRepository = Mockito.mock(RentalRepository.class);
+        rentalService = Mockito.mock(RentalService.class);
 
-        service = new PaymentService(userRepository, transactionService);
+        service = new PaymentService(userRepository, transactionService, rentalRepository, rentalService);
+    }
+
+    private void mockRental() {
+        Rental rental = new Rental();
+        rental.setId(123L);
+        Mockito.when(rentalRepository.findById(123L)).thenReturn(Optional.of(rental));
+        Mockito.when(rentalRepository.save(Mockito.any())).thenReturn(rental);
+        Mockito.doNothing().when(rentalService).updateRentalCache(Mockito.any());
     }
 
     @Test
@@ -35,6 +50,7 @@ public class PaymentServiceTest {
         request.setMethod("bank");
         request.setUserId(1L);
         request.setTargetId(2L);
+        request.setRentalId(123L);
 
         User tenant = new User();
         tenant.setId(1L);
@@ -44,6 +60,7 @@ public class PaymentServiceTest {
         landlord.setId(2L);
         landlord.setBalance(0.0);
 
+        mockRental();
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
         Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
@@ -55,8 +72,9 @@ public class PaymentServiceTest {
         PaymentRequest request = new PaymentRequest();
         request.setAmount(75_000.0);
         request.setMethod("virtual");
-        request.setUserId(1L);      // Add this
-        request.setTargetId(2L);    // Add this
+        request.setUserId(1L);
+        request.setTargetId(2L);
+        request.setRentalId(123L);
 
         User tenant = new User();
         tenant.setId(1L);
@@ -66,6 +84,7 @@ public class PaymentServiceTest {
         landlord.setId(2L);
         landlord.setBalance(0.0);
 
+        mockRental();
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
         Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
@@ -79,6 +98,7 @@ public class PaymentServiceTest {
         request.setMethod("invalid");
         request.setUserId(1L);
         request.setTargetId(2L);
+        request.setRentalId(123L);
 
         User tenant = new User();
         tenant.setId(1L);
@@ -88,6 +108,7 @@ public class PaymentServiceTest {
         landlord.setId(2L);
         landlord.setBalance(0.0);
 
+        mockRental();
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
         Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
@@ -101,6 +122,7 @@ public class PaymentServiceTest {
         request.setMethod("bank");
         request.setUserId(1L);
         request.setTargetId(2L);
+        request.setRentalId(123L);
 
         User tenant = new User();
         tenant.setId(1L);
@@ -110,6 +132,7 @@ public class PaymentServiceTest {
         landlord.setId(2L);
         landlord.setBalance(0.0);
 
+        mockRental();
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
         Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
@@ -126,8 +149,8 @@ public class PaymentServiceTest {
         landlord.setId(2L);
         landlord.setBalance(0.0);
 
-        Mockito.when(userRepository.findById(1L)).thenReturn(java.util.Optional.of(tenant));
-        Mockito.when(userRepository.findById(2L)).thenReturn(java.util.Optional.of(landlord));
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
         String result = service.handleRentPayment("1", "2", 100.0);
 
@@ -144,8 +167,8 @@ public class PaymentServiceTest {
         landlord.setId(2L);
         landlord.setBalance(0.0);
 
-        Mockito.when(userRepository.findById(1L)).thenReturn(java.util.Optional.of(tenant));
-        Mockito.when(userRepository.findById(2L)).thenReturn(java.util.Optional.of(landlord));
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
         String result = service.handleRentPayment("1", "2", 100.0);
 
@@ -188,11 +211,13 @@ public class PaymentServiceTest {
         request.setMethod("bank");
         request.setUserId(1L);
         request.setTargetId(2L);
+        request.setRentalId(123L);
 
         User tenant = new User();
         tenant.setId(1L);
         tenant.setBalance(200_000.0);
 
+        mockRental();
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
         Mockito.when(userRepository.findById(2L)).thenReturn(Optional.empty());
 
@@ -211,7 +236,9 @@ public class PaymentServiceTest {
         request.setMethod("bank");
         request.setUserId(1L);
         request.setTargetId(2L);
+        request.setRentalId(123L);
 
+        mockRental();
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         ResponseStatusException thrown = assertThrows(ResponseStatusException.class, () -> {
@@ -223,12 +250,38 @@ public class PaymentServiceTest {
     }
 
     @Test
+    void testHandlePayment_rentalNotFound_shouldThrowException() {
+        PaymentRequest request = new PaymentRequest();
+        request.setAmount(100_000.0);
+        request.setMethod("bank");
+        request.setUserId(1L);
+        request.setTargetId(2L);
+        request.setRentalId(999L); // any ID that won't be found
+
+        User tenant = new User();
+        tenant.setId(1L);
+        tenant.setBalance(200_000.0);
+
+        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
+        Mockito.when(rentalRepository.findById(999L)).thenReturn(Optional.empty()); // simulate not found
+
+        ResponseStatusException thrown = assertThrows(ResponseStatusException.class, () -> {
+            service.handlePayment(request);
+        });
+
+        assertEquals(HttpStatus.NOT_FOUND, thrown.getStatusCode());
+        assertEquals("Rental not found", thrown.getReason());
+    }
+
+
+    @Test
     void testHandlePayment_strategyFails_shouldReturnFalse() {
         PaymentRequest request = new PaymentRequest();
         request.setAmount(100_000.0);
-        request.setMethod("fail"); // triggers the test-only strategy
+        request.setMethod("fail");
         request.setUserId(1L);
         request.setTargetId(2L);
+        request.setRentalId(123L);
 
         User tenant = new User();
         tenant.setId(1L);
@@ -238,10 +291,10 @@ public class PaymentServiceTest {
         landlord.setId(2L);
         landlord.setBalance(0.0);
 
+        mockRental();
         Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(tenant));
         Mockito.when(userRepository.findById(2L)).thenReturn(Optional.of(landlord));
 
         assertFalse(service.handlePayment(request));
     }
-
 }
