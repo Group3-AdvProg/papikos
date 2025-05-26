@@ -1,209 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
     <title>House Detail</title>
-
-    <!-- Bootstrap CSS (with SRI) -->
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
-            crossorigin="anonymous"
-    />
-
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
-            rel="stylesheet"
-    />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/papikos.css" rel="stylesheet" />
     <style>
-        :root { --bs-primary: #7065F0; }
-        body { font-family:'Segoe UI',sans-serif; background:#f9f9ff; }
-
-        .card-clickable { text-decoration: none; color: inherit; }
-        .card-clickable:hover { opacity: .95; }
-        .card-body * { pointer-events: none; }
-        .view-btn { pointer-events: auto; }
-        .wishlist-btn {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background-color: white;
-            border: none;
-            border-radius: 50%;
-            padding: 6px 8px;
-            box-shadow: 0 0 3px rgba(0,0,0,0.2);
-            z-index: 5;
-        }
-        .wishlist-btn .bi {
-            font-size: 1.2rem;
-            color: red;
-            pointer-events: auto;
+        .img-fluid {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
 <body>
+
 <div id="navbar-placeholder"></div>
 
 <div class="container py-4">
-    <div id="detailArea" class="row justify-content-center"></div>
-    <a class="btn btn-outline-secondary mt-4" href="/rental.html">
-        ⬅ Back to list
-    </a>
+    <div id="houseDetail" class="mt-4"></div>
+    <a href="management.html" class="btn btn-secondary mt-3">⬅ Back to Management</a>
 </div>
 
-<!-- Bootstrap JS Bundle (with SRI) -->
-<script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"
-></script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/navbarLoader.js"></script>
 <script>
-    const token      = sessionStorage.getItem("token");
-    const houseId    = new URLSearchParams(location.search).get("houseId");
-    let currentUser  = null;
-    let currentHouse = null;
-    let houseOwner   = null;
+    const token = sessionStorage.getItem("token");
+    const params = new URLSearchParams(window.location.search);
+    const houseId = params.get("id");
 
-    window.addEventListener("DOMContentLoaded", async () => {
-        loadNavbar();
-
-        if (!token) return location.href = "/login.html";
-        const meRes = await fetch("/api/auth/users/me", {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!meRes.ok) {
-            sessionStorage.removeItem("token");
-            return location.href = "/login.html";
-        }
-        const me = await meRes.json();
-        if (!me.role?.includes("TENANT")) return location.href = "/login.html";
-        currentUser = me;
-
-        await loadHouse();
-    });
-
-    async function loadHouse() {
+    async function fetchHouseDetail() {
         try {
-            const res = await fetch(`/api/houses/${houseId}`, {
-                headers: { Authorization: `Bearer ${token}` }
+            const res = await fetch(`/api/management/houses/${houseId}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
             });
-            if (!res.ok) throw new Error("House fetch failed");
-            currentHouse = await res.json();
-            houseOwner   = currentHouse.owner || null;
-            render();
-        } catch {
-            document.getElementById("detailArea").innerHTML =
-                `<div class="alert alert-danger">Failed to load house.</div>`;
+
+            if (!res.ok) throw new Error("Failed to fetch");
+
+            const house = await res.json();
+            document.getElementById("houseDetail").innerHTML = `
+                <h2 class="text-primary fw-bold">${house.name}</h2>
+                <img src="${house.imageUrl}" class="img-fluid rounded mb-3" alt="House Image" style="max-width: 600px;">
+                <p><strong>Address:</strong> ${house.address}</p>
+                <p><strong>Description:</strong> ${house.description}</p>
+                <p><strong>Rooms:</strong> ${house.numberOfRooms}</p>
+                <p><strong>Monthly Rent:</strong> Rp ${house.monthlyRent.toLocaleString("id-ID")}</p>
+                <a href="rentalRequests.html?houseId=${house.id}" class="btn btn-outline-primary mt-3">View Rental Requests</a>
+            `;
+        } catch (err) {
+            console.error("Failed to load house detail:", err);
+            document.getElementById("houseDetail").innerHTML = `
+                <div class="alert alert-danger">Failed to load house detail.</div>
+            `;
         }
     }
 
-    function render() {
-        const h     = currentHouse;
-        const addr  = h.location ?? h.address ?? "-";
-        const price = (h.monthlyRent ?? h.price ?? 0).toLocaleString("id-ID");
-        const rooms = h.numberOfRooms ?? "-";
-        const img   = h.imageUrl || "https://via.placeholder.com/600x350.png?text=No+Image";
+    window.onload = fetchHouseDetail;
 
-        const ownerBlock = houseOwner
-            ? `
-        <div class="card mb-4">
-          <div class="card-header bg-light fw-semibold">Owner Details</div>
-          <div class="card-body">
-            <p class="mb-1"><strong>Name:</strong> ${houseOwner.fullName}</p>
-            <p class="mb-1"><strong>Phone:</strong> ${houseOwner.phoneNumber}</p>
-            <p class="mb-0"><strong>Email:</strong> ${houseOwner.email}</p>
-          </div>
-        </div>`
-            : `<div class="alert alert-warning">Owner info not available.</div>`;
-
-        const showChatBtn = houseOwner && currentUser.id !== houseOwner.id
-            ? `<button
-             class="btn btn-outline-primary w-100 mb-2"
-             onclick="contactLandlord()"
-           >
-             <i class="bi bi-chat-dots-fill"></i> Chat with Landlord
-           </button>`
-            : "";
-
-        document.getElementById("detailArea").innerHTML = `
-        <div class="col-md-8">
-          ${ownerBlock}
-          <div class="card shadow-sm border-0">
-            <img src="${img}" class="card-img-top" alt="house" />
-            <div class="card-body">
-              <p class="text-uppercase fw-bold text-muted small mb-1">${addr}</p>
-              <h3 class="text-primary fw-bold">${h.name}</h3>
-              <h4 class="fw-bold mt-3">Rp ${price}</h4>
-              <div class="text-muted small mb-3">${rooms} rooms</div>
-              <p>${h.description ?? "-"}</p>
-              ${showChatBtn}
-              <label for="checkInDate" class="form-label fw-semibold">Check-in Date</label>
-              <input type="date" id="checkInDate" class="form-control w-25 mb-3" required />
-              <label for="duration" class="form-label fw-semibold">Duration (months)</label>
-              <input type="number" id="duration" class="form-control w-25 mb-3"
-                     value="1" min="1" required />
-              <button class="btn btn-primary w-100" onclick="bookNow()">Book Now</button>
-            </div>
-          </div>
-        </div>`;
-    }
-
-    async function contactLandlord() {
-        if (!houseOwner) return alert("Owner info not available.");
-        const res = await fetch("/api/chat/rooms", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ landlordEmail: houseOwner.email })
-        });
-        if (res.ok) {
-            const room = await res.json();
-            window.location.href = `/chat.html?roomId=${room.id}`;
-        } else {
-            alert("Error starting chat");
-        }
-    }
-
-    async function bookNow() {
-        const checkIn  = document.getElementById("checkInDate").value;
-        const duration = +document.getElementById("duration").value;
-        if (!checkIn || duration < 1) {
-            return alert("Please fill in date & duration properly!");
-        }
-        const baseRent  = currentHouse.monthlyRent ?? currentHouse.price ?? 0;
-        const totalCost = baseRent * duration;
-        const payload = {
-            houseId: currentHouse.id,
-            tenantId: currentUser.id,
-            checkInDate,
-            durationInMonths: duration,
-            totalPrice: totalCost,
-            isPaid: false
-        };
-        const res = await fetch("/api/rentals", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-            alert("Request sent!");
-            const redirectUrl = `/rental.html?houseId=${currentHouse.id}`;
-            location.href = redirectUrl;
-        } else {
-            alert("Request failed");
-        }
-    }
+    window.addEventListener("DOMContentLoaded", () => {
+        loadNavbar();
+    });
 </script>
 </body>
 </html>
