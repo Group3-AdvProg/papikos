@@ -1,10 +1,10 @@
 package id.ac.ui.cs.advprog.papikos.RentalTest.Service;
 
 import id.ac.ui.cs.advprog.papikos.auth.entity.User;
+import id.ac.ui.cs.advprog.papikos.house.model.House;
 import id.ac.ui.cs.advprog.papikos.house.rental.model.Rental;
 import id.ac.ui.cs.advprog.papikos.house.rental.repository.RentalRepository;
 import id.ac.ui.cs.advprog.papikos.house.rental.service.RentalServiceImpl;
-import id.ac.ui.cs.advprog.papikos.house.model.House;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -17,8 +17,11 @@ import static org.mockito.Mockito.*;
 
 public class RentalServiceImplTest {
 
-    @Mock private RentalRepository repo;
-    @InjectMocks private RentalServiceImpl service;
+    @Mock
+    private RentalRepository repo;
+
+    @InjectMocks
+    private RentalServiceImpl service;
 
     private final Long id = 1L;
 
@@ -131,7 +134,7 @@ public class RentalServiceImplTest {
         existing.setTenant(new User());
 
         Rental details = baseRental("Kos Baru", 99L);
-        details.setTenant(null); // Simulasi skip tenant
+        details.setTenant(null); // Simulate skip tenant
 
         when(repo.findById(id)).thenReturn(Optional.of(existing));
         when(repo.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -319,5 +322,27 @@ public class RentalServiceImplTest {
         assertDoesNotThrow(() -> service.deleteRentalAsync(id).get());
 
         verify(repo).deleteById(id);
+    }
+
+    // === CACHE BEHAVIOR ===
+
+    @Test
+    void getAllRentals_shouldReturnCachedOnSubsequentCalls() {
+        Rental r = baseRental("CacheKos", 123L);
+        List<Rental> initial = List.of(r);
+
+        // first call: repo.findAll()
+        when(repo.findAll()).thenReturn(initial);
+        List<Rental> first = service.getAllRentals();
+        assertEquals(1, first.size());
+        assertSame(initial, first);
+
+        // alter stub and call again
+        when(repo.findAll()).thenReturn(Collections.emptyList());
+        List<Rental> second = service.getAllRentals();
+        assertSame(first, second, "Expected cached list on second call");
+
+        // verify repository only called once
+        verify(repo, times(1)).findAll();
     }
 }
