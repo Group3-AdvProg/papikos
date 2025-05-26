@@ -89,6 +89,7 @@ class RentalControllerTest {
     }
 
     // === SYNC ===
+
     @Test void testCreateRentalSync_HouseNotFound() throws Exception {
         RentalDTO dto = new RentalDTO();
         dto.setHouseId(123L);
@@ -212,6 +213,7 @@ class RentalControllerTest {
     }
 
     // === ASYNC ===
+
     @Test void testCreateAsync_HouseNotFound_ShouldThrow() throws Exception {
         RentalDTO dto = new RentalDTO();
         dto.setHouseId(111L);
@@ -258,28 +260,26 @@ class RentalControllerTest {
 
         when(houseRepository.findById(1L)).thenReturn(Optional.of(rental.getHouse()));
         when(userRepository.findById(1L)).thenReturn(Optional.of(rental.getTenant()));
-        when(rentalService.createRentalAsync(any())).thenReturn(CompletableFuture.completedFuture(rental));
+        when(rentalService.createRentalAsync(any()))
+                .thenReturn(CompletableFuture.completedFuture(rental));
 
-        var result = mockMvc.perform(post("/api/rentals/async")
+        var mvcResult = mockMvc.perform(post("/api/rentals/async")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        mockMvc.perform(asyncDispatch(result))
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(2));
     }
 
-    @Test
-    void testCreateRentalAsync_UserNotTenant() throws Exception {
-        // prepare DTO
+    @Test void testCreateRentalAsync_UserNotTenant() throws Exception {
         RentalDTO dto = new RentalDTO();
         dto.setHouseId(1L);
         dto.setTenantId(1L);
-        dto.setDurationInMonths(2); // ← avoid null
+        dto.setDurationInMonths(2);
 
-        // stub repos
         House house = new House();
         house.setMonthlyRent(1000.0);
         when(houseRepository.findById(1L)).thenReturn(Optional.of(house));
@@ -291,45 +291,59 @@ class RentalControllerTest {
         admin.setPhoneNumber("08123456789");
         when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
 
-        // stub async service
         Rental fake = new Rental();
         fake.setId(77L);
         when(rentalService.createRentalAsync(any()))
                 .thenReturn(CompletableFuture.completedFuture(fake));
 
-        // perform async request
         var mvcResult = mockMvc.perform(post("/api/rentals/async")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        // dispatch and assert OK + returned id
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(77));
     }
 
-
     @Test void testFindByIdAsync_NotFound() throws Exception {
-        when(rentalService.getRentalByIdAsync(404L)).thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+        when(rentalService.getRentalByIdAsync(404L))
+                .thenReturn(CompletableFuture.completedFuture(Optional.empty()));
 
-        var result = mockMvc.perform(get("/api/rentals/async/404"))
+        var mvcResult = mockMvc.perform(get("/api/rentals/async/404"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        mockMvc.perform(asyncDispatch(result))
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isNotFound());
     }
 
-    @Test void testDeleteAsync_NotFoundPath() throws Exception {
-        when(rentalService.getRentalByIdAsync(888L)).thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+    @Test void testFindByIdAsync_Found() throws Exception {
+        Rental rental = setupRental(5L, 15L, "Async Find");
 
-        var result = mockMvc.perform(delete("/api/rentals/async/888"))
+        when(rentalService.getRentalByIdAsync(5L))
+                .thenReturn(CompletableFuture.completedFuture(Optional.of(rental)));
+
+        var mvcResult = mockMvc.perform(get("/api/rentals/async/5"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        mockMvc.perform(asyncDispatch(result))
+        mockMvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(5))
+                .andExpect(jsonPath("$.fullName").value("Async Find"));
+    }
+
+    @Test void testDeleteAsync_NotFoundPath() throws Exception {
+        when(rentalService.getRentalByIdAsync(888L))
+                .thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+
+        var mvcResult = mockMvc.perform(delete("/api/rentals/async/888"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isNotFound());
     }
 
@@ -338,14 +352,16 @@ class RentalControllerTest {
         House house = rental.getHouse();
         house.setNumberOfRooms(2);
 
-        when(rentalService.getRentalByIdAsync(66L)).thenReturn(CompletableFuture.completedFuture(Optional.of(rental)));
-        when(rentalService.deleteRentalAsync(66L)).thenReturn(CompletableFuture.completedFuture(null));
+        when(rentalService.getRentalByIdAsync(66L))
+                .thenReturn(CompletableFuture.completedFuture(Optional.of(rental)));
+        when(rentalService.deleteRentalAsync(66L))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
-        var result = mockMvc.perform(delete("/api/rentals/async/66"))
+        var mvcResult = mockMvc.perform(delete("/api/rentals/async/66"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        mockMvc.perform(asyncDispatch(result))
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("rental deleted and availability updated")));
 
@@ -360,17 +376,16 @@ class RentalControllerTest {
         when(rentalService.getAllRentalsAsync())
                 .thenReturn(CompletableFuture.completedFuture(List.of(r1, r2)));
 
-        var result = mockMvc.perform(get("/api/rentals/async")) // ✅ path yang benar
+        var mvcResult = mockMvc.perform(get("/api/rentals/async"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        mockMvc.perform(asyncDispatch(result))
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
 
-    @Test
-    void testFindAllRentalsSync() throws Exception {
+    @Test void testFindAllRentalsSync() throws Exception {
         Rental r1 = setupRental(1L, 10L, "Kos A");
         Rental r2 = setupRental(2L, 20L, "Kos B");
 
@@ -383,20 +398,19 @@ class RentalControllerTest {
                 .andExpect(jsonPath("$[1].id").value(2));
     }
 
-
     @Test void testUpdateRentalAsync_Found() throws Exception {
         Rental rental = setupRental(99L, 123L, "Update Test");
 
         when(rentalService.updateRentalAsync(eq(99L), any()))
                 .thenReturn(CompletableFuture.completedFuture(rental));
 
-        var result = mockMvc.perform(put("/api/rentals/async/99")
+        var mvcResult = mockMvc.perform(put("/api/rentals/async/99")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(rental)))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        mockMvc.perform(asyncDispatch(result))
+        mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(99));
     }
