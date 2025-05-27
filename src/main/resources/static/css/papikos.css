@@ -54,10 +54,6 @@ body {
     opacity: 0.9;
 }
 
-.card-body * {
-    pointer-events: none;
-}
-
 .action-buttons {
     pointer-events: auto;
 }

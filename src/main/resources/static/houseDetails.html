@@ -152,11 +152,21 @@
 
     async function fetchHouseDetail() {
         try {
+            const userRes = await fetch("/api/auth/users/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
+
+            const currentUser = await userRes.json();
+
+            if (!currentUser.role?.includes("LANDLORD")) {
+                document.getElementById("house-content").innerHTML =
+                    `<div class="alert alert-warning m-5">Only landlords are allowed to access this page. Please<a href="/login.html" class="alert-link"> log in</a>.</div>`;
+                return;
+            }
+
             const res = await fetch(`/api/management/houses/${houseId}`, {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
-
-            if (!res.ok) throw new Error("Failed to fetch");
 
             const house = await res.json();
             document.getElementById("houseImage").src = house.imageUrl;
@@ -169,8 +179,8 @@
             document.getElementById("back").href = `management.html`;
         } catch (err) {
             console.error("Failed to load house detail:", err);
-            document.querySelector(".zillow-left").innerHTML = `
-        <div class="alert alert-danger">Failed to load house detail.</div>
+            document.querySelector(".zillow-content").innerHTML = `
+        <div class="alert alert-danger">Only landlords are allowed to access this page. Please<a href="/login.html" class="alert-link"> log in</a>.</div>
       `;
         }
     }

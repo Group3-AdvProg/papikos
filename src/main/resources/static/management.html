@@ -17,6 +17,11 @@
 
     <!-- Your custom styles -->
     <link href="/css/papikos.css" rel="stylesheet" />
+    <style>
+        .card-body * {
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body class="bg-light text-dark">
 
@@ -100,8 +105,10 @@
     </div>
 
     <!-- Houses grid -->
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="houseContainer">
-        <!-- Cards injected here -->
+    <div id="houseWindow">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="houseContainer">
+            <!-- Cards injected here -->
+        </div>
     </div>
 </main>
 
@@ -288,8 +295,11 @@
             renderHouses(houses);
         } catch (err) {
             console.error("Failed to fetch houses:", err);
-            document.getElementById("houseContainer").innerHTML =
-                '<div class="alert alert-danger">You are not authorized. Please log in as Landlord</div>';
+            document.getElementById("houseWindow").innerHTML = `
+                <div class="alert alert-danger text-center">
+                  Only landlords are allowed to access this page. Please <a href="/login.html" class="alert-link">log in</a>.
+                </div>
+            `;
         }
     }
 

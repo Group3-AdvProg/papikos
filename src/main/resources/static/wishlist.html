@@ -86,7 +86,7 @@
   window.addEventListener("DOMContentLoaded", async () => {
     loadNavbar();
     if (!token) {
-      wishlistContainer.innerHTML = `<div class="alert alert-warning">Please log in to view your wishlist.</div>`;
+      wishlistContainer.innerHTML = `<div class="alert alert-warning">Please <a href="/login.html" class="alert-link">log in</a> to view your wishlist.</div>`;
       return;
     }
 
