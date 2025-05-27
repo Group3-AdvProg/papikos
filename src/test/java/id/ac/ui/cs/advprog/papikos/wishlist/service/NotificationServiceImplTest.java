@@ -94,6 +94,7 @@ class NotificationServiceImplTest {
 
     @Test
     void testNotifyAvailability() {
+        house.setName("Kos UI");
         when(houseRepo.findById(10L)).thenReturn(Optional.of(house));
         when(wishlistRepo.findByHouseId(10L)).thenReturn(List.of(wishlistItem));
 
@@ -102,13 +103,14 @@ class NotificationServiceImplTest {
         verify(notificationRepo, times(1)).save(argThat(n ->
                 n.getReceiverId().equals(2L) &&
                         n.getSenderId().equals(1L) &&
-                        n.getMessage().contains("House 10 is now available") &&
+                        n.getMessage().contains("House Kos UI has new available room!") &&
                         !n.isRead()
         ));
     }
 
     @Test
     void testNotifyAvailability_HouseWithoutOwner() {
+        house.setName("Kos UI");
         house.setOwner(null);
         when(houseRepo.findById(10L)).thenReturn(Optional.of(house));
         when(wishlistRepo.findByHouseId(10L)).thenReturn(List.of(wishlistItem));
@@ -118,7 +120,7 @@ class NotificationServiceImplTest {
         verify(notificationRepo, times(1)).save(argThat(n ->
                 n.getReceiverId().equals(2L) &&
                         n.getSenderId() == null &&
-                        n.getMessage().contains("House 10 is now available") &&
+                        n.getMessage().contains("House Kos UI has new available room!") &&
                         !n.isRead()
         ));
     }

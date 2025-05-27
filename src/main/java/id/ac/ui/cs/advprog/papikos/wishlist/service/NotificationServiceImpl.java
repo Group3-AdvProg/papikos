@@ -50,7 +50,7 @@ public class NotificationServiceImpl implements NotificationService {
                 var notif = Notification.builder()
                         .receiverId(tenantId)
                         .senderId(ownerId)
-                        .message("House " + houseId + " is now available!")
+                        .message("House " + house.getName() + " has new available room!")
                         .createdAt(LocalDateTime.now())
                         .isRead(false)
                         .build();
